@@ -376,6 +376,7 @@ namespace VSCodeDebug
 					break;
 
 				default:
+					Console.WriteLine($"unrecognized request: {command}");
 					SendErrorResponse(response, 1014, "unrecognized request: {_request}", new { _request = command });
 					break;
 				}

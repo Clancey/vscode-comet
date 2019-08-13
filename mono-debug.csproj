@@ -19,7 +19,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
-    <AssemblyName>mono-debug</AssemblyName>
     <Commandlineparameters>--server=4711</Commandlineparameters>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -28,7 +27,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
-    <AssemblyName>mono-debug</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -66,6 +64,10 @@
     <Compile Include="src\DebugSession.cs" />
     <Compile Include="src\MonoDebug.cs" />
     <Compile Include="src\Protocol.cs" />
+    <Compile Include="src\iOS\IPhoneCommandConnectionDebuggerArgs.cs" />
+    <Compile Include="src\iOS\IPhoneCommandConnection.cs" />
+    <Compile Include="src\iOS\AggregateAsyncResult.cs" />
+    <Compile Include="src\iOS\StreamTransportConnection.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -81,5 +83,6 @@
   </Target>
   <ItemGroup>
     <Folder Include="src\" />
+    <Folder Include="src\iOS\" />
   </ItemGroup>
 </Project>

@@ -181,6 +181,7 @@ namespace VSCodeDebug
 
 		public void LogMessage(string format, params object[] args)
 		{
+			Console.WriteLine(format, args);
 		}
 
 		public string GetNewDebuggerLogFilename()
