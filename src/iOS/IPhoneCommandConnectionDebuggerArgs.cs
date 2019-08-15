@@ -7,7 +7,7 @@ using Mono.Debugging.Soft;
 
 namespace VSCodeDebug
 {
-	class IPhoneCommandConnectionDebuggerArgs : SoftDebuggerStartArgs, ISoftDebuggerConnectionProvider
+	class IPhoneSimulatorDebuggerArgs : SoftDebuggerStartArgs, ISoftDebuggerConnectionProvider
 	{
 		IPhoneCommandConnection commandConnection;
 		string appName;
@@ -20,7 +20,7 @@ namespace VSCodeDebug
 			get { return commandConnection; }
 		}
 
-		public IPhoneCommandConnectionDebuggerArgs(string appName, IPhoneCommandConnection commandConnection)
+		public IPhoneSimulatorDebuggerArgs(string appName, IPhoneCommandConnection commandConnection)
 		{
 			this.appName = appName;
 			this.commandConnection = commandConnection;

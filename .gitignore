@@ -11,6 +11,7 @@
 *.zip
 *.exe
 *.exe.mdb
+*.DS_Store
 mono-debug.userprefs
 npm-debug.log
 .vs/mono-debug/v15/.suo

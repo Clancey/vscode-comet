@@ -247,6 +247,8 @@ namespace VSCodeDebug
 			const string host = "127.0.0.1";
 			int port = Utilities.FindFreePort(55555);
 
+			var xamarinOptions = CreateFromArgs(args);
+
 			string mono_path = runtimeExecutable;
 			if (mono_path == null) {
 				if (!Utilities.IsOnPath(MONO)) {
@@ -375,7 +377,7 @@ namespace VSCodeDebug
 			}
 
 			if (debug) {
-				Connect(IPAddress.Parse(host), port);
+				Connect(xamarinOptions,IPAddress.Parse(host), port);
 			}
 
 			SendResponse(response);
@@ -386,8 +388,24 @@ namespace VSCodeDebug
 			}
 		}
 
+		XamarinOptions CreateFromArgs( dynamic args)
+		{
+
+			//Project Path
+			//RoslynCodeManager
+			var csProj = getString(args, VSCodeKeys.XamarinOptions.CSProj);
+			//var hasHotRload = Comet.Reload.RoslynCodeManager.Shared.ShouldHotReload(csProj);
+			//TODO: Figure out if has HotUI
+			var options = new XamarinOptions() {
+				ProjectType = getEnum<ProjectType>(args, VSCodeKeys.XamarinOptions.ProjectType, ProjectType.Mono),
+				IsSim = getBool(args,VSCodeKeys.XamarinOptions.IsSimulator,true),
+			};
+			return options;
+		}
+
 		public override void Attach(Response response, dynamic args)
 		{
+			var xamarinOption = CreateFromArgs(args);
 			_attachMode = true;
 
 			SetExceptionBreakpoints(args.__exceptionOptions);
@@ -412,7 +430,7 @@ namespace VSCodeDebug
 				return;
 			}
 
-			Connect(address, port);
+			Connect(xamarinOption, address, port);
 
 			SendResponse(response);
 		}
@@ -905,6 +923,17 @@ namespace VSCodeDebug
 			return s;
 		}
 
+		private static T getEnum<T>(dynamic args, string property, T dflt = default) where T: Enum
+		{
+			var value = getString(args, property);
+			if(string.IsNullOrWhiteSpace(value)) {
+				return dflt;
+			}
+			if (Enum.TryParse(value, out T myEnum))
+				return myEnum;
+			return dflt;
+		}
+
 		//-----------------------
 
 		private void WaitForSuspend()
@@ -943,18 +972,28 @@ namespace VSCodeDebug
 			return bt == null ? null : bt.GetFrame(0).GetException();
 		}
 
-		private void Connect(IPAddress address, int port)
+		private void Connect(XamarinOptions options, IPAddress address, int port)
 		{
 			lock (_lock) {
 
 				_debuggeeKilled = false;
 
-				var args0 = new Mono.Debugging.Soft.SoftDebuggerConnectArgs(string.Empty, address, port) {
-					MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
-					TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL
-				};
+				Mono.Debugging.Soft.SoftDebuggerStartArgs args = null;
+				if (options.ProjectType == ProjectType.Android) {
+					args = new Mono.Debugging.Soft.SoftDebuggerConnectArgs(options.AppName, address, port) {
+						MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
+						TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL,
 
-				_session.Run(new Mono.Debugging.Soft.SoftDebuggerStartInfo(args0), _debuggerSessionOptions);
+					};
+				} else if(options.ProjectType == ProjectType.iOS) {
+					if (options.IsSim)
+						args = new IPhoneSimulatorDebuggerArgs(options.AppName, new IPhoneTcpCommandConnection(IPAddress.Loopback, port)) { MaxConnectionAttempts = 10 };
+					else
+						args = new Mono.Debugging.Soft.SoftDebuggerListenArgs(options.AppName, IPAddress.Loopback, port);
+				}
+
+				Console.WriteLine("Listening for debugger!");
+				_session.Run(new Mono.Debugging.Soft.SoftDebuggerStartInfo(args), _debuggerSessionOptions);
 
 				_debuggeeExecuting = true;
 			}

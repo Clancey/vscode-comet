@@ -6,7 +6,7 @@
     <ProjectGuid>{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>VSCodeDebug</RootNamespace>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -55,6 +55,8 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Build" />
+    <Reference Include="Microsoft.Build.Framework" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -68,6 +70,15 @@
     <Compile Include="src\iOS\IPhoneCommandConnection.cs" />
     <Compile Include="src\iOS\AggregateAsyncResult.cs" />
     <Compile Include="src\iOS\StreamTransportConnection.cs" />
+    <Compile Include="src\Comet\DocumentChangedEventArgs.cs" />
+    <Compile Include="src\Comet\IDEManager.cs" />
+    <Compile Include="src\Comet\FixedSizedQueue.cs" />
+    <Compile Include="src\Comet\SyntaxNodeHelper.cs" />
+    <Compile Include="src\Comet\RoslynCodeManager.cs" />
+    <Compile Include="src\Comet\FixedSizeDictionary.cs" />
+    <Compile Include="src\Comet\ClassCollector.cs" />
+    <Compile Include="src\DebugOptions.cs" />
+    <Compile Include="src\VSCodeKeys.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
