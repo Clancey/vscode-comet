@@ -394,7 +394,10 @@ namespace VSCodeDebug
 			//Project Path
 			//RoslynCodeManager
 			var csProj = getString(args, VSCodeKeys.XamarinOptions.CSProj);
-			//var hasHotRload = Comet.Reload.RoslynCodeManager.Shared.ShouldHotReload(csProj);
+			var configuration = getString(args, VSCodeKeys.XamarinOptions.Configuration);
+			var platform = getString(args, VSCodeKeys.XamarinOptions.Platform);
+			var hasComet = getBool(args,VSCodeKeys.XamarinOptions.HasComet);
+			var shouldDebug = hasComet?? getBool(args,VSCodeKeys.XamarinOptions.ForceComet);
 			//TODO: Figure out if has HotUI
 			var options = new XamarinOptions() {
 				ProjectType = getEnum<ProjectType>(args, VSCodeKeys.XamarinOptions.ProjectType, ProjectType.Mono),
