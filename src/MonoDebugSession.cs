@@ -408,6 +408,7 @@ namespace VSCodeDebug
 
 		public override void Attach(Response response, dynamic args)
 		{
+			Console.WriteLine("Attach");
 			var xamarinOption = CreateFromArgs(args);
 			_attachMode = true;
 

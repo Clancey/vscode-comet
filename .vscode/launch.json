@@ -9,7 +9,7 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}"
 			],
-			"stopOnEntry": false,
+			//"stopOnEntry": false,
 			"outFiles": [
 				"${workspaceRoot}/out/**/*.js"
 			]

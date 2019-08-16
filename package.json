@@ -22,11 +22,12 @@
 		"postinstall": "node ./node_modules/vscode/bin/install"
 	},
 	"engines": {
-		"vscode": "^1.8.0",
+		"vscode": "^1.33.0",
 		"node": "^6.3.0"
 	},
 	"dependencies": {
 		"vscode-debugprotocol": "^1.20.0",
+		"vscode-debugadapter": "1.35.0",
 		"vscode-nls": "^2.0.2"
 	},
 	"repository": {
@@ -44,12 +45,15 @@
 		"mocha": "^6.2.0",
 		"typescript": "^2.0.3",
 		"vsce": "^1.20.0",
-		"vscode": "^1.0.3",
+		"vscode": "1.1.36",
 		"vscode-debugadapter-testsupport": "^1.20.0",
 		"vscode-nls-dev": "^2.0.1"
 	},
 	"main": "./out/extension",
 	"activationEvents": [
+		"workspaceContains:**/*.csproj",
+		"workspaceContains:**/*.sln",
+		"onLanguage:csharp",
 		"onCommand:extension.mono-debug.configureExceptions",
 		"onCommand:extension.mono-debug.startSession"
 	],
@@ -98,8 +102,21 @@
 				"command": "extension.mono-debug.configureExceptions",
 				"title": "%configure.exceptions.command%",
 				"category": "Debug"
-			}
+			},
+			{
+                "command": "extension.comet.setAsStartup",
+                "title": "Commet: Set project as startup"
+            }
 		],
+		"menus": {
+            "explorer/context": [
+                {
+                    "command": "extension.comet.setAsStartup",
+					"group": "navigation@1",
+					"when": "resourceExtname == .csproj"
+                }
+            ]
+        },
 		"breakpoints": [
 			{
 				"language": "csharp"

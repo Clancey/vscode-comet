@@ -12,7 +12,7 @@ namespace VSCodeDebug
 			public const string IsSimulator = "isSim";
 
 			public const string ForceComet = "_forceComet";
-			public const string HasComet = "HasComet";
+			public const string HasComet = "hasComet";
 		}
 	}
 }
