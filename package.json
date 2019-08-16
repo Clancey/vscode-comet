@@ -14,7 +14,7 @@
 	"license": "MIT",
 	"private": true,
 	"scripts": {
-		"prepublish": "make build",
+		"prepare": "make build",
 		"vscode:prepublish": "make build",
 		"compile": "make build",
 		"watch": "tsc -w -p ./src/typescript",
@@ -38,8 +38,6 @@
 		"url": "https://github.com/Microsoft/vscode-mono-debug/issues"
 	},
 	"devDependencies": {
-		"@types/es6-collections": "^0.5.29",
-		"@types/es6-promise": "0.0.32",
 		"@types/mocha": "^2.2.32",
 		"@types/node": "^6.0.39",
 		"mocha": "^6.2.0",
@@ -104,19 +102,19 @@
 				"category": "Debug"
 			},
 			{
-                "command": "extension.comet.setAsStartup",
-                "title": "Commet: Set project as startup"
-            }
+				"command": "extension.comet.setAsStartup",
+				"title": "Commet: Set project as startup"
+			}
 		],
 		"menus": {
-            "explorer/context": [
-                {
-                    "command": "extension.comet.setAsStartup",
+			"explorer/context": [
+				{
+					"command": "extension.comet.setAsStartup",
 					"group": "navigation@1",
 					"when": "resourceExtname == .csproj"
-                }
-            ]
-        },
+				}
+			]
+		},
 		"breakpoints": [
 			{
 				"language": "csharp"
