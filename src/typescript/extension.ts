@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import * as nls from 'vscode-nls';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { CometProjectManager, getConfiguration } from './comet-configuration';
+import { CometProjectManager, getConfiguration } from './comet/comet-configuration';
 
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
