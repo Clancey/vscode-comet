@@ -11,6 +11,8 @@ import {ProjectType, MsBuildProjectAnalyzer } from './msbuild-project-analyzer';
 
 export class CometProjectManager implements vscode.Disposable {
     
+    public static Shared():CometProjectManager {return CometProjectManager.shared};
+    private static shared:CometProjectManager;
     private currentProjectPath:string;
     private static currentProjectDisplay:string;
     public static CurrentProjectDisplay():string {return CometProjectManager.currentProjectDisplay;}
@@ -25,6 +27,7 @@ export class CometProjectManager implements vscode.Disposable {
     private hasComet:boolean;
     private statusBarItem: vscode.StatusBarItem;
     constructor(){
+        CometProjectManager.shared = this;
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.statusBarItem.tooltip = "Comet";
         this.statusBarItem.text = "☄️";

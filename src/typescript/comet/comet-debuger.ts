@@ -26,7 +26,7 @@ export class CometDebugger implements vscode.Disposable {
         context.subscriptions.push(vscode.commands.registerCommand('extension.comet-debug.configureExceptions', () => configureExceptions()));
         context.subscriptions.push(vscode.commands.registerCommand('extension.comet-debug.startSession', config => startSession(config)));
         // register a configuration provider for 'mock' debug type
-        const provider = new CometConfigurationProvider();
+        const provider = new CometConfigurationProvider(cometManger);
         context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('comet', provider));
 
         context.subscriptions.push(vscode.debug.onDidStartDebugSession(async (s) => {
@@ -51,6 +51,7 @@ export class CometDebugger implements vscode.Disposable {
                 // this.disableAllServiceExtensions();
             }
         }));
+
     }
     dispose() {
 
@@ -213,71 +214,18 @@ function startSession(config: any): StartSessionResult {
 
 class CometConfigurationProvider implements vscode.DebugConfigurationProvider {
 
-
-	/**
-	 * Massage a debug configuration just before a debug session is being launched,
-	 * e.g. add all missing attributes to the debug configuration.
-	 */
-
-    // 	if (!folder || !folder.uri) {
-    //         vscode.window.showErrorMessage("Cannot create .NET debug configurations. No workspace folder was selected.");
-    //         return [];
-    //     }
-
-    //     try
-    //     {
-    //         let hasWorkspaceMatches : boolean = await this.checkWorkspaceInformationMatchesWorkspaceFolder(folder); 
-    //         if (!hasWorkspaceMatches) {
-    //             vscode.window.showErrorMessage(`Cannot create .NET debug configurations. The active C# project is not within folder '${folder.uri.fsPath}'.`);
-    //             return [];
-    //         }
-
-    //         let info: WorkspaceInformationResponse = await serverUtils.requestWorkspaceInformation(this.server);           
-
-    //         const generator = new AssetGenerator(info, folder);
-    //         if (generator.hasExecutableProjects()) {
-
-    //             if (!await generator.selectStartupProject())
-    //             {
-    //                 return [];
-    //             }
-
-    //             // Make sure .vscode folder exists, addTasksJsonIfNecessary will fail to create tasks.json if the folder does not exist. 
-    //             await fs.ensureDir(generator.vscodeFolder);
-
-    //             // Add a tasks.json
-    //             const buildOperations : AssetOperations = await getBuildOperations(generator);
-    //             await addTasksJsonIfNecessary(generator, buildOperations);
-
-    //             const isWebProject = generator.hasWebServerDependency();
-    //             const launchJson: string = generator.createLaunchJson(isWebProject);
-
-    //             // jsonc-parser's parse function parses a JSON string with comments into a JSON object. However, this removes the comments. 
-    //             return parse(launchJson);
-
-    //         } else {               
-    //             // Error to be caught in the .catch() below to write default C# configurations
-    //             throw new Error("Does not contain .NET Core projects.");
-    //         }
-    //     }
-    //     catch
-    //     {
-    //         // Provider will always create an launch.json file. Providing default C# configurations.
-    //         // jsonc-parser's parse to convert to JSON object without comments. 
-    //         return [
-    //             createFallbackLaunchConfiguration(),                  
-    //             parse(createAttachConfiguration())
-    //         ];
-    //     }
-
-    // }
-    //resolveDebugConfiguration?(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration>;
+    private cometManger: CometProjectManager;
+    constructor(cometManger: CometProjectManager)
+    {
+        this.cometManger = cometManger;
+    }
+	
     async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: DebugConfiguration, token?: vscode.CancellationToken): Promise<DebugConfiguration> {
 
         // if launch.json is missing or empty
         if (!config.type && !config.request && !config.name) {
             const editor = vscode.window.activeTextEditor;
-            if (editor && editor.document.languageId === 'markdown') {
+            if (editor && editor.document.languageId === 'csharp') {
                 config.type = 'comet';
                 // config.name = 'Launch';
                 // config.request = 'launch';
@@ -286,14 +234,8 @@ class CometConfigurationProvider implements vscode.DebugConfigurationProvider {
             }
         }
 
-        if (!config.csproj) {
-            return vscode.window.showInformationMessage("csproj is not set").then(_ => {
-                return undefined;	// abort launch
-            });
-        }
-        console.log("Parsing CSProj");
-        var cometConfig = await getConfiguration(config);//.then((cometConfig) =>{
-        cometConfig.Hi = "From VSCode";
+        
+       var cometConfig = await this.cometManger.ApplyConfiguration(config);
         return cometConfig;
     }
 }
