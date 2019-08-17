@@ -12,11 +12,16 @@ import {ProjectType, MsBuildProjectAnalyzer } from './msbuild-project-analyzer';
 export class CometProjectManager implements vscode.Disposable {
     
     private currentProjectPath:string;
-    private currentProjectDisplay:string;
-    private currentConfigurations:string[];
+    private static currentProjectDisplay:string;
+    public static CurrentProjectDisplay():string {return CometProjectManager.currentProjectDisplay;}
+    private static currentConfigurations:string[];
     private currentPlatforms:string[];
-    private currentConfig:string;
-    private currentProjectType:ProjectType = ProjectType.Unknown;
+    private static currentConfig:string;
+    public static CurrentConfig():string {return CometProjectManager.currentConfig;}
+    private static currentPlatform:string = "iPhoneSimulator";
+    public static CurrentPlatform():string {return CometProjectManager.currentPlatform;}
+    private static currentProjectType:ProjectType = ProjectType.Unknown;
+    public static CurrentProjectType():ProjectType {return CometProjectManager.currentProjectType;}
     private hasComet:boolean;
     private statusBarItem: vscode.StatusBarItem;
     constructor(){
@@ -33,12 +38,12 @@ export class CometProjectManager implements vscode.Disposable {
     }
     updateStatus()
     {
-        if(this.currentProjectDisplay == null){
+        if(CometProjectManager.currentProjectDisplay == null){
             this.statusBarItem.hide();
             return;
         }
 
-        this.statusBarItem.text = (this.hasComet == true ? "☄️"  : "") + ` ${this.currentProjectDisplay} | ${this.currentConfig}`;
+        this.statusBarItem.text = (this.hasComet == true ? "☄️"  : "") + ` ${CometProjectManager.currentProjectDisplay} | ${CometProjectManager.currentConfig}`;
         this.statusBarItem.show(); 
     }
 
@@ -55,20 +60,20 @@ export class CometProjectManager implements vscode.Disposable {
             
             var analyzer = new MsBuildProjectAnalyzer(projXml);
             await analyzer.analyze();
-            this.currentProjectType = analyzer.getProjectType();
+            CometProjectManager.currentProjectType = analyzer.getProjectType();
             //TODO: do a better check based on current os
-            if(this.currentProjectType == ProjectType.Unknown)
+            if(CometProjectManager.currentProjectType == ProjectType.Unknown)
             { 
-                this.currentProjectDisplay = null;
+                CometProjectManager.currentProjectDisplay = null;
                 vscode.window.showInformationMessage("Unsupported Project");
                 return;
             }
-            this.currentProjectDisplay = analyzer.getProjectName();
-            this.currentConfigurations = analyzer.getConfigurationNames();
-            this.currentConfig = this.currentConfigurations.find(x=> x.includes("Debug"));
+            CometProjectManager.currentProjectDisplay = analyzer.getProjectName();
+            CometProjectManager.currentConfigurations = analyzer.getConfigurationNames();
+            CometProjectManager.currentConfig = CometProjectManager.currentConfigurations.find(x=> x.includes("Debug"));
             
-            if(this.currentConfig == null) 
-                this.currentConfig = this.currentConfigurations[0];
+            if(CometProjectManager.currentConfig === null) 
+            CometProjectManager.currentConfig = CometProjectManager.currentConfigurations[0];
 
             this.currentPlatforms = analyzer.getPlatformNames();
             var nugets = analyzer.getPackageReferences();
@@ -83,9 +88,41 @@ export class CometProjectManager implements vscode.Disposable {
         catch(ex)
         {
             console.log(ex);
-            this.currentProjectDisplay = null;
+            CometProjectManager.currentProjectDisplay = null;
         }
 
+    }
+    public async ApplyConfiguration(config: any) : Promise<any>{
+
+        if(this.currentProjectPath == null)
+        {
+            if(config.csproj != null)
+                return config;
+
+            return vscode.window.showInformationMessage("csproj is not set").then(_ => {
+                return undefined;	// abort launch
+            });
+        }
+
+        config.hasComet = this.hasComet;
+
+        if(!config.configuration)
+        {
+            config.configuration = CometProjectManager.currentConfig;
+        }
+        if(!config.platform)
+        {
+            config.platform = CometProjectManager.currentPlatform;
+        }
+
+        if(CometProjectManager.currentProjectType === ProjectType.iOS)
+        {
+            if(!config.csproj)
+            {
+                config.csproj = this.currentProjectPath
+            }
+        }
+        return config;
     }
     
     dispose() {
@@ -111,9 +148,9 @@ export async function getConfiguration(config: any) : Promise<any>{
     var configurations = analyzer.getConfigurationNames();
     var platforms = analyzer.getPlatformNames();
     var nugets = analyzer.getPackageReferences();
-    var hasCommet =  nugets.find(e=> e.includes("Comet.Reload")) != null;
+    var hasComet =  nugets.find(e=> e.includes("Comet.Reload")) != null;
     var references = analyzer.getReferences();
-    config.hasComet = hasCommet;
+    config.hasComet = hasComet;
 
     return config;
 }
