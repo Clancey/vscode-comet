@@ -226,7 +226,7 @@ namespace VSCodeDebug
 				return;
 
 
-			int port = 10000;//Utilities.FindFreePort(10000);
+			int port = Utilities.FindFreePort(10000);
 
 			var host = getString(args, "address");
 			IPAddress address = string.IsNullOrWhiteSpace(host) ? IPAddress.Loopback :  Utilities.ResolveIPAddress(host);
