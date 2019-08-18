@@ -59,7 +59,6 @@ export class CometDebugger implements vscode.Disposable {
 
 }
 
-
 //----- configureExceptions ---------------------------------------------------------------------------------------------------
 
 // we store the exception configuration in the workspace or user settings as
@@ -233,8 +232,6 @@ class CometConfigurationProvider implements vscode.DebugConfigurationProvider {
                 // config.stopOnEntry = true;
             }
         }
-
-        
        var cometConfig = await this.cometManger.ApplyConfiguration(config);
         return cometConfig;
     }

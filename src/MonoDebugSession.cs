@@ -9,7 +9,10 @@ using System.Threading;
 using System.Linq;
 using System.Net;
 using Mono.Debugging.Client;
-
+using System.Threading.Tasks;
+using Microsoft.Build.BuildEngine;
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Execution;
 
 namespace VSCodeDebug
 {
@@ -97,7 +100,7 @@ namespace VSCodeDebug
 			};
 
 			_session.TargetUnhandledException += (sender, e) => {
-				Stopped ();
+				Stopped();
 				var ex = DebuggerActiveException();
 				if (ex != null) {
 					_exception = ex.Instance;
@@ -181,6 +184,14 @@ namespace VSCodeDebug
 			// Mono Debug is ready to accept breakpoints immediately
 			SendEvent(new InitializedEvent());
 		}
+		bool ValidateArg(Response response, string value, string property)
+		{
+			if (string.IsNullOrWhiteSpace(value)) {
+				SendErrorResponse(response, 3001, $"Property '{property}' is missing or empty.", null);
+				return false;
+			}
+			return true;
+		}
 
 		public override async void Launch(Response response, dynamic args)
 		{
@@ -188,225 +199,146 @@ namespace VSCodeDebug
 
 			SetExceptionBreakpoints(args.__exceptionOptions);
 
-			// validate argument 'program'
+			//validate argument 'program'
+			//TODO: Remove this
 			string programPath = getString(args, "program");
-			if (programPath == null) {
-				SendErrorResponse(response, 3001, "Property 'program' is missing or empty.", null);
-				return;
-			}
+			//if (programPath == null) {
+			//	SendErrorResponse(response, 3001, "Property 'program' is missing or empty.", null);
+			//	return;
+			//}
 			programPath = ConvertClientPathToDebugger(programPath);
-			if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
-				SendErrorResponse(response, 3002, "Program '{path}' does not exist.", new { path = programPath });
+			//if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
+			//	SendErrorResponse(response, 3002, "Program '{path}' does not exist.", new { path = programPath });
+			//	return;
+			//}
+
+
+
+			XamarinOptions xamarinOptions = CreateFromArgs(args);
+
+			if (!ValidateArg(response, xamarinOptions.CSProj, VSCodeKeys.XamarinOptions.CSProj))
+				return;
+
+			if (!ValidateArg(response, xamarinOptions.Configuration, VSCodeKeys.XamarinOptions.Configuration))
+				return;
+
+			if (!ValidateArg(response, xamarinOptions.Platform, VSCodeKeys.XamarinOptions.Platform))
+				return;
+
+
+			int port = 10000;//Utilities.FindFreePort(10000);
+
+			var host = getString(args, "address");
+			IPAddress address = string.IsNullOrWhiteSpace(host) ? IPAddress.Loopback :  Utilities.ResolveIPAddress(host);
+			if (address == null) {
+				SendErrorResponse(response, 3013, "Invalid address '{address}'.", new { address = address });
 				return;
 			}
 
-			// validate argument 'cwd'
-			var workingDirectory = (string)args.cwd;
-			if (workingDirectory != null) {
-				workingDirectory = workingDirectory.Trim();
-				if (workingDirectory.Length == 0) {
-					SendErrorResponse(response, 3003, "Property 'cwd' is empty.");
-					return;
-				}
-				workingDirectory = ConvertClientPathToDebugger(workingDirectory);
-				if (!Directory.Exists(workingDirectory)) {
-					SendErrorResponse(response, 3004, "Working directory '{path}' does not exist.", new { path = workingDirectory });
-					return;
-				}
-			}
-
-			// validate argument 'runtimeExecutable'
-			var runtimeExecutable = (string)args.runtimeExecutable;
-			if (runtimeExecutable != null) {
-				runtimeExecutable = runtimeExecutable.Trim();
-				if (runtimeExecutable.Length == 0) {
-					SendErrorResponse(response, 3005, "Property 'runtimeExecutable' is empty.");
-					return;
-				}
-				runtimeExecutable = ConvertClientPathToDebugger(runtimeExecutable);
-				if (!File.Exists(runtimeExecutable)) {
-					SendErrorResponse(response, 3006, "Runtime executable '{path}' does not exist.", new { path = runtimeExecutable });
-					return;
-				}
-			}
 
 
-			// validate argument 'env'
-			Dictionary<string, string> env = null;
-			var environmentVariables = args.env;
-			if (environmentVariables != null) {
-				env = new Dictionary<string, string>();
-				foreach (var entry in environmentVariables) {
-					env.Add((string)entry.Name, (string)entry.Value);
-				}
-				if (env.Count == 0) {
-					env = null;
-				}
-			}
-
-			const string host = "127.0.0.1";
-			int port = Utilities.FindFreePort(55555);
-
-			var xamarinOptions = CreateFromArgs(args);
-
-			string mono_path = runtimeExecutable;
-			if (mono_path == null) {
-				if (!Utilities.IsOnPath(MONO)) {
-					SendErrorResponse(response, 3011, "Can't find runtime '{_runtime}' on PATH.", new { _runtime = MONO });
-					return;
-				}
-				mono_path = MONO;     // try to find mono through PATH
-			}
-
-
-			var cmdLine = new List<String>();
-
-			bool debug = !getBool(args, "noDebug", false);
-			if (debug) {
-				cmdLine.Add("--debug");
-				cmdLine.Add(String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port));
-			}
-
-			// add 'runtimeArgs'
-			if (args.runtimeArgs != null) {
-				string[] runtimeArguments = args.runtimeArgs.ToObject<string[]>();
-				if (runtimeArguments != null && runtimeArguments.Length > 0) {
-					cmdLine.AddRange(runtimeArguments);
-				}
-			}
-
-			// add 'program'
-			if (workingDirectory == null) {
-				// if no working dir given, we use the direct folder of the executable
-				workingDirectory = Path.GetDirectoryName(programPath);
-				cmdLine.Add(Path.GetFileName(programPath));
-			}
-			else {
-				// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
-				cmdLine.Add(Utilities.MakeRelativePath(workingDirectory, programPath));
-			}
-
-			// add 'args'
-			if (args.args != null) {
-				string[] arguments = args.args.ToObject<string[]>();
-				if (arguments != null && arguments.Length > 0) {
-					cmdLine.AddRange(arguments);
-				}
-			}
-
-			// what console?
-			var console = getString(args, "console", null);
-			if (console == null) {
-				// continue to read the deprecated "externalConsole" attribute
-				bool externalConsole = getBool(args, "externalConsole", false);
-				if (externalConsole) {
-					console = "externalTerminal";
-				}
-			}
-
-			if (console == "externalTerminal" || console == "integratedTerminal") {
-
-				cmdLine.Insert(0, mono_path);
-
-				var termArgs = new {
-					kind = console == "integratedTerminal" ? "integrated" : "external",
-					title = "Node Debug Console",
-					cwd = workingDirectory,
-					args = cmdLine.ToArray(),
-					env = environmentVariables
-				};
-
-				var resp = await SendRequest("runInTerminal", termArgs);
-				if (!resp.success) {
-					SendErrorResponse(response, 3011, "Cannot launch debug target in terminal ({_error}).", new { _error = resp.message });
-					return;
-				}
-
-			} else { // internalConsole
-
-				_process = new System.Diagnostics.Process();
-				_process.StartInfo.CreateNoWindow = true;
-				_process.StartInfo.UseShellExecute = false;
-				_process.StartInfo.WorkingDirectory = workingDirectory;
-				_process.StartInfo.FileName = mono_path;
-				_process.StartInfo.Arguments = Utilities.ConcatArgs(cmdLine.ToArray());
-
-				_stdoutEOF = false;
-				_process.StartInfo.RedirectStandardOutput = true;
-				_process.OutputDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
-					if (e.Data == null) {
-						_stdoutEOF = true;
-					}
-					SendOutput("stdout", e.Data);
-				};
-
-				_stderrEOF = false;
-				_process.StartInfo.RedirectStandardError = true;
-				_process.ErrorDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
-					if (e.Data == null) {
-						_stderrEOF = true;
-					}
-					SendOutput("stderr", e.Data);
-				};
-
-				_process.EnableRaisingEvents = true;
-				_process.Exited += (object sender, EventArgs e) => {
-					Terminate("runtime process exited");
-				};
-
-				if (env != null) {
-					// we cannot set the env vars on the process StartInfo because we need to set StartInfo.UseShellExecute to true at the same time.
-					// instead we set the env vars on MonoDebug itself because we know that MonoDebug lives as long as a debug session.
-					foreach (var entry in env) {
-						System.Environment.SetEnvironmentVariable(entry.Key, entry.Value);
-					}
-				}
-
-				var cmd = string.Format("{0} {1}", mono_path, _process.StartInfo.Arguments);
-				SendOutput("console", cmd);
-
-				try {
-					_process.Start();
-					_process.BeginOutputReadLine();
-					_process.BeginErrorReadLine();
-				}
-				catch (Exception e) {
-					SendErrorResponse(response, 3012, "Can't launch terminal ({reason}).", new { reason = e.Message });
-					return;
-				}
-			}
-
-			if (debug) {
-				Connect(xamarinOptions,IPAddress.Parse(host), port);
-			}
+			Connect(xamarinOptions, address, port);
+			await LaunchiOS(xamarinOptions, port);
 
 			SendResponse(response);
-
-			if (_process == null && !debug) {
-				// we cannot track mono runtime process so terminate this session
-				Terminate("cannot track mono runtime");
-			}
 		}
 
-		XamarinOptions CreateFromArgs( dynamic args)
+		const string MlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch";
+		async Task LaunchiOS(XamarinOptions options, int port)
 		{
+			var workingDir = Path.GetDirectoryName(options.CSProj);
+			const string sdkRoot = "-sdkroot /Applications/Xcode.app/Contents/Developer";
 
-			//Project Path
-			//RoslynCodeManager
+
+			var appPath = Directory.EnumerateDirectories(options.OutputFolder, "*.app").FirstOrDefault();
+
+			var success = await RunMlaumchComand(MlaunchPath, workingDir,
+				sdkRoot,
+				$"--launchsim {appPath}",
+				$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
+				//TODO: Update path root
+				"--sdk 12.4 --device=:v2:runtime=com.apple.CoreSimulator.SimRuntime.iOS-12-4,devicetype=com.apple.CoreSimulator.SimDeviceType.iPhone-XR"
+				);
+			Console.WriteLine(success);
+		}
+
+		System.Diagnostics.Process iOSDebuggerProcess;
+		public Task<(bool Success,string Output)> RunMlaumchComand(string command,string workingDirectory,params string[] args)
+		{
+			var p = new System.Diagnostics.Process();
+			return Task.Run(() => {
+				try {
+					p.StartInfo.CreateNoWindow = false;
+					p.StartInfo.FileName = command;
+					//p.StartInfo.WorkingDirectory = workingDirectory;
+					p.StartInfo.RedirectStandardOutput = true ;
+					p.StartInfo.Arguments = Utilities.ConcatArgs(args,false);
+					p.StartInfo.UseShellExecute = false;
+					p.StartInfo.RedirectStandardInput = true;
+
+//					var env = Environment.GetEnvironmentVariables();
+//					var sysenv = env as Dictionary<string,string>;
+				
+//					foreach (dynamic ev in env) {
+//#if DNXCORE50
+//                if (Process.StartInfo.Environment[ev.Key] != null)
+//                    Process.StartInfo.Environment[ev.Key] = Process.StartInfo.Environment[ev.Key].TrimEnd(' ').TrimEnd(';') + ";" + ev.Value;
+//                else
+//                    Process.StartInfo.Environment.Add(ev.Key, ev.Value);
+//#else
+//						if (p.StartInfo.EnvironmentVariables[ev.Key] != null)
+//							p.StartInfo.EnvironmentVariables[ev.Key] = p.StartInfo.EnvironmentVariables[ev.Key].TrimEnd(' ').TrimEnd(';') + ";" + ev.Value;
+//						else
+//							p.StartInfo.EnvironmentVariables.Add(ev.Key, ev.Value);
+//#endif
+
+//					}
+						p.Start();
+					//p.WaitForExit();
+					
+				} catch (Exception ex) {
+
+					Console.WriteLine(ex);
+				}
+				const string iOSRunningText = "Press enter to terminate the application";
+				bool isFinished = false;
+				while (!isFinished && !p.HasExited) {
+					var resp = p.StandardOutput.ReadLine();
+					if (resp == iOSRunningText)
+						isFinished = true;
+				}
+				iOSDebuggerProcess = p;
+				return (isFinished, "");
+			});
+		}
+
+
+		XamarinOptions CreateFromArgs(dynamic args)
+		{
 			var csProj = getString(args, VSCodeKeys.XamarinOptions.CSProj);
 			var configuration = getString(args, VSCodeKeys.XamarinOptions.Configuration);
 			var platform = getString(args, VSCodeKeys.XamarinOptions.Platform);
-			var hasComet = getBool(args,VSCodeKeys.XamarinOptions.HasComet);
-			var shouldDebug = hasComet?? getBool(args,VSCodeKeys.XamarinOptions.ForceComet);
-			//TODO: Figure out if has HotUI
+			var hasComet = getBool(args, VSCodeKeys.XamarinOptions.HasComet);
+			var shouldDebug = hasComet ?? getBool(args, VSCodeKeys.XamarinOptions.ForceComet);
+
+			var parser = new ProjectParser(csProj);
+			var outPut = parser.OutputFolder(configuration, platform);
+
+			var outputfolder = Path.Combine(Path.GetDirectoryName(csProj), outPut);
+
 			var options = new XamarinOptions() {
-				ProjectType = getEnum<ProjectType>(args, VSCodeKeys.XamarinOptions.ProjectType, ProjectType.Mono),
-				IsSim = getBool(args,VSCodeKeys.XamarinOptions.IsSimulator,true),
+				CSProj = csProj,
+				Configuration = configuration,
+				Platform = platform,
+				IsComet = hasComet,
+				ProjectType = parser.GetProjectType(),
+				OutputFolder = outputfolder,
+				IsSim = getBool(args, VSCodeKeys.XamarinOptions.IsSimulator, true),
 			};
 			return options;
 		}
 
-		public override void Attach(Response response, dynamic args)
+		public override async void Attach(Response response, dynamic args)
 		{
 			Console.WriteLine("Attach");
 			var xamarinOption = CreateFromArgs(args);
@@ -433,8 +365,8 @@ namespace VSCodeDebug
 				SendErrorResponse(response, 3013, "Invalid address '{address}'.", new { address = address });
 				return;
 			}
-
 			Connect(xamarinOption, address, port);
+			await LaunchiOS(xamarinOption, port);
 
 			SendResponse(response);
 		}
@@ -563,7 +495,7 @@ namespace VSCodeDebug
 			foreach (var be in _breakpoints) {
 				var bp = be.Value as Mono.Debugging.Client.Breakpoint;
 				if (bp != null && bp.FileName == path) {
-					bpts.Add(new Tuple<int,int>((int)be.Key, (int)bp.Line));
+					bpts.Add(new Tuple<int, int>((int)be.Key, (int)bp.Line));
 				}
 			}
 
@@ -571,8 +503,7 @@ namespace VSCodeDebug
 			foreach (var bpt in bpts) {
 				if (lin.Contains(bpt.Item2)) {
 					lin2.Add(bpt.Item2);
-				}
-				else {
+				} else {
 					// Program.Log("cleared bpt #{0} for line {1}", bpt.Item1, bpt.Item2);
 
 					BreakEvent b;
@@ -654,11 +585,13 @@ namespace VSCodeDebug
 			SendResponse(response, new StackTraceResponseBody(stackFrames, totalFrames));
 		}
 
-		public override void Source(Response response, dynamic arguments) {
+		public override void Source(Response response, dynamic arguments)
+		{
 			SendErrorResponse(response, 1020, "No source available");
 		}
 
-		public override void Scopes(Response response, dynamic args) {
+		public override void Scopes(Response response, dynamic args)
+		{
 
 			int frameId = getInt(args, "frameId", 0);
 			var frame = _frameHandles.Get(frameId, null);
@@ -704,8 +637,7 @@ namespace VSCodeDebug
 						foreach (var v in children) {
 							variables.Add(CreateVariable(v));
 						}
-					}
-					else {
+					} else {
 						foreach (var v in children) {
 							v.WaitHandle.WaitOne();
 							variables.Add(CreateVariable(v));
@@ -760,14 +692,11 @@ namespace VSCodeDebug
 							if (error.IndexOf("reference not available in the current evaluation context") > 0) {
 								error = "not available";
 							}
-						}
-						else if (flags.HasFlag(ObjectValueFlags.Unknown)) {
+						} else if (flags.HasFlag(ObjectValueFlags.Unknown)) {
 							error = "invalid expression";
-						}
-						else if (flags.HasFlag(ObjectValueFlags.Object) && flags.HasFlag(ObjectValueFlags.Namespace)) {
+						} else if (flags.HasFlag(ObjectValueFlags.Object) && flags.HasFlag(ObjectValueFlags.Namespace)) {
 							error = "not available";
-						}
-						else {
+						} else {
 							int handle = 0;
 							if (val.HasChildren) {
 								handle = _variableHandles.Create(val.GetAllChildren());
@@ -775,16 +704,14 @@ namespace VSCodeDebug
 							SendResponse(response, new EvaluateResponseBody(val.DisplayValue, handle));
 							return;
 						}
-					}
-					else {
+					} else {
 						error = "invalid expression";
 					}
-				}
-				else {
+				} else {
 					error = "no active stackframe";
 				}
 			}
-			SendErrorResponse(response, 3014, "Evaluate request failed ({_reason}).", new { _reason = error } );
+			SendErrorResponse(response, 3014, "Evaluate request failed ({_reason}).", new { _reason = error });
 		}
 
 		//---- private ------------------------------------------
@@ -825,16 +752,18 @@ namespace VSCodeDebug
 			}
 		}
 
-		private void SendOutput(string category, string data) {
+		private void SendOutput(string category, string data)
+		{
 			if (!String.IsNullOrEmpty(data)) {
-				if (data[data.Length-1] != '\n') {
+				if (data[data.Length - 1] != '\n') {
 					data += '\n';
 				}
 				SendEvent(new OutputEvent(category, data));
 			}
 		}
 
-		private void Terminate(string reason) {
+		private void Terminate(string reason)
+		{
 			if (!_terminated) {
 
 				// wait until we've seen the end of stdout and stderr
@@ -876,8 +805,8 @@ namespace VSCodeDebug
 		private Variable CreateVariable(ObjectValue v)
 		{
 			var dv = v.DisplayValue;
-			if (dv.Length > 1 && dv [0] == '{' && dv [dv.Length - 1] == '}') {
-				dv = dv.Substring (1, dv.Length - 2);
+			if (dv.Length > 1 && dv[0] == '{' && dv[dv.Length - 1] == '}') {
+				dv = dv.Substring(1, dv.Length - 2);
 			}
 			return new Variable(v.Name, dv, v.TypeName, v.HasChildren ? _variableHandles.Create(v.GetAllChildren()) : 0);
 		}
@@ -896,8 +825,7 @@ namespace VSCodeDebug
 		{
 			try {
 				return (bool)container[propertyName];
-			}
-			catch (Exception) {
+			} catch (Exception) {
 				// ignore and return default value
 			}
 			return dflt;
@@ -907,8 +835,7 @@ namespace VSCodeDebug
 		{
 			try {
 				return (int)container[propertyName];
-			}
-			catch (Exception) {
+			} catch (Exception) {
 				// ignore and return default value
 			}
 			return dflt;
@@ -927,10 +854,10 @@ namespace VSCodeDebug
 			return s;
 		}
 
-		private static T getEnum<T>(dynamic args, string property, T dflt = default) where T: Enum
+		private static T getEnum<T>(dynamic args, string property, T dflt = default) where T : Enum
 		{
 			var value = getString(args, property);
-			if(string.IsNullOrWhiteSpace(value)) {
+			if (string.IsNullOrWhiteSpace(value)) {
 				return dflt;
 			}
 			if (Enum.TryParse(value, out T myEnum))
@@ -955,12 +882,14 @@ namespace VSCodeDebug
 			}
 		}
 
-		private Backtrace DebuggerActiveBacktrace() {
+		private Backtrace DebuggerActiveBacktrace()
+		{
 			var thr = DebuggerActiveThread();
 			return thr == null ? null : thr.Backtrace;
 		}
 
-		private Mono.Debugging.Client.StackFrame DebuggerActiveFrame() {
+		private Mono.Debugging.Client.StackFrame DebuggerActiveFrame()
+		{
 			if (_activeFrame != null)
 				return _activeFrame;
 
@@ -971,7 +900,8 @@ namespace VSCodeDebug
 			return null;
 		}
 
-		private ExceptionInfo DebuggerActiveException() {
+		private ExceptionInfo DebuggerActiveException()
+		{
 			var bt = DebuggerActiveBacktrace();
 			return bt == null ? null : bt.GetFrame(0).GetException();
 		}
@@ -989,7 +919,7 @@ namespace VSCodeDebug
 						TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL,
 
 					};
-				} else if(options.ProjectType == ProjectType.iOS) {
+				} else if (options.ProjectType == ProjectType.iOS) {
 					if (options.IsSim)
 						args = new IPhoneSimulatorDebuggerArgs(options.AppName, new IPhoneTcpCommandConnection(IPAddress.Loopback, port)) { MaxConnectionAttempts = 10 };
 					else
@@ -1014,6 +944,9 @@ namespace VSCodeDebug
 		private void DebuggerKill()
 		{
 			lock (_lock) {
+
+				iOSDebuggerProcess?.StandardInput?.WriteLine("\r\n");
+				iOSDebuggerProcess = null;
 				if (_session != null) {
 
 					_debuggeeExecuting = true;

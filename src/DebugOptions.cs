@@ -25,6 +25,7 @@ namespace VSCodeDebug
 
 		public bool IsComet { get; set; }
 
+		public string OutputFolder { get; set; }
 
 		public string iOSDeviceId { get; set; }
 		public string AdbDeviceId { get; set; }

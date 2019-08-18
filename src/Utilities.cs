@@ -15,7 +15,7 @@ using Mono.Debugging.Client;
 
 namespace VSCodeDebug
 {
-	public class Utilities
+	public static class Utilities
 	{
 		private const string WHICH = "/usr/bin/which";
 		private const string WHERE = "where";
@@ -59,7 +59,7 @@ namespace VSCodeDebug
 			return false;
 		}
 
-		public static string ConcatArgs(string[] args)
+		public static string ConcatArgs(string[] args, bool quote = true)
 		{
 			var arg = "";
 			if (args != null) {
@@ -67,7 +67,7 @@ namespace VSCodeDebug
 					if (arg.Length > 0) {
 						arg += " ";
 					}
-					arg += Utilities.Quote(r);
+					arg += quote ? Utilities.Quote(r) : r;
 				}
 			}
 			return arg;
@@ -166,6 +166,17 @@ namespace VSCodeDebug
 			Uri uri2 = new Uri(dir_path);
 			return uri2.MakeRelativeUri(uri1).ToString();
 			*/
+		}
+		public static string ToNativePath(this string intput)
+		{
+			if (IsRunningOnMono()) {
+				return intput.Replace("\\", "/");
+			} else
+				return intput.Replace("/", "\\");
+		}
+		public static bool IsRunningOnMono()
+		{
+			return Type.GetType("Mono.Runtime") != null;
 		}
 	}
 

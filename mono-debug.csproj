@@ -57,6 +57,9 @@
     </Reference>
     <Reference Include="Microsoft.Build" />
     <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.Build.Engine" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -79,6 +82,7 @@
     <Compile Include="src\Comet\ClassCollector.cs" />
     <Compile Include="src\DebugOptions.cs" />
     <Compile Include="src\VSCodeKeys.cs" />
+    <Compile Include="src\Comet\ProjectParser.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -2,15 +2,15 @@ import * as vs from "vscode";
 import { StdIOService, UnknownNotification, UnknownResponse } from "./stdio_service";
 import * as c from "./comet-types"
 
-export class FlutterDaemon extends StdIOService<UnknownNotification> {
-	//public deviceManager: FlutterDeviceManager;
+export class CometDaemon extends StdIOService<UnknownNotification> {
+	//public deviceManager: CometDeviceManager;
 
-	constructor(flutterBinPath: string, projectFolder: string) {
+	constructor(cometBinPath: string, projectFolder: string) {
 		super(() => "comet-temp.log", true);
 
-		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
+		this.createProcess(projectFolder, cometBinPath, ["daemon"]);
 
-		//this.deviceManager = new FlutterDeviceManager(this);
+		//this.deviceManager = new CometDeviceManager(this);
 
 		// Enable device polling.
 		this.deviceEnable();

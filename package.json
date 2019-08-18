@@ -95,6 +95,17 @@
 				}
 			}
 		},
+		"taskDefinitions": [
+			{
+				"type": "comet",
+				"required": [
+				],
+				"properties": {
+					
+				}
+			}
+		],
+
 		"commands": [
 			{
 				"command": "extension.mono-debug.configureExceptions",
@@ -103,7 +114,7 @@
 			},
 			{
 				"command": "extension.comet.setAsStartup",
-				"title": "Commet: Set project as startup"
+				"title": "Comet: Set project as startup"
 			}
 		],
 		"menus": {
@@ -125,9 +136,9 @@
 		],
 		"debuggers": [
 			{
-				"type": "mono",
+				"type": "comet",
 				"label": "C# Mono",
-				"program": "./bin/Release/mono-debug.exe",
+				"program": "./bin/Release/comet-debug.exe",
 				"osx": {
 					"runtime": "mono"
 				},
@@ -135,7 +146,7 @@
 					"runtime": "mono"
 				},
 				"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-				"startSessionCommand": "extension.mono-debug.startSession",
+				"startSessionCommand": "extension.comet-debug.startSession",
 				"initialConfigurations": [
 					{
 						"name": "%mono.launch.config.name%",

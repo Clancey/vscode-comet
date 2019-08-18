@@ -14,6 +14,7 @@ export class CometProjectManager implements vscode.Disposable {
     public static Shared():CometProjectManager {return CometProjectManager.shared};
     private static shared:CometProjectManager;
     private currentProjectPath:string;
+    public CurrentCSProj():string {return this.currentProjectPath;}
     private static currentProjectDisplay:string;
     public static CurrentProjectDisplay():string {return CometProjectManager.currentProjectDisplay;}
     private static currentConfigurations:string[];
