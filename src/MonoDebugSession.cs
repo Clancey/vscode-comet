@@ -393,9 +393,11 @@ namespace VSCodeDebug
 		public override void Disconnect(Response response, dynamic args)
 		{
 			try {
-				iOSDebuggerProcess?.StandardInput?.WriteLine("\r\n");
-				iOSDebuggerProcess?.Kill();
-				iOSDebuggerProcess = null;
+				if (!(iOSDebuggerProcess?.HasExited ?? true)) {
+					iOSDebuggerProcess?.StandardInput?.WriteLine("\r\n");
+					iOSDebuggerProcess?.Kill();
+					iOSDebuggerProcess = null;
+				}
 			}
 			catch(Exception ex) {
 				Console.WriteLine(ex);
@@ -976,9 +978,11 @@ namespace VSCodeDebug
 			lock (_lock) {
 
 				try {
-					iOSDebuggerProcess?.StandardInput?.WriteLine("\r\n");
-					iOSDebuggerProcess?.Kill();
-					iOSDebuggerProcess = null;
+					if (!(iOSDebuggerProcess?.HasExited ?? true)) {
+						iOSDebuggerProcess?.StandardInput?.WriteLine("\r\n");
+						iOSDebuggerProcess?.Kill();
+						iOSDebuggerProcess = null;
+					}
 				} catch (Exception ex) {
 					Console.WriteLine(ex);
 				}
