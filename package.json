@@ -137,7 +137,7 @@
 		"debuggers": [
 			{
 				"type": "comet",
-				"label": "C# Mono",
+				"label": "Comet MVU Toolkit",
 				"program": "./bin/Release/comet-debug.exe",
 				"osx": {
 					"runtime": "mono"

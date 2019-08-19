@@ -251,13 +251,13 @@ namespace VSCodeDebug
 
 
 			var appPath = Directory.EnumerateDirectories(options.OutputFolder, "*.app").FirstOrDefault();
+			var iOSSdkVersion = options.iOSSimulatorDeviceOS;
 
 			var success = await RunMlaumchComand(MlaunchPath, workingDir,
 				sdkRoot,
 				$"--launchsim {appPath}",
 				$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
-				//TODO: Update path root
-				"--sdk 12.4 --device=:v2:runtime=com.apple.CoreSimulator.SimRuntime.iOS-12-4,devicetype=com.apple.CoreSimulator.SimDeviceType.iPhone-XR"
+				$"--sdk {iOSSdkVersion} --device=:v2:runtime=com.apple.CoreSimulator.SimRuntime.iOS-{iOSSdkVersion.Replace(".","-")},devicetype=com.apple.CoreSimulator.SimDeviceType.{options.iOSSimulatorDeviceType}"
 				);
 			Console.WriteLine(success);
 		}
@@ -334,6 +334,8 @@ namespace VSCodeDebug
 				ProjectType = parser.GetProjectType(),
 				OutputFolder = outputfolder,
 				IsSim = getBool(args, VSCodeKeys.XamarinOptions.IsSimulator, true),
+				iOSSimulatorDeviceOS = getString(args, VSCodeKeys.XamarinOptions.iOSSimulatorOS,"12.4"),
+				iOSSimulatorDeviceType = getString(args, VSCodeKeys.XamarinOptions.iOSSimulatorDeviceType, "iPhone-XR"),
 			};
 			return options;
 		}

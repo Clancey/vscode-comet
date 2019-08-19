@@ -13,6 +13,10 @@ namespace VSCodeDebug
 
 			public const string ForceComet = "_forceComet";
 			public const string HasComet = "hasComet";
+
+			public const string iOSSimulatorOS = "iOSSimulatorOS";
+			public const string iOSSimulatorDeviceType = "iOSSimulatorDeviceType";
+
 		}
 	}
 }
