@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.Build.BuildEngine;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
+using Comet.Reload;
 
 namespace VSCodeDebug
 {
@@ -153,6 +154,19 @@ namespace VSCodeDebug
 
 			_session.OutputWriter = (isStdErr, text) => {
 				SendOutput(isStdErr ? "stderr" : "stdout", text);
+			};
+
+			this.HandleUnknownRequest = (s) => {
+				if (s.command == "DocumentChanged") {
+
+					string fileName = s.args.fileName;
+					string text = s.args.text;
+					IDEManager.Shared.HandleDocumentChanged(
+						new DocumentChangedEventArgs(fileName, text));
+
+					return true;
+				}
+				return false;
 			};
 		}
 
@@ -340,6 +354,9 @@ namespace VSCodeDebug
 			return options;
 		}
 
+
+
+
 		public override async void Attach(Response response, dynamic args)
 		{
 			Console.WriteLine("Attach");
@@ -375,6 +392,15 @@ namespace VSCodeDebug
 
 		public override void Disconnect(Response response, dynamic args)
 		{
+			try {
+				iOSDebuggerProcess?.StandardInput?.WriteLine("\r\n");
+				iOSDebuggerProcess?.Kill();
+				iOSDebuggerProcess = null;
+			}
+			catch(Exception ex) {
+				Console.WriteLine(ex);
+			}
+			IDEManager.Shared.StopMonitoring();
 			if (_attachMode) {
 
 				lock (_lock) {
@@ -908,8 +934,10 @@ namespace VSCodeDebug
 			return bt == null ? null : bt.GetFrame(0).GetException();
 		}
 
+		
 		private void Connect(XamarinOptions options, IPAddress address, int port)
 		{
+			IDEManager.Shared.StartMonitoring();
 			lock (_lock) {
 
 				_debuggeeKilled = false;
@@ -947,8 +975,13 @@ namespace VSCodeDebug
 		{
 			lock (_lock) {
 
-				iOSDebuggerProcess?.StandardInput?.WriteLine("\r\n");
-				iOSDebuggerProcess = null;
+				try {
+					iOSDebuggerProcess?.StandardInput?.WriteLine("\r\n");
+					iOSDebuggerProcess?.Kill();
+					iOSDebuggerProcess = null;
+				} catch (Exception ex) {
+					Console.WriteLine(ex);
+				}
 				if (_session != null) {
 
 					_debuggeeExecuting = true;

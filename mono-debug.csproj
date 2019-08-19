@@ -78,6 +78,8 @@
     <Compile Include="src\VSCodeKeys.cs" />
     <Compile Include="src\Comet\ProjectParser.cs" />
   </ItemGroup>
+  <Import Project="..\Comet.Reload\Comet.Reload.IDE\Comet.Reload.IDE.projitems" Label="Shared" Condition="Exists('..\Comet.Reload\Comet.Reload.IDE\Comet.Reload.IDE.projitems')" />
+  <Import Project="..\Comet.Reload\Comet.Reload.Core\Comet.Reload.Core.projitems" Label="Shared" Condition="Exists('..\Comet.Reload\Comet.Reload.Core\Comet.Reload.Core.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <None Include="package.json" />

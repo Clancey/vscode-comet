@@ -18,11 +18,12 @@ const configuration = vscode.workspace.getConfiguration('comet-debug');
 
 export class CometDebugger implements vscode.Disposable {
 
-
+    public static Shared:CometDebugger;
     private currentDebugSession: vscode.DebugSession;
 
 
     constructor(context: vscode.ExtensionContext, cometManger: CometProjectManager) {
+        CometDebugger.Shared = this;
         context.subscriptions.push(vscode.commands.registerCommand('extension.comet-debug.configureExceptions', () => configureExceptions()));
         context.subscriptions.push(vscode.commands.registerCommand('extension.comet-debug.startSession', config => startSession(config)));
         // register a configuration provider for 'mock' debug type
@@ -37,7 +38,7 @@ export class CometDebugger implements vscode.Disposable {
                 type = debugSessionInfo.configurationProperties.type;
             }
 
-            if (type === "dart") {
+            if (type === "comet") {
                 this.currentDebugSession = s;
                 //this.resetFlutterSettings();
             }
@@ -55,6 +56,18 @@ export class CometDebugger implements vscode.Disposable {
     }
     dispose() {
 
+    }
+
+    public SendDocumentChanged(file:string, text:string)
+    {
+        if(this.currentDebugSession === undefined)
+            return;
+        this.SendCustomDebugCommand("DocumentChanged",{ fileName: file, text })
+    }
+
+    public SendCustomDebugCommand(type: string, args?: any) {
+        if (this.currentDebugSession)
+            this.currentDebugSession.customRequest(type, args);
     }
 
 }

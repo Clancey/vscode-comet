@@ -376,6 +376,11 @@ namespace VSCodeDebug
 					break;
 
 				default:
+					if (HandleUnknownRequest?.Invoke((command, args, response)) ?? false) {
+						//This was handled!
+						break;
+					}
+
 					Console.WriteLine($"unrecognized request: {command}");
 					SendErrorResponse(response, 1014, "unrecognized request: {_request}", new { _request = command });
 					break;
@@ -389,6 +394,8 @@ namespace VSCodeDebug
 				Stop();
 			}
 		}
+
+		public Func<(string command, dynamic args, Response respons), bool> HandleUnknownRequest;
 
 		public abstract void Initialize(Response response, dynamic args);
 
