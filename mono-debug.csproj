@@ -73,13 +73,6 @@
     <Compile Include="src\iOS\IPhoneCommandConnection.cs" />
     <Compile Include="src\iOS\AggregateAsyncResult.cs" />
     <Compile Include="src\iOS\StreamTransportConnection.cs" />
-    <Compile Include="src\Comet\DocumentChangedEventArgs.cs" />
-    <Compile Include="src\Comet\IDEManager.cs" />
-    <Compile Include="src\Comet\FixedSizedQueue.cs" />
-    <Compile Include="src\Comet\SyntaxNodeHelper.cs" />
-    <Compile Include="src\Comet\RoslynCodeManager.cs" />
-    <Compile Include="src\Comet\FixedSizeDictionary.cs" />
-    <Compile Include="src\Comet\ClassCollector.cs" />
     <Compile Include="src\DebugOptions.cs" />
     <Compile Include="src\VSCodeKeys.cs" />
     <Compile Include="src\Comet\ProjectParser.cs" />
