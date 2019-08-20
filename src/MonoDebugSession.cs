@@ -289,26 +289,7 @@ namespace VSCodeDebug
 					p.StartInfo.Arguments = Utilities.ConcatArgs(args,false);
 					p.StartInfo.UseShellExecute = false;
 					p.StartInfo.RedirectStandardInput = true;
-
-//					var env = Environment.GetEnvironmentVariables();
-//					var sysenv = env as Dictionary<string,string>;
-				
-//					foreach (dynamic ev in env) {
-//#if DNXCORE50
-//                if (Process.StartInfo.Environment[ev.Key] != null)
-//                    Process.StartInfo.Environment[ev.Key] = Process.StartInfo.Environment[ev.Key].TrimEnd(' ').TrimEnd(';') + ";" + ev.Value;
-//                else
-//                    Process.StartInfo.Environment.Add(ev.Key, ev.Value);
-//#else
-//						if (p.StartInfo.EnvironmentVariables[ev.Key] != null)
-//							p.StartInfo.EnvironmentVariables[ev.Key] = p.StartInfo.EnvironmentVariables[ev.Key].TrimEnd(' ').TrimEnd(';') + ";" + ev.Value;
-//						else
-//							p.StartInfo.EnvironmentVariables.Add(ev.Key, ev.Value);
-//#endif
-
-//					}
-						p.Start();
-					//p.WaitForExit();
+					p.Start();
 					
 				} catch (Exception ex) {
 
@@ -320,6 +301,8 @@ namespace VSCodeDebug
 					var resp = p.StandardOutput.ReadLine();
 					if (resp == iOSRunningText)
 						isFinished = true;
+					else
+						return (false, resp);
 				}
 				iOSDebuggerProcess = p;
 				return (isFinished, "");
