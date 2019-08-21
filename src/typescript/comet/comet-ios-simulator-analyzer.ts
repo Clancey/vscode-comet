@@ -14,14 +14,26 @@ export class CometiOSSimulatorAnalyzer {
     private xml: string;
     private parsedXml: any;
     constructor(storagePath: string) {
+        if (!fs.existsSync(storagePath)){
+            fs.mkdirSync(storagePath);
+        }
         this.xml = path.join(storagePath, 'iosSimulators.xml');
     }
     static mLaunchPath: string = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch";
     public async RefreshSimulators():Promise<void>{
 
-        var result = await exec(`${CometiOSSimulatorAnalyzer.mLaunchPath} --listsim=${this.xml}`,{ } );
-        this.parsedXml = await parseString(this.xml);
+        try{
+        var result = await exec(`${CometiOSSimulatorAnalyzer.mLaunchPath} --listsim="${this.xml}"`,{ } );
+
+
+        var projXml = fs.readFileSync(this.xml);
+        this.parsedXml = await parseString(projXml);
         console.log(this.parsedXml);
+        }
+        catch(ex)
+        {
+            console.exception(ex);
+        }
     }
 
 }
