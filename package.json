@@ -53,7 +53,7 @@
 		"webpack": "^4.39.2",
 		"webpack-cli": "^3.3.7"
 	},
-	"main": "./dist/extension",
+	"main": "./out/extension",
 	"activationEvents": [
 		"workspaceContains:**/*.csproj",
 		"workspaceContains:**/*.sln",

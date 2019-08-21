@@ -18,7 +18,13 @@ interface SimVersion {
 }
 export class CometiOSSimulatorAnalyzer {
 
-    public Simulators: ISimulatorVersion[];
+    private Simulators: ISimulatorVersion[];
+    public async GetSimulators(): Promise<ISimulatorVersion[]>
+    {
+        if(this.Simulators === undefined)
+            await this.RefreshSimulators();
+        return this.Simulators;
+    }
     private xml: string;
     private parsedXml: any;
     constructor(storagePath: string) {
