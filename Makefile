@@ -1,5 +1,5 @@
 
-MONO_DEBUG_RELEASE = "./bin/Release/mono-debug.exe"
+MONO_DEBUG_RELEASE = "./bin/Debug/mono-debug.exe"
 MONO_DEBUG_DEBUG = "./bin/Debug/mono-debug.exe"
 
 all: vsix
@@ -21,7 +21,7 @@ debug: $MONO_DEBUG_DEBUG
 	@echo "build finished"
 
 $MONO_DEBUG_RELEASE:
-	msbuild /p:Configuration=Release mono-debug.sln
+	msbuild /p:Configuration=Debug mono-debug.sln
 
 $MONO_DEBUG_DEBUG:
 	msbuild /p:Configuration=Debug mono-debug.sln

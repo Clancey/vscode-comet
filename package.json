@@ -1,7 +1,7 @@
 {
 	"name": "comet-debug",
 	"displayName": "Comet Debug",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"publisher": "clancey",
 	"description": "Visual Studio Code debugger extension for Comet",
 	"icon": "images/mono-debug-icon.png",
@@ -20,9 +20,9 @@
 		"watch": "tsc -w -p ./src/typescript",
 		"test": "make tests; mocha --timeout 10000 -u tdd ./out/tests",
 		"postinstall": "node ./node_modules/vscode/bin/install",
-    "webpack": "webpack --mode development",
-    "webpack-dev": "webpack --mode development --watch",
-    "test-compile": "tsc -p ./"
+		"webpack": "webpack --mode development",
+		"webpack-dev": "webpack --mode development --watch",
+		"test-compile": "tsc -p ./"
 	},
 	"engines": {
 		"vscode": "^1.33.0",
@@ -58,8 +58,8 @@
 		"workspaceContains:**/*.csproj",
 		"workspaceContains:**/*.sln",
 		"onLanguage:csharp",
-		"onCommand:extension.mono-debug.configureExceptions",
-		"onCommand:extension.mono-debug.startSession"
+		"onCommand:extension.comet-debug.configureExceptions",
+		"onCommand:extension.comet-debug.startSession"
 	],
 	"contributes": {
 		"configuration": {
@@ -110,7 +110,7 @@
 		],
 		"commands": [
 			{
-				"command": "extension.mono-debug.configureExceptions",
+				"command": "extension.comet-debug.configureExceptions",
 				"title": "%configure.exceptions.command%",
 				"category": "Debug"
 			},
@@ -137,7 +137,7 @@
 			{
 				"type": "comet",
 				"label": "Comet: Debugger",
-				"program": "./bin/Release/comet-debug.exe",
+				"program": "./bin/Debug/comet-debug.exe",
 				"osx": {
 					"runtime": "mono"
 				},
@@ -148,9 +148,9 @@
 				"startSessionCommand": "extension.comet-debug.startSession",
 				"initialConfigurations": [
 					{
-						"name": "%mono.launch.config.name%",
+						"name": "%comet.launch.config.name%",
 						"type": "comet",
-						"request": "launch",
+						"request": "launch"
 					}
 				]
 			}
