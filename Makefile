@@ -12,6 +12,7 @@ publish: $MONO_DEBUG_RELEASE
 	./node_modules/.bin/vsce publish
 
 build: $MONO_DEBUG_RELEASE
+	webpack --mode production
 	node_modules/.bin/tsc -p ./src/typescript
 	@echo "build finished"
 
