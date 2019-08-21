@@ -7,6 +7,7 @@ let fs = require("fs");
 let path = require('path')
 import * as vscode from 'vscode';
 import { ProjectType, MsBuildProjectAnalyzer } from './msbuild-project-analyzer';
+import {CometiOSSimulatorAnalyzer} from './comet-ios-simulator-analyzer';
 
 
 export interface IProjects {
@@ -38,6 +39,9 @@ export class CometProjectManager implements vscode.Disposable {
     public static CurrentPlatform(): string { return CometProjectManager.currentPlatform; }
     private static currentProjectType: ProjectType = ProjectType.Unknown;
     public static CurrentProjectType(): ProjectType { return CometProjectManager.currentProjectType; }
+    
+    private simulatorAnalyzer:CometiOSSimulatorAnalyzer;
+    
     private hasComet: boolean;
     private statusBarItem: vscode.StatusBarItem;
 
@@ -49,14 +53,15 @@ export class CometProjectManager implements vscode.Disposable {
     }
     private foundProjects: IProjects[] = [];
 
-    constructor() {
+    constructor(context: vscode.ExtensionContext) {
         CometProjectManager.shared = this;
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.statusBarItem.tooltip = "Comet";
         this.statusBarItem.text = "☄️";
         
         this.subscriptions.push(vscode.commands.registerCommand("comet.selectProject", this.showProjectPicker, this));
-
+        this.subscriptions.push(vscode.commands.registerCommand("comet.selectDevice", this.showProjectPicker, this));
+        this.subscriptions.push(vscode.commands.registerCommand("comet.refreshiOSSimulators", this.showProjectPicker, this));
         let pattern = path.join(vscode.workspace.rootPath, '.csproj');
         let fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);
         fileWatcher.onDidChange((e: vscode.Uri) => {
@@ -71,6 +76,9 @@ export class CometProjectManager implements vscode.Disposable {
             console.log(e);
             this.foundProjects = [];
         });
+        this.simulatorAnalyzer = new CometiOSSimulatorAnalyzer(context.storagePath);
+        this.simulatorAnalyzer.RefreshSimulators();
+        
         this.subscriptions.push(fileWatcher);
         this.FindProjectsInWorkspace();
         this.updateStatus();

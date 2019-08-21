@@ -51,6 +51,8 @@ export class MsBuildProjectAnalyzer {
 
   public getProjectType(): ProjectType {
     var guids = selectPropertyPathItems<string>(this.parsedXml, ["Project", "PropertyGroup", "ProjectTypeGuids"])[0];
+    if(!guids)
+      return ProjectType.Unknown;
     if(guids.indexOf(this.iOSGuid) > -1)
         return ProjectType.iOS;
     if(guids.indexOf(this.androidGuid) > -1)

@@ -13,19 +13,19 @@ import {setUpHotReload} from "./comet/comet-hotreload";
 
 
 let cometBuildTaskProvider: vscode.Disposable | undefined;
-const cometManager = new CometProjectManager();
+let cometManager:CometProjectManager;
 let cometDebugger:CometDebugger;
 
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log("Activated comet!!!");
+	cometManager= new CometProjectManager(context);
 	cometDebugger = new CometDebugger(context,cometManager);
 	context.subscriptions.push(vscode.commands.registerCommand('extension.comet.setAsStartup',(e: vscode.Uri) =>{
 		cometManager.SetCurentProject(e.path);
 
 	}));
 	cometBuildTaskProvider = vscode.tasks.registerTaskProvider(CometBuildTaskProvider.CometBuildScriptType, new CometBuildTaskProvider(vscode.workspace.rootPath));
-
 	setUpHotReload(context);
 }
 
