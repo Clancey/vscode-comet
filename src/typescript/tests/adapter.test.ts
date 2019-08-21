@@ -1,131 +1,131 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+// /*---------------------------------------------------------------------------------------------
+//  *  Copyright (c) Microsoft Corporation. All rights reserved.
+//  *  Licensed under the MIT License. See License.txt in the project root for license information.
+//  *--------------------------------------------------------------------------------------------*/
 
-"use strict";
+// "use strict";
 
-import assert = require('assert');
-import * as Path from 'path';
-import {DebugClient} from 'vscode-debugadapter-testsupport';
-import {DebugProtocol} from 'vscode-debugprotocol';
+// import assert = require('assert');
+// import * as Path from 'path';
+// import {DebugClient} from 'vscode-debugadapter-testsupport';
+// import {DebugProtocol} from 'vscode-debugprotocol';
 
-suite('Node Debug Adapter', () => {
+// suite('Node Debug Adapter', () => {
 
-	const PROJECT_ROOT = Path.join(__dirname, '../../');
-	const DATA_ROOT = Path.join(PROJECT_ROOT, 'testdata/');
+// 	const PROJECT_ROOT = Path.join(__dirname, '../../');
+// 	const DATA_ROOT = Path.join(PROJECT_ROOT, 'testdata/');
 
-	const DEBUG_ADAPTER = Path.join(PROJECT_ROOT, 'bin/Release/mono-debug.exe');
-
-
-	let dc: DebugClient;
-
-	setup( () => {
-		dc = new DebugClient('mono', DEBUG_ADAPTER, 'mono');
-		return dc.start();
-	});
-
-	teardown( () => dc.stop() );
+// 	const DEBUG_ADAPTER = Path.join(PROJECT_ROOT, 'bin/Release/mono-debug.exe');
 
 
-	suite('basic', () => {
+// 	let dc: DebugClient;
 
-		test('unknown request should produce error', done => {
-			dc.send('illegal_request').then(() => {
-				done(new Error("does not report error on unknown request"));
-			}).catch(() => {
-				done();
-			});
-		});
-	});
+// 	setup( () => {
+// 		dc = new DebugClient('mono', DEBUG_ADAPTER, 'mono');
+// 		return dc.start();
+// 	});
 
-	suite('initialize', () => {
+// 	teardown( () => dc.stop() );
 
-		test('should produce error for invalid \'pathFormat\'', done => {
-			dc.initializeRequest({
-				adapterID: 'mono',
-				linesStartAt1: true,
-				columnsStartAt1: true,
-				pathFormat: 'url'
-			}).then(response => {
-				done(new Error("does not report error on invalid 'pathFormat' attribute"));
-			}).catch(err => {
-				// error expected
-				done();
-			});
-		});
-	});
 
-	suite('launch', () => {
+// 	suite('basic', () => {
 
-		test('should run program to the end', () => {
+// 		test('unknown request should produce error', done => {
+// 			dc.send('illegal_request').then(() => {
+// 				done(new Error("does not report error on unknown request"));
+// 			}).catch(() => {
+// 				done();
+// 			});
+// 		});
+// 	});
 
-			const PROGRAM = Path.join(DATA_ROOT, 'simple/Program.exe');
+// 	suite('initialize', () => {
 
-			return Promise.all([
-				dc.configurationSequence(),
-				dc.launch({ program: PROGRAM }),
-				dc.waitForEvent('terminated')
-			]);
-		});
+// 		test('should produce error for invalid \'pathFormat\'', done => {
+// 			dc.initializeRequest({
+// 				adapterID: 'mono',
+// 				linesStartAt1: true,
+// 				columnsStartAt1: true,
+// 				pathFormat: 'url'
+// 			}).then(response => {
+// 				done(new Error("does not report error on invalid 'pathFormat' attribute"));
+// 			}).catch(err => {
+// 				// error expected
+// 				done();
+// 			});
+// 		});
+// 	});
 
-		test('should run program to the end (and not stop on Debugger.Break())', () => {
+// 	suite('launch', () => {
 
-			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/Program.exe');
+// 		test('should run program to the end', () => {
 
-			return Promise.all([
-				dc.configurationSequence(),
-				dc.launch({ program: PROGRAM, noDebug: true }),
-				dc.waitForEvent('terminated')
-			]);
-		});
+// 			const PROGRAM = Path.join(DATA_ROOT, 'simple/Program.exe');
 
-		test('should stop on debugger statement', () => {
+// 			return Promise.all([
+// 				dc.configurationSequence(),
+// 				dc.launch({ program: PROGRAM }),
+// 				dc.waitForEvent('terminated')
+// 			]);
+// 		});
 
-			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/Program.exe');
-			const DEBUGGER_LINE = 10;
+// 		test('should run program to the end (and not stop on Debugger.Break())', () => {
 
-			return Promise.all([
-				dc.configurationSequence(),
-				dc.launch({ program: PROGRAM }),
-				dc.assertStoppedLocation('step',{line: DEBUGGER_LINE})
-			]);
-		});
-	});
+// 			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/Program.exe');
 
-	suite('setBreakpoints', () => {
+// 			return Promise.all([
+// 				dc.configurationSequence(),
+// 				dc.launch({ program: PROGRAM, noDebug: true }),
+// 				dc.waitForEvent('terminated')
+// 			]);
+// 		});
 
-		const PROGRAM = Path.join(DATA_ROOT, 'simple/Program.exe');
-		const SOURCE = Path.join(DATA_ROOT, 'simple/Program.cs');
-		const BREAKPOINT_LINE = 13;
+// 		test('should stop on debugger statement', () => {
 
-		test('should stop on a breakpoint', () => {
-			return dc.hitBreakpoint({ program: PROGRAM }, { path: SOURCE, line: BREAKPOINT_LINE } );
-		});
-	});
+// 			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/Program.exe');
+// 			const DEBUGGER_LINE = 10;
 
-	suite('output events', () => {
+// 			return Promise.all([
+// 				dc.configurationSequence(),
+// 				dc.launch({ program: PROGRAM }),
+// 				dc.assertStoppedLocation('step',{line: DEBUGGER_LINE})
+// 			]);
+// 		});
+// 	});
 
-		const PROGRAM = Path.join(DATA_ROOT, 'output/Output.exe');
+// 	suite('setBreakpoints', () => {
 
-		test('stdout and stderr events should be complete and in correct order', () => {
-			return Promise.all([
-				dc.configurationSequence(),
-				dc.launch({ program: PROGRAM }),
-				dc.assertOutput('stdout', "Hello stdout 0\nHello stdout 1\nHello stdout 2\n"),
-				dc.assertOutput('stderr', "Hello stderr 0\nHello stderr 1\nHello stderr 2\n")
-			]);
-		});
-	});
+// 		const PROGRAM = Path.join(DATA_ROOT, 'simple/Program.exe');
+// 		const SOURCE = Path.join(DATA_ROOT, 'simple/Program.cs');
+// 		const BREAKPOINT_LINE = 13;
 
-	suite('FSharp Tests', () => {
+// 		test('should stop on a breakpoint', () => {
+// 			return dc.hitBreakpoint({ program: PROGRAM }, { path: SOURCE, line: BREAKPOINT_LINE } );
+// 		});
+// 	});
 
-		const PROGRAM = Path.join(DATA_ROOT, 'fsharp/Program.exe');
-		const SOURCE = Path.join(DATA_ROOT, 'fsharp/Program.fs');
-		const BREAKPOINT_LINE = 8;
+// 	suite('output events', () => {
 
-		test('should stop on a breakpoint in an fsharp program', () => {
-			return dc.hitBreakpoint({ program: PROGRAM }, { path: SOURCE, line: BREAKPOINT_LINE } );
-		});
-	});
-});
+// 		const PROGRAM = Path.join(DATA_ROOT, 'output/Output.exe');
+
+// 		test('stdout and stderr events should be complete and in correct order', () => {
+// 			return Promise.all([
+// 				dc.configurationSequence(),
+// 				dc.launch({ program: PROGRAM }),
+// 				dc.assertOutput('stdout', "Hello stdout 0\nHello stdout 1\nHello stdout 2\n"),
+// 				dc.assertOutput('stderr', "Hello stderr 0\nHello stderr 1\nHello stderr 2\n")
+// 			]);
+// 		});
+// 	});
+
+// 	suite('FSharp Tests', () => {
+
+// 		const PROGRAM = Path.join(DATA_ROOT, 'fsharp/Program.exe');
+// 		const SOURCE = Path.join(DATA_ROOT, 'fsharp/Program.fs');
+// 		const BREAKPOINT_LINE = 8;
+
+// 		test('should stop on a breakpoint in an fsharp program', () => {
+// 			return dc.hitBreakpoint({ program: PROGRAM }, { path: SOURCE, line: BREAKPOINT_LINE } );
+// 		});
+// 	});
+// });

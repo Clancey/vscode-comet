@@ -2,7 +2,7 @@
 */**
 **/.DS_Store
 !bin/Release/*
-!out/extension.js
+!dist/extension.js
 !node_modules/vscode-nls/**/*
 !node_modules/vscode-debugprotocol/**/*
 !package.json
