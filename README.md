@@ -4,4 +4,4 @@
 
 ## Installing Xamarin
 
-Right now the extension is Mac only and requires Xamarin. [Install Link]("https://visualstudio.microsoft.com/xamarin/")
+Right now the extension is Mac only and requires Xamarin. [Install Link](https://visualstudio.microsoft.com/xamarin/)
