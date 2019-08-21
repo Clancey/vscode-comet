@@ -10,30 +10,70 @@ export interface ISimulatorVersion {
     id: string;
     versions: { name: string, id: string }[];
 }
+
+interface SimVersion {
+    name: string;
+    id: string;
+    identifier: string;
+}
 export class CometiOSSimulatorAnalyzer {
+
+    public Simulators: ISimulatorVersion[];
     private xml: string;
     private parsedXml: any;
     constructor(storagePath: string) {
-        if (!fs.existsSync(storagePath)){
+        if (!fs.existsSync(storagePath)) {
             fs.mkdirSync(storagePath);
         }
         this.xml = path.join(storagePath, 'iosSimulators.xml');
     }
     static mLaunchPath: string = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch";
-    public async RefreshSimulators():Promise<void>{
+    public async RefreshSimulators(): Promise<void> {
 
-        try{
-        var result = await exec(`${CometiOSSimulatorAnalyzer.mLaunchPath} --listsim="${this.xml}"`,{ } );
+        try {
+            var result = await exec(`${CometiOSSimulatorAnalyzer.mLaunchPath} --listsim="${this.xml}"`, {});
 
 
-        var projXml = fs.readFileSync(this.xml);
-        this.parsedXml = await parseString(projXml);
-        console.log(this.parsedXml);
+            var projXml = fs.readFileSync(this.xml);
+            this.parsedXml = await parseString(projXml);
+
+            this.Simulators = this.getAvailableDevices();
         }
-        catch(ex)
-        {
+        catch (ex) {
             console.exception(ex);
         }
+    }
+
+    private getVersions(): SimVersion[] {
+        var runtimes = selectPropertyPathItems<any>(this.parsedXml, ["MTouch", "Simulator", "SupportedRuntimes", "SimRuntime"])
+            .filter(x => x.Name[0].indexOf("iOS") > -1)
+            .map(c => ({
+                name: c.Name[0],
+                id: c.Name[0].replace("iOS ", ""),
+                identifier: c.Identifier[0],
+
+            }));
+        return runtimes;
+    }
+    private getAvailableDevices(): ISimulatorVersion[] {
+        var versions = this.getVersions();
+        var versionsMap: { [identifier: string]: { name: string, id: string }; };
+        versionsMap = _.keyBy(versions, 'identifier');// versions.map(x=> [x.identifier] = {name:x.name,id:x.version})
+
+        var devices = selectPropertyPathItems<any>(this.parsedXml, ["MTouch", "Simulator", "AvailableDevices", "SimDevice"])
+            .filter(x => x.SimRuntime[0].indexOf("iOS") > -1)
+            .map(c => ({
+                name: c.$.Name,
+                runtime: c.SimRuntime[0],
+                type: c.SimDeviceType[0].replace("com.apple.CoreSimulator.SimDeviceType.", ""),
+            }));
+
+        var groupedDevices = _(devices).groupBy(c => c.type).map((runtimes, type) => ({ type, runtimes })).value();
+        return groupedDevices.map(c => ({
+            id: c.type,
+            name: c.runtimes[0].name,
+            versions: c.runtimes.map(x => versionsMap[x.runtime]),
+        }));
     }
 
 }

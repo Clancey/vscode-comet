@@ -7,23 +7,25 @@ let fs = require("fs");
 let path = require('path')
 import * as vscode from 'vscode';
 import { ProjectType, MsBuildProjectAnalyzer } from './msbuild-project-analyzer';
-import {CometiOSSimulatorAnalyzer} from './comet-ios-simulator-analyzer';
+import { CometiOSSimulatorAnalyzer, ISimulatorVersion } from './comet-ios-simulator-analyzer';
 
 
 export interface IProjects {
     name: string;
     path: string;
     type: ProjectType;
-    configurations:string[];
-    platforms:string[];
+    configurations: string[];
+    platforms: string[];
 }
 
 export class CometProjectManager implements vscode.Disposable {
 
     static mLaunchPath: string = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch";
+
     public static IsXamarinIosInstalled(): boolean {
         return fs.existsSync(this.mLaunchPath);
     }
+
     private subscriptions: vscode.Disposable[] = [];
     public static Shared(): CometProjectManager { return CometProjectManager.shared };
     private static shared: CometProjectManager;
@@ -39,14 +41,19 @@ export class CometProjectManager implements vscode.Disposable {
     public static CurrentPlatform(): string { return CometProjectManager.currentPlatform; }
     private static currentProjectType: ProjectType = ProjectType.Unknown;
     public static CurrentProjectType(): ProjectType { return CometProjectManager.currentProjectType; }
-    
-    private simulatorAnalyzer:CometiOSSimulatorAnalyzer;
-    
-    private hasComet: boolean;
-    private statusBarItem: vscode.StatusBarItem;
 
-    public async GetProjects(): Promise<IProjects[]>{
-        if(this.foundProjects.length > 0)
+    private currentSimulator: ISimulatorVersion;
+    private currentSimulatorVerion: string;
+
+
+    private simulatorAnalyzer: CometiOSSimulatorAnalyzer;
+
+    private hasComet: boolean;
+    private projectStatusBarItem: vscode.StatusBarItem;
+    private deviceStatusBarItem: vscode.StatusBarItem;
+
+    public async GetProjects(): Promise<IProjects[]> {
+        if (this.foundProjects.length > 0)
             return this.foundProjects;
         await this.FindProjectsInWorkspace();
         return this.foundProjects;
@@ -55,13 +62,20 @@ export class CometProjectManager implements vscode.Disposable {
 
     constructor(context: vscode.ExtensionContext) {
         CometProjectManager.shared = this;
-        this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-        this.statusBarItem.tooltip = "Comet";
-        this.statusBarItem.text = "☄️";
-        
+        this.projectStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+        this.projectStatusBarItem.tooltip = "Comet";
+        this.projectStatusBarItem.text = "☄️";
+
+
+        this.deviceStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
+        this.deviceStatusBarItem.tooltip = "Comet Devices";
+        this.deviceStatusBarItem.text = "Select a Device";
+        this.deviceStatusBarItem.command = "comet.selectDevice";
+        this.deviceStatusBarItem.show();
+
         this.subscriptions.push(vscode.commands.registerCommand("comet.selectProject", this.showProjectPicker, this));
-        this.subscriptions.push(vscode.commands.registerCommand("comet.selectDevice", this.showProjectPicker, this));
-        this.subscriptions.push(vscode.commands.registerCommand("comet.refreshiOSSimulators", this.showProjectPicker, this));
+        this.subscriptions.push(vscode.commands.registerCommand("comet.selectDevice", this.showDevicePicker, this));
+        this.subscriptions.push(vscode.commands.registerCommand("comet.refreshiOSSimulators", this.refreshSimulator, this));
         let pattern = path.join(vscode.workspace.rootPath, '.csproj');
         let fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);
         fileWatcher.onDidChange((e: vscode.Uri) => {
@@ -78,53 +92,83 @@ export class CometProjectManager implements vscode.Disposable {
         });
         this.simulatorAnalyzer = new CometiOSSimulatorAnalyzer(context.storagePath);
         this.simulatorAnalyzer.RefreshSimulators();
-        
+
         this.subscriptions.push(fileWatcher);
         this.FindProjectsInWorkspace();
-        this.updateStatus();
+        this.updateProjectStatus();
     }
 
     public async SetCurentProject(project: string) {
         this.currentProjectPath = project;
         await this.parseProject(project);
-        this.updateStatus();
+        this.updateProjectStatus();
     }
 
-    updateStatus() {
-        // if (CometProjectManager.currentProjectDisplay == null) {
-        //     this.statusBarItem.hide();
-        //     return;
-        // }
-        
-        var projectString = this.currentProjectPath === undefined ? " Select a CSProj" : ` ${CometProjectManager.currentProjectDisplay} | ${CometProjectManager.currentConfig}`;
-        
-        //this.statusBarItem.text = (this.hasComet == true ? "☄️" : "") + projectString;
-        
-        this.statusBarItem.text =  "☄️" + projectString;
-        this.statusBarItem.command = "comet.selectProject";
-        this.statusBarItem.show();
+    async refreshSimulator() {
+        await this.simulatorAnalyzer.RefreshSimulators();
     }
+    updateProjectStatus() {
+
+        var projectString = this.currentProjectPath === undefined ? " Select a CSProj" : ` ${CometProjectManager.currentProjectDisplay} | ${CometProjectManager.currentConfig}`;
+        this.projectStatusBarItem.text = "☄️" + projectString;
+        this.projectStatusBarItem.command = "comet.selectProject";
+        this.projectStatusBarItem.show();
+    }
+
+    updateDeviceStatus() {
+
+        var projectString = this.currentSimulator === undefined ? " Select a Device" : ` ${this.currentSimulator.name}  ${this.currentSimulatorVerion}`;
+
+        //this.statusBarItem.text = (this.hasComet == true ? "☄️" : "") + projectString;
+
+        this.deviceStatusBarItem.text = "☄️" + projectString;
+        this.projectStatusBarItem.command = "comet.selectDevice";
+        this.deviceStatusBarItem.show();
+
+    }
+
 
     public async showProjectPicker(): Promise<void> {
         var projects = (await this.GetProjects())
-                .map(x=> ({
-                    //description: x.type.toString(),
-                    label: x.name,
-                    project: x,
-                }));
-		 const p = await vscode.window.showQuickPick(projects, { placeHolder: "Select a device to use" });
-		if (p) {
-			this.SetCurentProject(p.project.path);
+            .map(x => ({
+                //description: x.type.toString(),
+                label: x.name,
+                project: x,
+            }));
+        const p = await vscode.window.showQuickPick(projects, { placeHolder: "Select a project to use" });
+        if (p) {
+
+            const c = await vscode.window.showQuickPick(p.project.configurations, { placeHolder: "Select a configuration to use" });
+            if (c) {
+                CometProjectManager.currentConfig = c;
+                this.SetCurentProject(p.project.path);
+            }
         }
-        const c = await vscode.window.showQuickPick(p.project.configurations, { placeHolder: "Select a device to use" });
-        if(c)
-            CometProjectManager.currentConfig = c;
-            this.updateStatus();
+        this.updateProjectStatus();
     }
-    
-    private isProjectSupported(type:ProjectType) : boolean
-    {
+
+    private isProjectSupported(type: ProjectType): boolean {
         return type === ProjectType.iOS;
+    }
+
+    async showDevicePicker() : Promise<void>{
+
+        var simulators = this.simulatorAnalyzer.Simulators
+            .map(x => ({
+                //description: x.type.toString(),
+                label: x.name,
+                simulator: x,
+            }));
+        const p = await vscode.window.showQuickPick(simulators, { placeHolder: "Select a device to use" });
+        if (p) {
+            var versions = p.simulator.versions.map(x => ({ label: x.name, version: x }));
+            const c = await vscode.window.showQuickPick(versions, { placeHolder: "Select an OS version." });
+            if (c) {
+                this.currentSimulatorVerion = c.version.id;
+                this.currentSimulator = p.simulator;
+            }
+        }
+        this.updateDeviceStatus();
     }
 
 
@@ -173,7 +217,7 @@ export class CometProjectManager implements vscode.Disposable {
 
     async FindProjectsInWorkspace() {
         var projects = [];
-        async function fromDir(startPath, filter ) : Promise<void>{
+        async function fromDir(startPath, filter): Promise<void> {
             if (!fs.existsSync(startPath)) {
                 console.log("no dir ", startPath);
                 return;
@@ -193,7 +237,7 @@ export class CometProjectManager implements vscode.Disposable {
         };
         await fromDir(vscode.workspace.rootPath, ".csproj");
         this.foundProjects = projects.filter((x) => this.isProjectSupported(x.type));
-        if(!this.currentProjectPath && this.foundProjects.length > 0)
+        if (!this.currentProjectPath && this.foundProjects.length > 0)
             this.SetCurentProject(this.foundProjects[0].path);
 
     }
@@ -223,6 +267,19 @@ export class CometProjectManager implements vscode.Disposable {
                 config.csproj = this.currentProjectPath
             }
         }
+        if(!this.currentSimulator && !config.iOSSimulatorDeviceType)
+        {
+            await this.showDevicePicker();
+        }
+        if (this.currentSimulator) {
+            if (!config.iOSSimulatorDeviceType) {
+                config.iOSSimulatorDeviceType = this.currentSimulator.id;
+            }
+            
+            if (!config.iOSSimulatorOS) {
+                config.iOSSimulatorOS = this.currentSimulatorVerion;
+            }
+        }
         return config;
     }
 
@@ -231,7 +288,7 @@ export class CometProjectManager implements vscode.Disposable {
     }
 
 }
-export async function parseProject(csproj:string) : Promise<IProjects>{
+export async function parseProject(csproj: string): Promise<IProjects> {
     var proj = csproj;
     if (vscode.workspace.workspaceFolders !== undefined) { // is undefined if no folder is opened
         let workspaceRoot = vscode.workspace.workspaceFolders[0];
