@@ -153,7 +153,12 @@ export class CometProjectManager implements vscode.Disposable {
 
     async showDevicePicker() : Promise<void>{
 
-        var simulators = (await this.simulatorAnalyzer.GetSimulators())
+        var simulatorsRaw = (await this.simulatorAnalyzer.GetSimulators());
+        if(simulatorsRaw === undefined)
+        {
+            return;
+        }
+        var simulators = simulatorsRaw
             .map(x => ({
                 //description: x.type.toString(),
                 label: x.name,

@@ -1,5 +1,6 @@
 import * as _ from "lodash";
 import * as cp from 'child_process';
+import * as vscode from 'vscode';
 let fs = require("fs");
 let path = require('path')
 
@@ -36,17 +37,28 @@ export class CometiOSSimulatorAnalyzer {
     static mLaunchPath: string = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch";
     public async RefreshSimulators(): Promise<void> {
 
+        var stdOut:string;
         try {
             var result = await exec(`${CometiOSSimulatorAnalyzer.mLaunchPath} --listsim="${this.xml}"`, {});
+            stdOut=result.stdout;
 
-
+            if(!fs.existsSync(path)){
+                vscode.window.showErrorMessage("Please verify your Xamarin.iOS installation is correct.");
+                return;
+            }
             var projXml = fs.readFileSync(this.xml);
+            if(projXml == null || projXml==''){
+                vscode.window.showErrorMessage("Please verify your Xamarin.iOS installation is correct.");
+                return;
+            }
             this.parsedXml = await parseString(projXml);
 
             this.Simulators = this.getAvailableDevices();
         }
         catch (ex) {
-            console.exception(ex);
+            this.Simulators = undefined;
+            console.error(ex);
+            vscode.window.showErrorMessage(stdOut);
         }
     }
 

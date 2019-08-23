@@ -7,7 +7,6 @@ export function setUpHotReload(context: ExtensionContext)
     let hotReloadDelayTimer: NodeJS.Timer;
 
     context.subscriptions.push(workspace.onDidSaveTextDocument((td) => {
-
 		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
 		// Hopefully we can improve in future: https://github.com/Microsoft/vscode/issues/42913
 		if (hotReloadDelayTimer) {
