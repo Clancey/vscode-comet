@@ -1,7 +1,7 @@
 {
 	"name": "comet-debug",
 	"displayName": "Comet Debug",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"publisher": "clancey",
 	"description": "Visual Studio Code debugger extension for Comet",
 	"icon": "images/mono-debug-icon.png",
