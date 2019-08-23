@@ -42,7 +42,7 @@ export class CometiOSSimulatorAnalyzer {
             var result = await exec(`${CometiOSSimulatorAnalyzer.mLaunchPath} --listsim="${this.xml}"`, {});
             stdOut=result.stdout;
 
-            if(!fs.existsSync(path)){
+            if(!fs.existsSync(this.xml)){
                 vscode.window.showErrorMessage("Please verify your Xamarin.iOS installation is correct.");
                 return;
             }
