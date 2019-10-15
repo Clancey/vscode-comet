@@ -58,7 +58,7 @@ export class CometiOSSimulatorAnalyzer {
         catch (ex) {
             this.Simulators = undefined;
             //console.error(ex);
-            vscode.window.showErrorMessage(ex.stderr);
+            vscode.window.showErrorMessage(`Please try running 'sudo xcode-select -s /Applications/Xcode.app/' in your terminal ${ex.stderr}: `);
         }
     }
 
