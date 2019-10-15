@@ -57,8 +57,8 @@ export class CometiOSSimulatorAnalyzer {
         }
         catch (ex) {
             this.Simulators = undefined;
-            console.error(ex);
-            vscode.window.showErrorMessage(stdOut);
+            //console.error(ex);
+            vscode.window.showErrorMessage(ex.stderr);
         }
     }
 
