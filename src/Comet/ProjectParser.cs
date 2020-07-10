@@ -19,7 +19,7 @@ namespace VSCodeDebug
 
 		public string ProjectName() => ProjectRoot().ProjectName();
 
-		public string OutputFolder(string configuration, string platform) => ProjectRoot().GetOutput(configuration, platform).ToNativePath();
+		public string OutputFolder(string configuration, string platform) => ProjectRoot()?.GetOutput(configuration, platform)?.ToNativePath();
 
 
 

@@ -9,6 +9,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Comet.Reload.Core", "..\Com
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Comet.Reload.IDE", "..\Comet.Reload\Comet.Reload.IDE\Comet.Reload.IDE.shproj", "{4F101B9A-EF2C-47B6-B7E0-007FE8B97168}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndroidDevices", "AndroidDevices\AndroidDevices.csproj", "{DAA7E9B5-D3E5-486A-BF62-74D2B5C7605B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DAA7E9B5-D3E5-486A-BF62-74D2B5C7605B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAA7E9B5-D3E5-486A-BF62-74D2B5C7605B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAA7E9B5-D3E5-486A-BF62-74D2B5C7605B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAA7E9B5-D3E5-486A-BF62-74D2B5C7605B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

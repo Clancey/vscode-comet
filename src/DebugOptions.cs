@@ -30,6 +30,7 @@ namespace VSCodeDebug
 		public string iOSDeviceId { get; set; }
 		public string iOSSimulatorDeviceOS { get; set; }
 		public string iOSSimulatorDeviceType { get; set; }
+		public string AdbDeviceName { get; set; }
 		public string AdbDeviceId { get; set; }
 	}
 }

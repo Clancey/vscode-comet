@@ -250,9 +250,14 @@ namespace VSCodeDebug
 			}
 
 
+			if (xamarinOptions.ProjectType == ProjectType.Android)
+				await LaunchAndroid(xamarinOptions, port);
+			if(xamarinOptions.ProjectType == ProjectType.iOS)
+				await LaunchiOS(xamarinOptions, port);
+
+
 
 			Connect(xamarinOptions, address, port);
-			await LaunchiOS(xamarinOptions, port);
 
 			SendResponse(response);
 		}
@@ -274,6 +279,72 @@ namespace VSCodeDebug
 				$"--sdk {iOSSdkVersion} --device=:v2:runtime=com.apple.CoreSimulator.SimRuntime.iOS-{iOSSdkVersion.Replace(".","-")},devicetype=com.apple.CoreSimulator.SimDeviceType.{options.iOSSimulatorDeviceType}"
 				);
 			Console.WriteLine(success);
+		}
+		AndroidSdk.AndroidSdkManager SdkManager;
+		async Task LaunchAndroid(XamarinOptions options, int port)
+		{
+			var workingDir = Path.GetDirectoryName(options.CSProj);
+			if (SdkManager == null) {
+				SdkManager = new AndroidSdk.AndroidSdkManager();
+				await Task.Run(() => {
+					SdkManager.Acquire();
+				});
+			}
+
+			//Todo: Verify by calling ADB if the device ID is valid, and name is correct, and its connected!
+
+
+			if (string.IsNullOrWhiteSpace(options.AdbDeviceId)) {
+				//It's an emulator! And it's not running
+				var startProcess = SdkManager.Emulator.Start(options.AdbDeviceName);
+				await Task.Run(() => {
+					var s = startProcess.WaitForBootComplete();
+					Console.WriteLine(s);
+				});
+			}
+			await RunMSBuildComand(workingDir, options.CSProj, "/t:Install", "/t:_Run", "/p:AndroidAttachDebugger=true", $"/p:SelectedDevice={options.AdbDeviceName}");
+
+
+
+
+			//var appPath = Directory.EnumerateDirectories(options.OutputFolder, "*.app").FirstOrDefault();
+			//var iOSSdkVersion = options.iOSSimulatorDeviceOS;
+
+			//var success = await RunMlaumchComand(MlaunchPath, workingDir,
+			//	sdkRoot,
+			//	$"--launchsim {appPath}",
+			//	$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
+			//	$"--sdk {iOSSdkVersion} --device=:v2:runtime=com.apple.CoreSimulator.SimRuntime.iOS-{iOSSdkVersion.Replace(".", "-")},devicetype=com.apple.CoreSimulator.SimDeviceType.{options.iOSSimulatorDeviceType}"
+			//	);
+			//Console.WriteLine(success);
+		}
+
+		public Task<(bool Success, string Output)> RunMSBuildComand(string workingDirectory, params string[] args)
+		{
+			//TODO: On windows find the MSBuild!
+			var msBuildCommand = Program.IsRunningOnMono() ? "ln" : "msbuid";
+			var newArgs = Program.IsRunningOnMono() ? new[] { "msbuild" }.Union(args).ToArray() : args;
+			var p = new System.Diagnostics.Process();
+			return Task.Run(() => {
+				try {
+					p.StartInfo.CreateNoWindow = false;
+					p.StartInfo.FileName = "/bin/bash";
+					p.StartInfo.WorkingDirectory = workingDirectory;
+					//p.StartInfo.RedirectStandardOutput = true;
+					p.StartInfo.Arguments = "-c \"" + Utilities.ConcatArgs(newArgs, false) +  "\"";
+					p.StartInfo.UseShellExecute = false;
+					p.StartInfo.RedirectStandardInput = true;
+					p.Start();
+					p.WaitForExit();
+					return (true, "");
+
+				} catch (Exception ex) {
+
+					Console.WriteLine(ex);
+				}
+
+			return (false, "");
+			});
 		}
 
 		System.Diagnostics.Process iOSDebuggerProcess;
@@ -333,6 +404,8 @@ namespace VSCodeDebug
 				IsSim = getBool(args, VSCodeKeys.XamarinOptions.IsSimulator, true),
 				iOSSimulatorDeviceOS = getString(args, VSCodeKeys.XamarinOptions.iOSSimulatorOS,"12.4"),
 				iOSSimulatorDeviceType = getString(args, VSCodeKeys.XamarinOptions.iOSSimulatorDeviceType, "iPhone-XR"),
+				AdbDeviceId = getString(args,nameof(XamarinOptions.AdbDeviceId)),
+				AdbDeviceName = getString(args, nameof(XamarinOptions.AdbDeviceName)),
 			};
 			return options;
 		}
@@ -368,6 +441,7 @@ namespace VSCodeDebug
 				return;
 			}
 			Connect(xamarinOption, address, port);
+			//TODO:Only run for iOS, run android 
 			await LaunchiOS(xamarinOption, port);
 
 			SendResponse(response);

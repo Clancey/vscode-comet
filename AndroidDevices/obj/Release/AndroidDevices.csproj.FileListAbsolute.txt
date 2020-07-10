@@ -1,0 +1,7 @@
+/Users/clancey/Projects/vscode-mono-debug/AndroidDevices/bin/Release/AndroidDevices.exe
+/Users/clancey/Projects/vscode-mono-debug/AndroidDevices/bin/Release/AndroidSdk.dll
+/Users/clancey/Projects/vscode-mono-debug/AndroidDevices/obj/Release/AndroidDevices.csprojAssemblyReference.cache
+/Users/clancey/Projects/vscode-mono-debug/AndroidDevices/obj/Release/AndroidDevices.csproj.CoreCompileInputs.cache
+/Users/clancey/Projects/vscode-mono-debug/AndroidDevices/obj/Release/AndroidDevices.csproj.CopyComplete
+/Users/clancey/Projects/vscode-mono-debug/AndroidDevices/obj/Release/AndroidDevices.exe
+/Users/clancey/Projects/vscode-mono-debug/bin/Release/AndroidDevices.exe

@@ -5,9 +5,11 @@
 'use strict';
 let fs = require("fs");
 let path = require('path')
+import * as util from "./services/utils";
 import * as vscode from 'vscode';
 import { ProjectType, MsBuildProjectAnalyzer } from './msbuild-project-analyzer';
 import { CometiOSSimulatorAnalyzer, ISimulatorVersion } from './comet-ios-simulator-analyzer';
+import { CometAndroidSimulatorAnalyzer } from './comet-android-simulators';
 
 
 export interface IProjects {
@@ -42,11 +44,14 @@ export class CometProjectManager implements vscode.Disposable {
     private static currentProjectType: ProjectType = ProjectType.Unknown;
     public static CurrentProjectType(): ProjectType { return CometProjectManager.currentProjectType; }
 
+
+    public CurrentDevice(): ISimulatorVersion { return this.currentSimulator; }
     private currentSimulator: ISimulatorVersion;
     private currentSimulatorVerion: string;
 
 
-    private simulatorAnalyzer: CometiOSSimulatorAnalyzer;
+    private iosSimulatorAnalyzer: CometiOSSimulatorAnalyzer;
+    private androidAnalyzer: CometAndroidSimulatorAnalyzer;
 
     private hasComet: boolean;
     private projectStatusBarItem: vscode.StatusBarItem;
@@ -65,6 +70,7 @@ export class CometProjectManager implements vscode.Disposable {
         this.projectStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.projectStatusBarItem.tooltip = "Comet";
         this.projectStatusBarItem.text = "☄️";
+        this.projectStatusBarItem.command = "comet.selectProject";
 
 
         this.deviceStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
@@ -90,9 +96,10 @@ export class CometProjectManager implements vscode.Disposable {
             console.log(e);
             this.foundProjects = [];
         });
-        this.simulatorAnalyzer = new CometiOSSimulatorAnalyzer(context.storagePath);
-        this.simulatorAnalyzer.RefreshSimulators();
+        this.iosSimulatorAnalyzer = new CometiOSSimulatorAnalyzer(context.storagePath);
+        this.iosSimulatorAnalyzer.RefreshSimulators();
 
+        this.androidAnalyzer = new CometAndroidSimulatorAnalyzer(context.storagePath, context.extensionPath);
         this.subscriptions.push(fileWatcher);
         this.FindProjectsInWorkspace();
         this.updateProjectStatus();
@@ -105,7 +112,7 @@ export class CometProjectManager implements vscode.Disposable {
     }
 
     async refreshSimulator() {
-        await this.simulatorAnalyzer.RefreshSimulators();
+        await this.iosSimulatorAnalyzer.RefreshSimulators();
     }
     updateProjectStatus() {
 
@@ -117,12 +124,13 @@ export class CometProjectManager implements vscode.Disposable {
 
     updateDeviceStatus() {
 
-        var projectString = this.currentSimulator === undefined ? " Select a Device" : ` ${this.currentSimulator.name}  ${this.currentSimulatorVerion}`;
+        var versionSTring = this.currentSimulatorVerion === undefined ? "" : this.currentSimulatorVerion;
+        var projectString = this.currentSimulator === undefined ? " Select a Device" : ` ${this.currentSimulator.name}  ${versionSTring}`;
 
         //this.statusBarItem.text = (this.hasComet == true ? "☄️" : "") + projectString;
 
         this.deviceStatusBarItem.text = "☄️" + projectString;
-        this.projectStatusBarItem.command = "comet.selectDevice";
+        this.deviceStatusBarItem.command = "comet.selectDevice";
         this.deviceStatusBarItem.show();
 
     }
@@ -148,12 +156,24 @@ export class CometProjectManager implements vscode.Disposable {
     }
 
     private isProjectSupported(type: ProjectType): boolean {
-        return type === ProjectType.iOS;
+        if(util.isWin)
+        {
+            return type === ProjectType.Android;
+        }
+        return type === ProjectType.iOS || type === ProjectType.Android;
     }
 
     async showDevicePicker() : Promise<void>{
 
-        var simulatorsRaw = (await this.simulatorAnalyzer.GetSimulators());
+        if(CometProjectManager.CurrentProjectType() == ProjectType.iOS)
+            await this.showiOSDevicePicker();
+        else if(CometProjectManager.CurrentProjectType() == ProjectType.Android)
+            await this.showAndroidDevicePicker();
+        this.updateDeviceStatus();
+    }
+
+    async showiOSDevicePicker() : Promise<void>{
+        var simulatorsRaw = (await this.iosSimulatorAnalyzer.GetSimulators());
         if(simulatorsRaw === undefined)
         {
             return;
@@ -171,9 +191,31 @@ export class CometProjectManager implements vscode.Disposable {
             if (c) {
                 this.currentSimulatorVerion = c.version.id;
                 this.currentSimulator = p.simulator;
+                CometProjectManager.currentPlatform = "iPhoneSimulator";
             }
         }
-        this.updateDeviceStatus();
+    }
+
+
+    async showAndroidDevicePicker() : Promise<void>{
+        var simulatorsRaw = (await this.androidAnalyzer.GetSimulators());
+        if(simulatorsRaw === undefined)
+        {
+            return;
+        }
+        var simulators = simulatorsRaw
+            .map(x => ({
+                //description: x.type.toString(),
+                label: x.name,
+                simulator: x,
+            }));
+        const p = await vscode.window.showQuickPick(simulators, { placeHolder: "Select a device to use" });
+        if (p) {
+            this.currentSimulator = p.simulator;
+            //TODO: we need to parse the real options.
+            CometProjectManager.currentPlatform = "AnyCPU";
+        }
+
     }
 
 
@@ -267,11 +309,20 @@ export class CometProjectManager implements vscode.Disposable {
             config.platform = CometProjectManager.currentPlatform;
         }
 
-        if (CometProjectManager.currentProjectType === ProjectType.iOS) {
-            if (!config.csproj) {
-                config.csproj = this.currentProjectPath
-            }
+        //if (!config.csproj) {
+            config.csproj = this.currentProjectPath
+        //}
+        if (CometProjectManager.currentProjectType === ProjectType.iOS){
+            return await this.ApplyiOSConfiguration(config);
         }
+        else if(CometProjectManager.currentProjectType === ProjectType.Android){
+            return await this.ApplyAndroidConfiguration(config);
+        }
+        return config;
+    }
+
+    async ApplyiOSConfiguration(config: any): Promise<any> {
+    
         if(!this.currentSimulator && !config.iOSSimulatorDeviceType)
         {
             await this.showDevicePicker();
@@ -285,6 +336,20 @@ export class CometProjectManager implements vscode.Disposable {
                 config.iOSSimulatorOS = this.currentSimulatorVerion;
             }
         }
+        return config;
+    }
+    async ApplyAndroidConfiguration(config: any): Promise<any> {
+    
+        if(!this.currentSimulator)
+        {
+            await this.showDevicePicker();
+        }
+        if (this.currentSimulator) {
+            config.AdbDeviceName = this.currentSimulator.name;
+            config.AdbDeviceId = this.currentSimulator.id;
+            
+        }
+
         return config;
     }
 

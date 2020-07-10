@@ -44,16 +44,16 @@
 		"@types/mocha": "^2.2.32",
 		"@types/node": "^6.0.39",
 		"mocha": "^6.2.0",
-		"ts-loader": "^6.0.4",
+		"ts-loader": "^6.2.2",
 		"typescript": "^2.0.3",
 		"vsce": "^1.20.0",
 		"vscode": "1.1.36",
 		"vscode-debugadapter-testsupport": "^1.20.0",
 		"vscode-nls-dev": "^2.0.1",
-		"webpack": "^4.39.2",
-		"webpack-cli": "^3.3.7"
+		"webpack": "^4.42.1",
+		"webpack-cli": "^3.3.11"
 	},
-	"main": "./dist/extension",
+	"main": "./out/extension",
 	"activationEvents": [
 		"workspaceContains:**/*.csproj",
 		"workspaceContains:**/*.sln",

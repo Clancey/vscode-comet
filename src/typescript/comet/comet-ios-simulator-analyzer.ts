@@ -3,16 +3,18 @@ import * as cp from 'child_process';
 import * as vscode from 'vscode';
 let fs = require("fs");
 let path = require('path')
+import {ProjectType } from './msbuild-project-analyzer';
 
 import { parseString, selectPropertyPathItems } from "./xml-parsing";
 
 export interface ISimulatorVersion {
+    projectType : ProjectType
     name: string;
     id: string;
-    versions: { name: string, id: string }[];
+    versions?: { name: string, id: string }[];
 }
 
-interface SimVersion {
+export interface SimVersion {
     name: string;
     id: string;
     identifier: string;
@@ -81,6 +83,7 @@ export class CometiOSSimulatorAnalyzer {
         var devices = selectPropertyPathItems<any>(this.parsedXml, ["MTouch", "Simulator", "AvailableDevices", "SimDevice"])
             .filter(x => x.SimRuntime[0].indexOf("iOS") > -1)
             .map(c => ({
+                projectType: ProjectType.iOS,
                 name: c.$.Name,
                 runtime: c.SimRuntime[0],
                 type: c.SimDeviceType[0].replace("com.apple.CoreSimulator.SimDeviceType.", ""),

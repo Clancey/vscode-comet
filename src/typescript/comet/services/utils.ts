@@ -6,7 +6,6 @@ import { DebugProtocol } from "vscode-debugprotocol";
 export const isWin = /^win/.test(process.platform);
 
 const toolEnv = Object.create(process.env);
-toolEnv.FLUTTER_HOST = "VSCode";
 toolEnv.PUB_ENVIRONMENT = (toolEnv.PUB_ENVIRONMENT ? `${toolEnv.PUB_ENVIRONMENT}:` : "") + "vscode.comet";
 
 

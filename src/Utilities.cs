@@ -170,9 +170,9 @@ namespace VSCodeDebug
 		public static string ToNativePath(this string intput)
 		{
 			if (IsRunningOnMono()) {
-				return intput.Replace("\\", "/");
+				return intput?.Replace("\\", "/");
 			} else
-				return intput.Replace("/", "\\");
+				return intput?.Replace("/", "\\");
 		}
 		public static bool IsRunningOnMono()
 		{
