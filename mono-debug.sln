@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
-VisualStudioVersion = 14.0.22823.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mono-debug", "mono-debug.csproj", "{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mono-debug", "mono-debug.csproj", "{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Comet.Reload.Core", "..\Comet.Reload\Comet.Reload.Core\Comet.Reload.Core.shproj", "{4AF14C8D-878A-4CB4-8B61-60A531AB358B}"
 EndProject
@@ -26,10 +26,16 @@ Global
 		{DAA7E9B5-D3E5-486A-BF62-74D2B5C7605B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAA7E9B5-D3E5-486A-BF62-74D2B5C7605B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5BF750EB-6312-4099-8423-437ADA0C3CB7}
+	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
 		$0.DotNetNamingPolicy = $1
-		$0.TextStylePolicy = $2
+		$0.TextStylePolicy = $4
 		$2.FileWidth = 160
 		$2.scope = text/x-csharp
 		$0.CSharpFormattingPolicy = $3
@@ -67,10 +73,6 @@ Global
 		$3.NewLineForMembersInObjectInit = False
 		$3.NewLineForMembersInAnonymousTypes = False
 		$3.NewLineForClausesInQuery = False
-		$0.TextStylePolicy = $4
 		$4.scope = text/plain
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

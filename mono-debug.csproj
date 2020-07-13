@@ -1,135 +1,53 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="packages\Microsoft.CodeAnalysis.Analyzers.2.9.4\build\Microsoft.CodeAnalysis.Analyzers.props" Condition="Exists('packages\Microsoft.CodeAnalysis.Analyzers.2.9.4\build\Microsoft.CodeAnalysis.Analyzers.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>VSCodeDebug</RootNamespace>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
-    <AssemblyName>comet-debug</AssemblyName>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
-    <Commandlineparameters>--server=4711</Commandlineparameters>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="ICSharpCode.NRefactory">
-      <HintPath>packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.NRefactory.CSharp">
-      <HintPath>packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil">
-      <HintPath>packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Mdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Debugger.Soft">
-      <HintPath>packages\Mono.Debugger.Soft.1.0.20161020.46\lib\net40\Mono.Debugger.Soft.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Debugging.Soft">
-      <HintPath>packages\Mono.Debugging.Soft.1.0.20161020.46\lib\net40\Mono.Debugging.Soft.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Debugging">
-      <HintPath>packages\Mono.Debugging.1.0.20161020.46\lib\net40\Mono.Debugging.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Build" />
-    <Reference Include="Microsoft.Build.Framework" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="Microsoft.Build.Engine" />
-    <Reference Include="System.Buffers">
-      <HintPath>packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Collections.Immutable">
-      <HintPath>packages\System.Collections.Immutable.1.5.0\lib\netstandard2.0\System.Collections.Immutable.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Numerics.Vectors">
-      <HintPath>packages\System.Numerics.Vectors.4.4.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
-    </Reference>
-    <Reference Include="mscorlib" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Reflection.Metadata">
-      <HintPath>packages\System.Reflection.Metadata.1.6.0\lib\netstandard2.0\System.Reflection.Metadata.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Memory">
-      <HintPath>packages\System.Memory.4.5.3\lib\netstandard2.0\System.Memory.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Text.Encoding.CodePages">
-      <HintPath>packages\System.Text.Encoding.CodePages.4.5.1\lib\net461\System.Text.Encoding.CodePages.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Tasks.Extensions">
-      <HintPath>packages\System.Threading.Tasks.Extensions.4.5.3\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeAnalysis">
-      <HintPath>packages\Microsoft.CodeAnalysis.Common.3.3.1\lib\netstandard2.0\Microsoft.CodeAnalysis.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.CSharp">
-      <HintPath>packages\Microsoft.CodeAnalysis.CSharp.3.3.1\lib\netstandard2.0\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="AndroidSdk">
-      <HintPath>AndroidDevices\AndroidSdk.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="src\MonoDebugSession.cs" />
-    <Compile Include="src\Handles.cs" />
-    <Compile Include="src\Utilities.cs" />
-    <Compile Include="src\DebugSession.cs" />
-    <Compile Include="src\MonoDebug.cs" />
-    <Compile Include="src\Protocol.cs" />
-    <Compile Include="src\iOS\IPhoneCommandConnectionDebuggerArgs.cs" />
-    <Compile Include="src\iOS\IPhoneCommandConnection.cs" />
-    <Compile Include="src\iOS\AggregateAsyncResult.cs" />
-    <Compile Include="src\iOS\StreamTransportConnection.cs" />
-    <Compile Include="src\DebugOptions.cs" />
-    <Compile Include="src\VSCodeKeys.cs" />
-    <Compile Include="src\Comet\ProjectParser.cs" />
-  </ItemGroup>
-  <Import Project="..\Comet.Reload\Comet.Reload.IDE\Comet.Reload.IDE.projitems" Label="Shared" Condition="Exists('..\Comet.Reload\Comet.Reload.IDE\Comet.Reload.IDE.projitems')" />
-  <Import Project="..\Comet.Reload\Comet.Reload.Core\Comet.Reload.Core.projitems" Label="Shared" Condition="Exists('..\Comet.Reload\Comet.Reload.Core\Comet.Reload.Core.projitems')" />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ItemGroup>
-    <None Include="package.json" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
-  </Target>
-  <ItemGroup>
-    <Folder Include="src\" />
-    <Folder Include="src\iOS\" />
-  </ItemGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="AndroidDevices\**" />
+		<Compile Remove="testdata\**" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="AndroidSdk">
+			<HintPath>AndroidDevices\AndroidSdk.dll</HintPath>
+		</Reference>
+		<Reference Include="ICSharpCode.NRefactory.CSharp">
+			<HintPath>.\libs\ICSharpCode.NRefactory.CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="ICSharpCode.NRefactory">
+			<HintPath>.\libs\ICSharpCode.NRefactory.dll</HintPath>
+		</Reference>
+		<Reference Include="Mono.Cecil">
+			<HintPath>.\libs\Mono.Cecil.dll</HintPath>
+		</Reference>
+		<Reference Include="Mono.Cecil.Mdb">
+			<HintPath>.\libs\Mono.Cecil.Mdb.dll</HintPath>
+		</Reference>
+		<Reference Include="Mono.Cecil.Pdb">
+			<HintPath>.\libs\Mono.Cecil.Pdb.dll</HintPath>
+		</Reference>
+		<Reference Include="Mono.Cecil.Rocks">
+			<HintPath>.\libs\Mono.Cecil.Rocks.dll</HintPath>
+		</Reference>
+		<Reference Include="Mono.Debugger.Soft">
+			<HintPath>.\libs\Mono.Debugger.Soft.dll</HintPath>
+		</Reference>
+		<Reference Include="Mono.Debugging">
+			<HintPath>.\libs\Mono.Debugging.dll</HintPath>
+		</Reference>
+		<Reference Include="Mono.Debugging.Soft">
+			<HintPath>.\libs\Mono.Debugging.Soft.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.6.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+		<PackageReference Include="Microsoft.Build" Version="16.5.0" />
+		<PackageReference Include="Microsoft.Build.Engine" Version="16.5.0" />
+		<PackageReference Include="Microsoft.Build.Framework" Version="16.5.0" />
+		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.5.0" />		
+	</ItemGroup>
 </Project>
