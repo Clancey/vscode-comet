@@ -80,13 +80,17 @@ export class CometBuildTaskProvider implements vscode.TaskProvider {
 		var target = "Build";
 		if(CometProjectManager.CurrentProjectType() === ProjectType.Android)
 		{
+			this.tasks.push(this.getTask(CometBuildTaskProvider.msBuildCommand,"Install",[]));
+
+			this.tasks.push(this.getTask(CometBuildTaskProvider.msBuildCommand,"_Run",["/p:AndroidAttachDebugger=True"]));
+
 			// var device = CometProjectManager.Shared().CurrentDevice();
 			// if(device === undefined ||device.projectType != ProjectType.Android)
 			// {
 			// 	vscode.window.showInformationMessage("csproj is not set");
 			// 	return undefined;
 			// }
-			target = "SignAndroidPackage";
+			target = "Install;_Run";
 			// flags.push("/p:AndroidAttachDebugger=true");
 			// flags.push(`-p:SelectedDevice=${device.id}`);
 			// flags.push(`/p:SelectedDevice=android_api_28`);
@@ -94,7 +98,10 @@ export class CometBuildTaskProvider implements vscode.TaskProvider {
 			//TODO: target install
 			//TODO: Target: _run
 		}
-		this.tasks.push(this.getTask(CometBuildTaskProvider.msBuildCommand,target,flags));
+		else 
+		{
+			this.tasks.push(this.getTask(CometBuildTaskProvider.msBuildCommand,target,flags));
+		}
 	
 		return this.tasks;
 	}
