@@ -34,7 +34,7 @@ export class CometAndroidSimulatorAnalyzer {
         this.jsonFile = path.join(storagePath, 'androidDevices.json');
         this.executablePath = path.join(extensionPath,CometAndroidSimulatorAnalyzer.mLaunchPath);
     }
-    static mLaunchPath: string = "./bin/Debug/AndroidDevices.exe";
+    static mLaunchPath: string = "./AndroidDevices/bin/Debug/netcoreapp3.0/AndroidDevices.dll";
     executablePath: string;
     public async RefreshSimulators(): Promise<void> {
 

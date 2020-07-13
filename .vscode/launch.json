@@ -18,7 +18,7 @@
 			"type": "mono",
 			"request": "launch",
 			"name": "Server",
-			"program": "${workspaceRoot}/bin/Debug/comet-debug.exe",
+			"program": "${workspaceRoot}/bin/Debug/netcoreapp3.0/comet-debug.dll",
 			"args": [ "--server=4711" ]
 		},
 		{
