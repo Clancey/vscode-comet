@@ -13,7 +13,9 @@ using System.Threading.Tasks;
 using Microsoft.Build.BuildEngine;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
+#if BUILD_HOT_RELOAD
 using Comet.Reload;
+#endif
 
 namespace VSCodeDebug
 {
@@ -161,8 +163,11 @@ namespace VSCodeDebug
 
 					string fileName = s.args.fileName;
 					string text = s.args.text;
+
+#if BUILD_HOT_RELOAD
 					IDEManager.Shared.HandleDocumentChanged(
 						new DocumentChangedEventArgs(fileName, text));
+#endif
 
 					return true;
 				}
@@ -459,7 +464,11 @@ namespace VSCodeDebug
 			catch(Exception ex) {
 				Console.WriteLine(ex);
 			}
+
+#if BUILD_HOT_RELOAD
 			IDEManager.Shared.StopMonitoring();
+#endif
+
 			if (_attachMode) {
 
 				lock (_lock) {
@@ -996,7 +1005,9 @@ namespace VSCodeDebug
 		
 		private void Connect(XamarinOptions options, IPAddress address, int port)
 		{
+#if BUILD_HOT_RELOAD
 			IDEManager.Shared.StartMonitoring();
+#endif
 			lock (_lock) {
 
 				_debuggeeKilled = false;
