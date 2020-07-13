@@ -296,8 +296,11 @@ namespace VSCodeDebug
 				});
 			}
 
+			Console.WriteLine($"Working Dir: {workingDir}");
+
 			//Todo: Verify by calling ADB if the device ID is valid, and name is correct, and its connected!
 
+			Console.WriteLine($"Trying ADB Device: {options.AdbDeviceId}");
 
 			if (string.IsNullOrWhiteSpace(options.AdbDeviceId)) {
 				//It's an emulator! And it's not running
@@ -307,21 +310,10 @@ namespace VSCodeDebug
 					Console.WriteLine(s);
 				});
 			}
+
+			Console.WriteLine($"Launching Android: {options.AdbDeviceName}");
+
 			await RunMSBuildComand(workingDir, options.CSProj, "/t:Install", "/t:_Run", "/p:AndroidAttachDebugger=true", $"/p:SelectedDevice={options.AdbDeviceName}");
-
-
-
-
-			//var appPath = Directory.EnumerateDirectories(options.OutputFolder, "*.app").FirstOrDefault();
-			//var iOSSdkVersion = options.iOSSimulatorDeviceOS;
-
-			//var success = await RunMlaumchComand(MlaunchPath, workingDir,
-			//	sdkRoot,
-			//	$"--launchsim {appPath}",
-			//	$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
-			//	$"--sdk {iOSSdkVersion} --device=:v2:runtime=com.apple.CoreSimulator.SimRuntime.iOS-{iOSSdkVersion.Replace(".", "-")},devicetype=com.apple.CoreSimulator.SimDeviceType.{options.iOSSimulatorDeviceType}"
-			//	);
-			//Console.WriteLine(success);
 		}
 
 		public Task<(bool Success, string Output)> RunMSBuildComand(string workingDirectory, params string[] args)
