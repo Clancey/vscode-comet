@@ -25,10 +25,12 @@
 		"node": "^6.3.0"
 	},
 	"dependencies": {
+		"@types/execa": "^2.0.0",
 		"@types/vscode": "^1.47.0",
-		"vscode-test": "^1.4.0",
+		"execa": "^4.0.3",
 		"vscode-debugprotocol": "^1.20.0",
-		"vscode-nls": "^2.0.2"
+		"vscode-nls": "^2.0.2",
+		"vscode-test": "^1.4.0"
 	},
 	"repository": {
 		"type": "git",
