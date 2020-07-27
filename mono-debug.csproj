@@ -58,4 +58,40 @@
 	<ItemGroup>
 	  <ProjectReference Include="AndroidDevices\AndroidDevices.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="node_modules\enhanced-resolve\LICENSE" />
+	  <None Remove="node_modules\enhanced-resolve\README.md" />
+	  <None Remove="node_modules\enhanced-resolve\lib\JoinRequestPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\NextPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\ModuleKindPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\ModulesInRootPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\LogInfoPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\SyncAsyncFileSystemDecorator.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\ParsePlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\AliasFieldPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\NodeJsInputFileSystem.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\CloneBasenamePlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\FileExistsPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\MainFieldPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\getInnerRequest.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\UnsafeCachePlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\SymlinkPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\AppendPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\AliasPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\DescriptionFilePlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\DescriptionFileUtils.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\ModulesInHierachicDirectoriesPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\ConcordExtensionsPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\ModuleAppendPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\ConcordMainPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\ResultPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\ConcordModulesPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\CachedInputFileSystem.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\FileKindPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\DirectoryExistsPlugin.js" />
+	  <None Remove="node_modules\enhanced-resolve\lib\Resolver.js" />
+	  <None Remove="node_modules\ts-loader\LICENSE" />
+	  <None Remove="node_modules\ts-loader\HISTORY.md" />
+	  <None Remove="node_modules\ts-loader\README.md" />
+	</ItemGroup>
 </Project>

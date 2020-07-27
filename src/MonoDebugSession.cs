@@ -313,14 +313,15 @@ namespace VSCodeDebug
 
 			Console.WriteLine($"Launching Android: {options.AdbDeviceName}");
 
-			await RunMSBuildComand(workingDir, options.CSProj, "/t:Install", "/t:_Run", "/p:AndroidAttachDebugger=true", $"/p:SelectedDevice={options.AdbDeviceName}");
+			await RunMSBuildComand(workingDir, options.CSProj, "/t:Install", "/t:_Run", "/p:AndroidAttachDebugger=true", $"/p:SelectedDevice={options.AdbDeviceName}", $"-p:AndroidSdbTargetPort={port}",$"-p:AndroidSdbHostPort={port}");
 		}
 
 		public Task<(bool Success, string Output)> RunMSBuildComand(string workingDirectory, params string[] args)
 		{
 			//TODO: On windows find the MSBuild!
 			var msBuildCommand = Program.IsRunningOnMono() ? "ln" : "msbuid";
-			var newArgs = Program.IsRunningOnMono() ? new[] { "msbuild" }.Union(args).ToArray() : args;
+			var newArgs =// Program.IsRunningOnMono() ?
+				new [] { "msbuild" }.Union (args).ToArray ();// : args;
 			var p = new System.Diagnostics.Process();
 			return Task.Run(() => {
 				try {

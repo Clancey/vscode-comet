@@ -343,6 +343,7 @@ export class CometProjectManager implements vscode.Disposable {
         if(!this.currentSimulator)
         {
             await this.showDevicePicker();
+            config.platform = CometProjectManager.currentPlatform;
         }
         if (this.currentSimulator) {
             config.AdbDeviceName = this.currentSimulator.name;
