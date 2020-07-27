@@ -16,13 +16,19 @@ export interface DeviceData {
 const path = require('path');
 const execa = require('execa');
 
+import * as vscode from 'vscode';
+
 export class XamarinUtil
 {
 	public UtilPath: string;
 
 	constructor()
 	{
-		this.UtilPath = path.join(process.cwd(), 'src', 'xamarin-util', 'bin', 'Release', 'netcoreapp3.1', 'xamarin-util.exe');
+		var thisExtension = vscode.extensions.getExtension('ms-vscode.xamarin');
+
+		var extPath = thisExtension.extensionPath;
+
+		this.UtilPath = path.join(extPath, 'src', 'xamarin-util', 'bin', 'Release', 'netcoreapp3.1', 'xamarin-util.exe');
 	}
 	
 	async RunCommand<TResult>(cmd: string, args: string[] = null)
