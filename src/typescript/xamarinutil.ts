@@ -28,7 +28,7 @@ export class XamarinUtil
 
 		var extPath = thisExtension.extensionPath;
 
-		this.UtilPath = path.join(extPath, 'src', 'xamarin-util', 'bin', 'Release', 'netcoreapp3.1', 'xamarin-util.exe');
+		this.UtilPath = path.join(extPath, 'src', 'xamarin-util', 'bin', 'Release', 'netcoreapp3.1', 'xamarin-util.dll');
 	}
 	
 	async RunCommand<TResult>(cmd: string, args: string[] = null)
@@ -41,7 +41,7 @@ export class XamarinUtil
 				stdargs.push(a);
 		}
 
-		var proc = await execa(this.UtilPath, stdargs);
+		var proc = await execa('dotnet', [ this.UtilPath ].concat(stdargs));
 		var txt = proc['stdout'];
 
 		return JSON.parse(txt) as CommandResponse<TResult>;
