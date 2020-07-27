@@ -14,9 +14,9 @@
 	"license": "MIT",
 	"private": true,
 	"scripts": {
-		"prepublish": "make build",
-		"vscode:prepublish": "make build",
-		"compile": "make build",
+		"prepublish": "pwsh ./build.ps1 build",
+		"vscode:prepublish": "pwsh ./build.ps1 build",
+		"compile": "pwsh ./build.ps1 build",
 		"watch": "tsc -w -p ./src/typescript",
 		"test": "make tests; mocha --timeout 10000 -u tdd ./out/tests"
 	},
@@ -25,10 +25,12 @@
 		"node": "^6.3.0"
 	},
 	"dependencies": {
+		"@types/execa": "^2.0.0",
 		"@types/vscode": "^1.47.0",
-		"vscode-test": "^1.4.0",
+		"execa": "^4.0.3",
 		"vscode-debugprotocol": "^1.20.0",
-		"vscode-nls": "^2.0.2"
+		"vscode-nls": "^2.0.2",
+		"vscode-test": "^1.4.0"
 	},
 	"repository": {
 		"type": "git",
@@ -44,9 +46,11 @@
 		"@types/node": "^6.0.39",
 		"mocha": "^2.4.5",
 		"typescript": "^2.0.3",
-		"vscode-debugadapter-testsupport": "^1.20.0",
 		"vsce": "^1.20.0",
-		"vscode-nls-dev": "^2.0.1"
+		"vscode-debugadapter-testsupport": "^1.20.0",
+		"vscode-nls-dev": "^2.0.1",
+		"webpack-cli": "^3.3.12",
+		"webpack": "^4.44.0"
 	},
 	"main": "./out/extension",
 	"activationEvents": [
@@ -157,7 +161,7 @@
 			{
 				"type": "mono",
 				"label": "Xamarin (Mono C#)",
-				"program": "./bin/Release/mono-debug.exe",
+				"program": "./src/mono-debug/bin/Release/netcoreapp3.1/mono-debug.exe"
 				"osx": {
 					"runtime": "mono"
 				},

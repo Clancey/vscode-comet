@@ -1,11 +1,29 @@
 {
-	"version": "0.1.0",
-	"command": "npm",
-	"isShellCommand": true,
-	"isBackground": true,
-	"showOutput": "always",
-	"args": [
-		"run", "watch"
-	],
-	"problemMatcher": "$tsc-watch"
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "NPM",
+			"command": "npm",
+			"type": "shell",
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"args": [
+				"run",
+				"watch"
+			],
+			"problemMatcher": "$tsc-watch"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "msbuild /r /t:Build /p:Configuration=Debug ./src/mono-debug/mono-debug.csproj"
+		},
+	]
 }
