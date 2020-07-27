@@ -15,11 +15,18 @@
 			]
 		},
 		{
-			"type": "mono",
-			"request": "launch",
 			"name": "Server",
-			"program": "${workspaceRoot}/bin/Debug/mono-debug.exe",
-			"args": [ "--server=4711" ]
+			"type": "coreclr",
+			"request": "launch",
+			"preLaunchTask": "build",
+			// If you have changed target frameworks, make sure to update the program path.
+			"program": "${workspaceFolder}/src/mono-debug/bin/Debug/netcoreapp3.1/mono-debug.exe",
+			"args": [ "--server", "--trace=response" ],
+			"cwd": "${workspaceFolder}",
+			// For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window
+			"console": "internalConsole",
+			"stopAtEntry": false,
+			"internalConsoleOptions": "openOnSessionStart"
 		},
 		{
 			"type": "node",
@@ -28,8 +35,10 @@
 			"cwd": "${workspaceRoot}",
 			"program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
 			"args": [
-				"-u", "tdd",
-				"--timeout", "999999",
+				"-u",
+				"tdd",
+				"--timeout",
+				"999999",
 				"--colors",
 				"./out/tests"
 			],
@@ -37,13 +46,18 @@
 				"--nolazy"
 			],
 			"sourceMaps": true,
-			"outFiles": [ "${workspaceRoot}/out/tests/**/*.js" ]
+			"outFiles": [
+				"${workspaceRoot}/out/tests/**/*.js"
+			]
 		}
 	],
 	"compounds": [
 		{
 			"name": "Extension + Server",
-			"configurations": [ "Extension", "Server" ]
+			"configurations": [
+				"Extension",
+				"Server"
+			]
 		}
 	]
 }
