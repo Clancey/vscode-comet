@@ -36,7 +36,7 @@ class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
         var devices = await util.GetAndroidDevices();
 
         for (var device of devices) {
-            results.push(new EmulatorItem(device.name, device.serial, device.isEmulator, device.isRunning));
+            results.push(new EmulatorItem(device.name, "android", device.serial, device.isEmulator, device.isRunning));
         }
 
         return results;
@@ -48,6 +48,7 @@ class EmulatorItem extends vscode.TreeItem {
     constructor(
         public readonly name: string,
         serial: string,
+        platform: string,
         isEmulator: boolean = false,
         isRunning: boolean = false,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None) 
