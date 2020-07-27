@@ -64,7 +64,7 @@
 				{
 					"id": "xamarinEmulator",
 					"name": "Available Emulators"
-				}, 
+				},
 				{
 					"id": "xamarinNewProject",
 					"name": "File > New"
@@ -161,7 +161,7 @@
 			{
 				"type": "mono",
 				"label": "Xamarin (Mono C#)",
-				"program": "./src/mono-debug/bin/Release/netcoreapp3.1/mono-debug.exe"
+				"program": "./src/mono-debug/bin/Release/netcoreapp3.1/mono-debug.exe",
 				"osx": {
 					"runtime": "mono"
 				},
