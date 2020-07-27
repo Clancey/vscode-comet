@@ -58,9 +58,12 @@
 		"views": {
 			"xamarin": [
 				{
-					"id": "xamarinforms",
-					"name": "Xamarin Forms",
-					"icon": "images/xam-logo.svg"
+					"id": "xamarinEmulator",
+					"name": "Available Emulators"
+				}, 
+				{
+					"id": "xamarinNewProject",
+					"name": "File > New"
 				}
 			]
 		},
@@ -73,11 +76,17 @@
 				}
 			]
 		},
+		"viewsWelcome": [
+			{
+				"view": "xamarinNewProject",
+				"contents": "Start a new project. \n [New App](command:xamarinNewProject.newProject)"
+			}
+		],
 		"menus": {
 			"view/title": [
 				{
-					"command": "xamarinforms.refreshEntry",
-					"when": "view == xamarinforms",
+					"command": "xamarinEmulator.refreshEntry",
+					"when": "view == xamarinEmulator",
 					"group": "navigation"
 				}
 			]
@@ -128,8 +137,12 @@
 				"category": "Debug"
 			},
 			{
-				"command": "xamarinforms.refreshEntry",
+				"command": "xamarinEmulator.refreshEntry",
 				"title": "Refresh"
+			},
+			{
+				"command": "xamarinNewProject.newProject",
+				"title": "new project"
 			}
 		],
 		"breakpoints": [
@@ -143,7 +156,7 @@
 		"debuggers": [
 			{
 				"type": "mono",
-				"label": "C# Mono",
+				"label": "Xamarin (Mono C#)",
 				"program": "./bin/Release/mono-debug.exe",
 				"osx": {
 					"runtime": "mono"
