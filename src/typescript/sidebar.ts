@@ -14,14 +14,6 @@ class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
     }
 
     getChildren(element?: EmulatorItem): vscode.ProviderResult<EmulatorItem[]> {
-
-        vscode.window.showInformationMessage("Starting getChildren()!");
-
-        // if (!this.workspaceRoot) {
-        //     vscode.window.showInformationMessage("Not in workspace root!")
-        //     return 
-        // }
-
         return Promise.resolve(this.getEmulatorsAndDevices());
     }
 
@@ -33,10 +25,10 @@ class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
         var util = new XamarinUtil();
 
         var results = new Array<EmulatorItem>();
-        var devices = await util.GetAndroidDevices();
+        var devices = await util.GetDevices();
 
         for (var device of devices) {
-            results.push(new EmulatorItem(device.name, "android", device.serial, device.isEmulator, device.isRunning));
+            results.push(new EmulatorItem(device.name, device.platform, device.serial, device.isEmulator, device.isRunning));
         }
 
         return results;
