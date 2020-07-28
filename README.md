@@ -26,5 +26,6 @@ All the above experiences should work in VS Code on both Windows and Mac
 0. For now we'll expect you have the Xamarin SDK, etc present via a Visual Studio (proper) install
 1. Clone repo recursively `git clone --recursive git@github.com:joshspicer/vscode-xamarin-ext.git`
 2. `npm i`
-3. pwsh build.ps1
+3. `pwsh build.ps1`
 4. Press F5 to debug 
+
