@@ -10,8 +10,8 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import XamarinEmulatorProvider from "./sidebar"
 import * as XamarinCommands from './xamarin-commands';
 import { execArgv } from 'process';
-import { SimpleResult } from "./xamarinutil"
-import { XamarinUtil } from "./xamarinutil"
+import { SimpleResult } from "./xamarin-util";
+import { XamarinUtil } from "./xamarin-util";
 
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
