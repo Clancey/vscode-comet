@@ -30,10 +30,12 @@ export async function newProject() {
 
     vscode.workspace.updateWorkspaceFolders(0, 1, { uri: folder });
 
+    // TODO: Move focus to Explorer somehow to make it obvious!
+
     });
 }   
 
-export async function selectEmulator(evt: vscode.TreeViewSelectionChangeEvent<EmulatorItem>, treeViewProvider: XamarinEmulatorProvider) {
+export async function selectEmulatorTreeView(evt: vscode.TreeViewSelectionChangeEvent<EmulatorItem>, treeViewProvider: XamarinEmulatorProvider) {
 
     if (evt.selection.length !== 1) {
         vscode.window.showErrorMessage(`There are ${evt.selection.length} emulators selected!`);
@@ -44,9 +46,4 @@ export async function selectEmulator(evt: vscode.TreeViewSelectionChangeEvent<Em
         treeViewProvider.CURRENT_EMULATOR = element;   
         treeViewProvider.refresh(element);  
     });
-<<<<<<< HEAD
 }
->>>>>>> local
-=======
-}
->>>>>>> 2e4d191e36cd87e4744c32085fe3234eddb1a0c1

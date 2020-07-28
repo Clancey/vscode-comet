@@ -144,7 +144,7 @@
 			{
 
 				"command": "xamarinEmulator.refresh",
-				"title": "Xamarin: Refresh Emulator List"
+				"title": "Refresh"
 			},
 			{
 				"command": "xamarinEmulator.select",
