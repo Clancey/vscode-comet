@@ -19,7 +19,6 @@ export class XamarinEmulatorProvider implements vscode.TreeDataProvider<Emulator
     getTreeItem(element: EmulatorItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
 
         if (this.CURRENT_EMULATOR && element.name == this.CURRENT_EMULATOR.name) {
-            vscode.window.showInformationMessage(`The current emulator selected is ${element.name}`)
             element.label = `[*] ${element.label}`;
         }
 

@@ -37,7 +37,6 @@ export async function selectEmulator(evt: vscode.TreeViewSelectionChangeEvent<Em
     }
 
     evt.selection.forEach(element => {
-        vscode.window.showInformationMessage(element.name);
         treeViewProvider.CURRENT_EMULATOR = element;     
         vscode.commands.executeCommand('xamarinEmulator.refresh');   
     });
