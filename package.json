@@ -152,7 +152,7 @@
 		],
 		"breakpoints": [
 			{
-				"language": "csharp"	
+				"language": "csharp"
 			},
 			{
 				"language": "fsharp"

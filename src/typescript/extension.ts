@@ -14,13 +14,15 @@ const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
 const configuration = vscode.workspace.getConfiguration('mono-debug');
 
+var treeViewProvider: XamarinEmulatorProvider; 
+
 export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('extension.mono-debug.configureExceptions', () => configureExceptions()));
 	context.subscriptions.push(vscode.commands.registerCommand('extension.mono-debug.startSession', config => startSession(config)));
 	
 	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
 
-	const treeViewProvider = new XamarinEmulatorProvider(vscode.workspace.rootPath);
+	treeViewProvider = new XamarinEmulatorProvider(vscode.workspace.rootPath);
 	const treeView = vscode.window.createTreeView("xamarinEmulator", { treeDataProvider: treeViewProvider });
 	vscode.commands.registerCommand("xamarinEmulator.refresh", () => treeViewProvider.refresh());	
 	treeView.onDidChangeSelection(evt => XamarinCommands.selectEmulator(evt, treeViewProvider));

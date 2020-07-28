@@ -12,16 +12,15 @@ export class XamarinEmulatorProvider implements vscode.TreeDataProvider<Emulator
     private _onDidChangeTreeData: vscode.EventEmitter<EmulatorItem | undefined> = new vscode.EventEmitter<EmulatorItem | undefined>();
     readonly onDidChangeTreeData: vscode.Event<EmulatorItem | undefined> = this._onDidChangeTreeData.event;
 
-    refresh(): void {
-        this._onDidChangeTreeData.fire(undefined);
+    public refresh(item: EmulatorItem = undefined): void {
+        this._onDidChangeTreeData.fire(undefined);  // TODO: don't reload everytime (pass in `item`);
     }
 
     getTreeItem(element: EmulatorItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
 
         if (this.CURRENT_EMULATOR && element.name == this.CURRENT_EMULATOR.name) {
-            element.label = `[*] ${element.label}`;
+            element.label = `>>> ${element.label}`;
         }
-
         return element;
     }
 
