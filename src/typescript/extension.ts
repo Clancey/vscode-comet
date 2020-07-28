@@ -14,14 +14,40 @@ import { SimpleResult } from "./xamarin-util";
 import { XamarinUtil } from "./xamarin-util";
 import { XamarinConfigurationProvider } from "./xamarin-configuration";
 
+import { BaseEvent, WorkspaceInformationUpdated } from './omnisharp/loggingEvents';
+import { EventType } from './omnisharp/EventType';
+import { ObservableValue } from './ObservableValue';
+import { OutputChannel } from 'vscode';
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
 const configuration = vscode.workspace.getConfiguration('mono-debug');
 
+let startableProjects = new ObservableValue<string[]>();
+let omnisharp: any = null;
+let output: OutputChannel = null;
+
 var currentDebugSession: vscode.DebugSession;
 
 export function activate(context: vscode.ExtensionContext) {
+	output = vscode.window.createOutputChannel("Xamarin");
+	omnisharp = vscode.extensions.getExtension("ms-vscode.csharp").exports;
+
+	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
+
+	omnisharp.eventStream.subscribe((e: BaseEvent) => {
+		if (e.type === EventType.WorkspaceInformationUpdated) {
+			startableProjects.next((<WorkspaceInformationUpdated>e).info.MsBuild.Projects
+				.filter(project => project.TargetFramework.startsWith("MonoAndroid") || project.TargetFramework.startsWith("Xamarin"))
+				.map(project => project.Path));
+
+			if (startableProjects.value.values.length > 0) {
+				output.appendLine("Found startable projects: ");
+				startableProjects.value.forEach(project => output.appendLine(project));
+			}
+		}
+	});
+
 	context.subscriptions.push(vscode.commands.registerCommand('extension.mono-debug.configureExceptions', () => configureExceptions()));
 	context.subscriptions.push(vscode.commands.registerCommand('extension.mono-debug.startSession', config => startSession(config)));
 	
