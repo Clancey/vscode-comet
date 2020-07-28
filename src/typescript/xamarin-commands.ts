@@ -18,7 +18,7 @@ export async function newProject() {
     // TEMP
     // Requires that you have added `forms-app` to your env via https://github.com/xamarin/xamarin-templates#creating-a-new-template
     const cprocess = require('child_process')
-    cprocess.exec(`dotnet new forms-app -o ${folder[0].path}/project_name`, (err, stdout, stderr) => {
+    cprocess.exec(`dotnet new forms-app -o ${folder[0].path}/${project_name}`, (err, stdout, stderr) => {
         vscode.window.showInformationMessage(`Creating ${project_name} at path ${folder[0].path}...`);
     console.log('stdout: ' + stdout);
     console.log('stderr: ' + stderr);

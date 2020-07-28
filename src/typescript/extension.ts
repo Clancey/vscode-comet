@@ -24,8 +24,6 @@ export function activate(context: vscode.ExtensionContext) {
 	const treeView = vscode.window.createTreeView("xamarinEmulator", { treeDataProvider: treeViewProvider });
 	vscode.commands.registerCommand("xamarinEmulator.refresh", () => treeViewProvider.refresh());	
 	treeView.onDidChangeSelection(evt => XamarinCommands.selectEmulator(evt, treeViewProvider));
-
-
 }	
 
 export function deactivate() {
