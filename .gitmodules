@@ -4,3 +4,6 @@
 [submodule "external/nrefactory"]
 	path = external/nrefactory
 	url = https://github.com/xamarin/NRefactory.git
+[submodule "external/babyshark"]
+	path = external/babyshark
+	url = https://github.com/xamarin/babyshark.git
