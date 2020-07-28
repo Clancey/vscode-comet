@@ -53,6 +53,21 @@ export class XamarinUtil
 		return JSON.parse(txt) as CommandResponse<TResult>;
 	}
 
+	public async Debug(jsonConfig: string): Promise<SimpleResult>
+	{
+		var proc = execa('dotnet', [ this.UtilPath, `-c=debug` ]);
+
+		proc.stdin.pipe(jsonConfig);
+		
+		await proc;
+
+		var txt = proc['stdout'];
+
+		var result = JSON.parse(txt) as CommandResponse<SimpleResult>;
+
+		return result.response;
+	}
+
 	public async GetAndroidDevices()
 	{
 		var r = await this.RunCommand<Array<DeviceData>>("android-devices");

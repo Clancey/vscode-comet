@@ -9,6 +9,10 @@ import * as nls from 'vscode-nls';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import XamarinEmulatorProvider from "./sidebar"
 import * as XamarinCommands from './xamarin-commands';
+import { execArgv } from 'process';
+import { SimpleResult } from "./xamarinutil"
+import { XamarinUtil } from "./xamarinutil"
+
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
@@ -169,6 +173,13 @@ function startSession(config: any) : StartSessionResult {
 	if (config && !config.__exceptionOptions) {
 		config.__exceptionOptions = convertToExceptionOptions(getModel());
 	}
+	
+	var util = new XamarinUtil();
+	
+	var configJson = config.toJSON();
+	
+	util.Debug(configJson);
+
 
 	vscode.commands.executeCommand('vscode.startDebug', config);
 

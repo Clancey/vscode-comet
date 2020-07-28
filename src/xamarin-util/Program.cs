@@ -49,6 +49,7 @@ namespace VsCodeXamarinUtil
 					"android-devices" => AndroidDevices(),
 					"ios-devices" => iOSDevices(),
 					"android-start-emulator" => AndroidStartEmulator(extras),
+					"debug" => Debug(),
 					_ => Version()
 				};
 			}
@@ -117,6 +118,21 @@ namespace VsCodeXamarinUtil
 			var ok = AndroidSdk.StartEmulatorAndWaitForBoot(GetAndroidSdkHome(), avdName);
 
 			return new SimpleResult { Success = ok };
+		}
+
+		static SimpleResult Debug()
+		{
+			var stdin = Console.OpenStandardInput();
+
+			using (var sr = new StreamReader(stdin))
+			{
+				var jsonConfig = sr.ReadToEnd();
+
+				Console.WriteLine(jsonConfig);
+				// TODO: Clancey's magic
+			}
+
+			return new SimpleResult { Success = true };
 		}
 	}
 }
