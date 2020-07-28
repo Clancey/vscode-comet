@@ -3,13 +3,26 @@ import { timeStamp } from 'console';
 import { DeviceData } from "./xamarinutil"
 import { XamarinUtil } from "./xamarinutil"
 
-class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
+export class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
 
     constructor(private workspaceRoot: string) {}
 
-    onDidChangeTreeData?: vscode.Event<void | EmulatorItem>;
+    public CURRENT_EMULATOR: EmulatorItem;
+
+    private _onDidChangeTreeData: vscode.EventEmitter<EmulatorItem | undefined> = new vscode.EventEmitter<EmulatorItem | undefined>();
+    readonly onDidChangeTreeData: vscode.Event<EmulatorItem | undefined> = this._onDidChangeTreeData.event;
+
+    refresh(): void {
+        this._onDidChangeTreeData.fire(undefined);
+    }
 
     getTreeItem(element: EmulatorItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
+
+        if (this.CURRENT_EMULATOR && element.name == this.CURRENT_EMULATOR.name) {
+            vscode.window.showInformationMessage(`The current emulator selected is ${element.name}`)
+            element.label = `[*] ${element.label}`;
+        }
+
         return element;
     }
 
@@ -43,10 +56,10 @@ class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
     }
 }
 
-class EmulatorItem extends vscode.TreeItem {
+export class EmulatorItem extends vscode.TreeItem {
 
     constructor(
-        public readonly name: string,
+        public  name: string,
         serial: string,
         platform: string,
         isEmulator: boolean = false,
@@ -58,10 +71,11 @@ class EmulatorItem extends vscode.TreeItem {
         this.serial = serial;
         this.isEmulator = isEmulator;
         this.isRunning = isRunning;
+
     }
 
     get tooltip(): string {
-		return `${this.label}-Android emulator`;
+		return `${this.label}`;
     }
     
     serial: string;
@@ -73,5 +87,3 @@ class EmulatorItem extends vscode.TreeItem {
     // contextValue = 
 
 }
-
- export default XamarinEmulatorProvider;

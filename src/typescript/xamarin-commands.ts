@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { EmulatorItem, XamarinEmulatorProvider } from "./sidebar"
 
 // Initiates the flow of creating a new project.  Is opinionated.
 export async function newProject() {
@@ -14,7 +15,6 @@ export async function newProject() {
     };
    var folder = await vscode.window.showOpenDialog(dialogOpts);
 
-
     // TEMP
     // Requires that you have added `forms-app` to your env via https://github.com/xamarin/xamarin-templates#creating-a-new-template
     const cprocess = require('child_process')
@@ -28,3 +28,17 @@ export async function newProject() {
     }
 });
 } 
+
+export async function selectEmulator(evt: vscode.TreeViewSelectionChangeEvent<EmulatorItem>, treeViewProvider: XamarinEmulatorProvider) {
+
+    if (evt.selection.length !== 1) {
+        vscode.window.showErrorMessage(`There are ${evt.selection.length} emulators selected!`);
+        return;
+    }
+
+    evt.selection.forEach(element => {
+        vscode.window.showInformationMessage(element.name);
+        treeViewProvider.CURRENT_EMULATOR = element;     
+        vscode.commands.executeCommand('xamarinEmulator.refresh');   
+    });
+}
