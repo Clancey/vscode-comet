@@ -176,7 +176,7 @@ function startSession(config: any) : StartSessionResult {
 	
 	var util = new XamarinUtil();
 	
-	var configJson = config.toJSON();
+	var configJson = JSON.stringify(config);
 	
 	util.Debug(configJson);
 
