@@ -9,10 +9,17 @@ import * as nls from 'vscode-nls';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import XamarinEmulatorProvider from "./sidebar"
 import * as XamarinCommands from './xamarin-commands';
+import { execArgv } from 'process';
+import { SimpleResult } from "./xamarin-util";
+import { XamarinUtil } from "./xamarin-util";
+import { XamarinConfigurationProvider } from "./xamarin-configuration";
+
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
 const configuration = vscode.workspace.getConfiguration('mono-debug');
+
+var currentDebugSession: vscode.DebugSession;
 
 export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('extension.mono-debug.configureExceptions', () => configureExceptions()));
@@ -20,6 +27,40 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
 	vscode.window.registerTreeDataProvider('xamarinEmulator', new XamarinEmulatorProvider(vscode.workspace.rootPath));
+
+	const provider = new XamarinConfigurationProvider();
+	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xamarin', provider));
+		
+	context.subscriptions.push(vscode.debug.onDidStartDebugSession(async (s) => {
+		let type = s.type;
+
+		if (type === "vslsShare") {
+			const debugSessionInfo = await s.customRequest("debugSessionInfo");
+			type = debugSessionInfo.configurationProperties.type;
+		}
+
+		if (type === "xamarin") {
+			this.currentDebugSession = s;
+			var jsonConfig = JSON.stringify(s.configuration);
+
+			console.log(jsonConfig);
+
+			// JSON config sent over to xamarin util to do things first before debugging
+			var util = new XamarinUtil();
+
+			var r = await util.Debug(jsonConfig);
+
+		}
+	}));
+	context.subscriptions.push(vscode.debug.onDidTerminateDebugSession((s) => {
+		if (s === this.currentDebugSession) {
+			this.currentDebugSession = null;
+			// this.reloadStatus.hide();
+			// this.debugMetrics.hide();
+			const debugSessionEnd = new Date();
+			// this.disableAllServiceExtensions();
+		}
+	}));
 }
 
 export function deactivate() {
@@ -169,7 +210,7 @@ function startSession(config: any) : StartSessionResult {
 	if (config && !config.__exceptionOptions) {
 		config.__exceptionOptions = convertToExceptionOptions(getModel());
 	}
-
+	
 	vscode.commands.executeCommand('vscode.startDebug', config);
 
 	return {
