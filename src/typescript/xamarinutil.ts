@@ -9,9 +9,10 @@ interface CommandResponse<T> {
 export interface DeviceData {
 	name: string;
 	serial: string;
+	platform: string;
+	version: string;
 	isEmulator: boolean;
 	isRunning: boolean;
-	platform: string;
 }
 
 export interface SimpleResult {
