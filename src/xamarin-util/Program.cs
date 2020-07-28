@@ -45,6 +45,7 @@ namespace VsCodeXamarinUtil
 				{
 					"version" => Version(),
 					"android-devices" => AndroidDevices(),
+					"ios-devices" => iOSDevices(),
 					_ => Version()
 				};
 			}
@@ -89,5 +90,8 @@ namespace VsCodeXamarinUtil
 
 		static IEnumerable<DeviceData> AndroidDevices()
 			=> AndroidSdk.GetEmulatorsAndDevices(GetAndroidSdkHome());
+
+		static IEnumerable<DeviceData> iOSDevices()
+			=> XCode.GetEmulatorsAndDevices();
 	}
 }
