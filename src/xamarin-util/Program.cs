@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Json;
 
@@ -44,8 +45,10 @@ namespace VsCodeXamarinUtil
 				responseObject = command switch
 				{
 					"version" => Version(),
+					"devices" => AllDevices(),
 					"android-devices" => AndroidDevices(),
 					"ios-devices" => iOSDevices(),
+					"android-start-emulator" => AndroidStartEmulator(extras),
 					_ => Version()
 				};
 			}
@@ -92,6 +95,28 @@ namespace VsCodeXamarinUtil
 			=> AndroidSdk.GetEmulatorsAndDevices(GetAndroidSdkHome());
 
 		static IEnumerable<DeviceData> iOSDevices()
-			=> XCode.GetEmulatorsAndDevices();
+			=> XCode.GetSimulatorsAndDevices();
+
+		static IEnumerable<DeviceData> AllDevices()
+		{
+			var result = AndroidDevices();
+
+			if (Util.IsWindows)
+				return result;
+
+			return result.Concat(iOSDevices());
+		}
+
+		static SimpleResult AndroidStartEmulator(IEnumerable<string> args)
+		{
+			var avdName = args?.FirstOrDefault();
+
+			if (string.IsNullOrWhiteSpace(avdName))
+				throw new ArgumentNullException("AvdName");
+
+			var ok = AndroidSdk.StartEmulatorAndWaitForBoot(GetAndroidSdkHome(), avdName);
+
+			return new SimpleResult { Success = ok };
+		}
 	}
 }

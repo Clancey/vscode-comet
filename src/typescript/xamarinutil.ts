@@ -9,8 +9,14 @@ interface CommandResponse<T> {
 export interface DeviceData {
 	name: string;
 	serial: string;
+	platform: string;
+	version: string;
 	isEmulator: boolean;
 	isRunning: boolean;
+}
+
+export interface SimpleResult {
+	sucess: boolean;
 }
 
 const path = require('path');
@@ -50,6 +56,24 @@ export class XamarinUtil
 	public async GetAndroidDevices()
 	{
 		var r = await this.RunCommand<Array<DeviceData>>("android-devices");
+		return r.response;
+	}
+
+	public async GetiOSDevices()
+	{
+		var r = await this.RunCommand<Array<DeviceData>>("ios-devices");
+		return r.response;
+	}
+
+	public async GetDevices()
+	{
+		var r = await this.RunCommand<Array<DeviceData>>("devices");
+		return r.response;
+	}
+
+	public async StartAndroidEmulator(name: string)
+	{
+		var r = await this.RunCommand<SimpleResult>("android-start-emulator", [ name ]);
 		return r.response;
 	}
 }
