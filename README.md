@@ -6,9 +6,10 @@ Project Goals:
 * Create an extension pack that bundles together multiple extensions to create the full experience (C#, new Xamarin extension, etc.)
 * Create a landing page experience for new Xamarin projects that provides helpful links and UI instructional overlay
 
-All the above experiences should work on both Windows and Mac
+All the above experiences should work in VS Code on both Windows and Mac
 
 **Debug experience**
 
 * Build and launch the app on the emulator
 * Locals, Stacks, breakpoints, etc.
+* Support both Android & iOS
