@@ -49,6 +49,18 @@
 			"outFiles": [
 				"${workspaceRoot}/out/tests/**/*.js"
 			]
+		},
+		{
+			"name": "xamarin-util",
+			"type": "coreclr",
+			"request": "launch",
+			"preLaunchTask": "build",
+			"program": "${workspaceFolder}/src/xamarin-util/bin/Debug/netcoreapp3.1/xamarin-util.dll",
+			"args": ["-c=android-devices"],
+			"cwd": "${workspaceFolder}",
+			"console": "internalConsole",
+			"stopOnEntry": false,
+			"internalConsoleOptions": "openOnSessionStart"
 		}
 	],
 	"compounds": [
