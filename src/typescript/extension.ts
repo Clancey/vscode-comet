@@ -12,17 +12,19 @@ import * as XamarinCommands from './xamarin-commands';
 import { execArgv } from 'process';
 import { SimpleResult } from "./xamarin-util";
 import { XamarinUtil } from "./xamarin-util";
+import { XamarinProjectManager } from "./xamarin-project-manager";
 import { XamarinConfigurationProvider } from "./xamarin-configuration";
 import { BaseEvent, WorkspaceInformationUpdated } from './omnisharp/loggingEvents';
 import { EventType } from './omnisharp/EventType';
 import { ObservableValue } from './ObservableValue';
 import { OutputChannel } from 'vscode';
+import { MSBuildProject } from './omnisharp/protocol';
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
 const configuration = vscode.workspace.getConfiguration('xamarin-debug');
 
-let startableProjects = new ObservableValue<string[]>();
+xamarinProjectManager: XamarinProjectManager;
 let omnisharp: any = null;
 let output: OutputChannel = null;
 
@@ -30,20 +32,18 @@ var currentDebugSession: vscode.DebugSession;
 
 export function activate(context: vscode.ExtensionContext) {
 	output = vscode.window.createOutputChannel("Xamarin");
+
+	this.xamarinProjectManager = new XamarinProjectManager(context);
+
 	omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
 
 	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
 
 	omnisharp.eventStream.subscribe((e: BaseEvent) => {
 		if (e.type === EventType.WorkspaceInformationUpdated) {
-			startableProjects.next((<WorkspaceInformationUpdated>e).info.MsBuild.Projects
+			this.xamarinProjectManager.StartupProjects.next((<WorkspaceInformationUpdated>e).info.MsBuild.Projects
 				.filter(project => project.TargetFramework.startsWith("MonoAndroid") || project.TargetFramework.startsWith("Xamarin"))
-				.map(project => project.Path));
-
-			if (startableProjects.value.length > 0) {
-				output.appendLine("Found startable projects: ");
-				startableProjects.value.forEach(project => output.appendLine(project));
-			}
+				.map(project => project));
 		}
 	});
 
