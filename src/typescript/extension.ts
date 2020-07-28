@@ -12,6 +12,7 @@ import * as XamarinCommands from './xamarin-commands';
 import { execArgv } from 'process';
 import { SimpleResult } from "./xamarin-util";
 import { XamarinUtil } from "./xamarin-util";
+import { XamarinConfigurationProvider } from "./xamarin-configuration";
 
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
@@ -27,6 +28,9 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
 	vscode.window.registerTreeDataProvider('xamarinEmulator', new XamarinEmulatorProvider(vscode.workspace.rootPath));
 
+	const provider = new XamarinConfigurationProvider();
+	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xamarin', provider));
+		
 	context.subscriptions.push(vscode.debug.onDidStartDebugSession(async (s) => {
 		let type = s.type;
 
