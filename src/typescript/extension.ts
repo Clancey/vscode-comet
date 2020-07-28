@@ -20,7 +20,7 @@ import { OutputChannel } from 'vscode';
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
-const configuration = vscode.workspace.getConfiguration('mono-debug');
+const configuration = vscode.workspace.getConfiguration('xamarin-debug');
 
 let startableProjects = new ObservableValue<string[]>();
 let omnisharp: any = null;
@@ -47,8 +47,8 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(vscode.commands.registerCommand('extension.mono-debug.configureExceptions', () => configureExceptions()));
-	context.subscriptions.push(vscode.commands.registerCommand('extension.mono-debug.startSession', config => startSession(config)));
+	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.configureExceptions', () => configureExceptions()));
+	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.startSession', config => startSession(config)));
 
 	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
 	vscode.window.registerTreeDataProvider('xamarinEmulator', new XamarinEmulatorProvider(vscode.workspace.rootPath));

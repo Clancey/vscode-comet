@@ -53,8 +53,8 @@
 	},
 	"main": "./out/extension",
 	"activationEvents": [
-		"onCommand:extension.mono-debug.configureExceptions",
-		"onCommand:extension.mono-debug.startSession",
+		"onCommand:extension.xamarin-debug.configureExceptions",
+		"onCommand:extension.xamarin-debug.startSession",
 		"onStartupFinished",
 		"workspaceContains:*.csproj",
 		"workspaceContains:**/*.csproj"
@@ -100,7 +100,7 @@
 			"type": "object",
 			"title": "%configuration.title%",
 			"properties": {
-				"mono-debug.exceptionOptions": {
+				"xamarin-debug.exceptionOptions": {
 					"type": "object",
 					"additionalProperties": {
 						"type": "string",
@@ -137,7 +137,7 @@
 		},
 		"commands": [
 			{
-				"command": "extension.mono-debug.configureExceptions",
+				"command": "extension.xamarin-debug.configureExceptions",
 				"title": "%configure.exceptions.command%",
 				"category": "Debug"
 			},
@@ -162,7 +162,7 @@
 			{
 				"type": "xamarin",
 				"label": "Xamarin (Mono C#)",
-				"program": "./src/mono-debug/bin/Release/net472/mono-debug.exe",
+				"program": "./src/mono-debug/bin/Debug/net472/mono-debug.exe",
 				"osx": {
 					"runtime": "mono"
 				},
@@ -170,7 +170,7 @@
 					"runtime": "mono"
 				},
 				"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-				"startSessionCommand": "extension.mono-debug.startSession",
+				"startSessionCommand": "extension.xamarin-debug.startSession",
 				"initialConfigurations": [
 					{
 						"name": "%mono.launch.config.name%",
