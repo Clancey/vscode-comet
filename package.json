@@ -160,7 +160,7 @@
 		],
 		"debuggers": [
 			{
-				"type": "mono",
+				"type": "xamarin",
 				"label": "Xamarin (Mono C#)",
 				"program": "./src/mono-debug/bin/Release/net472/mono-debug.exe",
 				"osx": {
