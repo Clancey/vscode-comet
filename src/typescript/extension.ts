@@ -30,7 +30,7 @@ var currentDebugSession: vscode.DebugSession;
 
 export function activate(context: vscode.ExtensionContext) {
 	output = vscode.window.createOutputChannel("Xamarin");
-	omnisharp = vscode.extensions.getExtension("ms-vscode.csharp").exports;
+	omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
 
 	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
 
@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
 				.filter(project => project.TargetFramework.startsWith("MonoAndroid") || project.TargetFramework.startsWith("Xamarin"))
 				.map(project => project.Path));
 
-			if (startableProjects.value.values.length > 0) {
+			if (startableProjects.value.length > 0) {
 				output.appendLine("Found startable projects: ");
 				startableProjects.value.forEach(project => output.appendLine(project));
 			}
