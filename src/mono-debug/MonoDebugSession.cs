@@ -9,11 +9,11 @@ using System.Threading;
 using System.Linq;
 using System.Net;
 using Mono.Debugging.Client;
-
+using VSCodeDebug.HotReload;
 
 namespace VSCodeDebug
 {
-	public class MonoDebugSession : DebugSession
+    public class MonoDebugSession : DebugSession
 	{
 		private const string MONO = "mono";
 		private readonly string[] MONO_EXTENSIONS = new String[] {
@@ -47,6 +47,7 @@ namespace VSCodeDebug
 		private bool _terminated = false;
 		private bool _stderrEOF = true;
 		private bool _stdoutEOF = true;
+		private HotReloadManager _hotReloadManager;
 
 
 		public MonoDebugSession() : base()
@@ -112,6 +113,8 @@ namespace VSCodeDebug
 
 			_session.TargetReady += (sender, e) => {
 				_activeProcess = _session.GetProcesses().SingleOrDefault();
+				_hotReloadManager = new HotReloadManager();
+				_hotReloadManager.StartHR(_session);
 			};
 
 			_session.TargetExited += (sender, e) => {
@@ -153,7 +156,7 @@ namespace VSCodeDebug
 			};
 		}
 
-		public override void Initialize(Response response, dynamic args)
+        public override void Initialize(Response response, dynamic args)
 		{
 			OperatingSystem os = Environment.OSVersion;
 			if (os.Platform != PlatformID.MacOSX && os.Platform != PlatformID.Unix && os.Platform != PlatformID.Win32NT) {

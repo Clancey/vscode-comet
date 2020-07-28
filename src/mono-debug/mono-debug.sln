@@ -1,0 +1,71 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30317.65
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mono-debug", "mono-debug.csproj", "{38338CAD-05F1-4AD1-9ACF-47E8E7FE30C2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.HotReload.Bridge", "..\..\external\babyshark\Source\Xamarin.HotReload.Bridge\Xamarin.HotReload.Bridge.csproj", "{AC73D476-CA48-49F7-9464-22EA55F59496}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.HotReload.Agent", "..\..\external\babyshark\Source\Xamarin.HotReload.Agent\Xamarin.HotReload.Agent.csproj", "{5D834A35-C42D-480D-9BFF-E8AA600A4982}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.HotReload.Contracts", "..\..\external\babyshark\Source\Xamarin.HotReload.Contracts\Xamarin.HotReload.Contracts.csproj", "{C8DA4E66-6279-4020-974C-035B4B6ABC26}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.HotReload.Translations", "..\..\external\babyshark\Source\Xamarin.HotReload.Translations\Xamarin.HotReload.Translations.csproj", "{7D759469-6C09-46A4-89AC-6DE310D00464}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.HotReload.Forms", "..\..\external\babyshark\Source\Xamarin.HotReload.Forms\Xamarin.HotReload.Forms.csproj", "{03A4ABC8-F993-4A0C-AAEC-997885B54B26}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HotReload", "HotReload", "{D22A2301-3D1B-4EF3-B52D-BF9FC3C3E7F3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.HotReload.Ide", "..\..\external\babyshark\Source\Xamarin.HotReload.Ide\Xamarin.HotReload.Ide.csproj", "{3A6046C0-B372-4DB6-A9B8-10BF47A06121}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{38338CAD-05F1-4AD1-9ACF-47E8E7FE30C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38338CAD-05F1-4AD1-9ACF-47E8E7FE30C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38338CAD-05F1-4AD1-9ACF-47E8E7FE30C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38338CAD-05F1-4AD1-9ACF-47E8E7FE30C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC73D476-CA48-49F7-9464-22EA55F59496}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC73D476-CA48-49F7-9464-22EA55F59496}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC73D476-CA48-49F7-9464-22EA55F59496}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC73D476-CA48-49F7-9464-22EA55F59496}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D834A35-C42D-480D-9BFF-E8AA600A4982}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D834A35-C42D-480D-9BFF-E8AA600A4982}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D834A35-C42D-480D-9BFF-E8AA600A4982}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D834A35-C42D-480D-9BFF-E8AA600A4982}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8DA4E66-6279-4020-974C-035B4B6ABC26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8DA4E66-6279-4020-974C-035B4B6ABC26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8DA4E66-6279-4020-974C-035B4B6ABC26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8DA4E66-6279-4020-974C-035B4B6ABC26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D759469-6C09-46A4-89AC-6DE310D00464}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D759469-6C09-46A4-89AC-6DE310D00464}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D759469-6C09-46A4-89AC-6DE310D00464}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D759469-6C09-46A4-89AC-6DE310D00464}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03A4ABC8-F993-4A0C-AAEC-997885B54B26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03A4ABC8-F993-4A0C-AAEC-997885B54B26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03A4ABC8-F993-4A0C-AAEC-997885B54B26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03A4ABC8-F993-4A0C-AAEC-997885B54B26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A6046C0-B372-4DB6-A9B8-10BF47A06121}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A6046C0-B372-4DB6-A9B8-10BF47A06121}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A6046C0-B372-4DB6-A9B8-10BF47A06121}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A6046C0-B372-4DB6-A9B8-10BF47A06121}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AC73D476-CA48-49F7-9464-22EA55F59496} = {D22A2301-3D1B-4EF3-B52D-BF9FC3C3E7F3}
+		{5D834A35-C42D-480D-9BFF-E8AA600A4982} = {D22A2301-3D1B-4EF3-B52D-BF9FC3C3E7F3}
+		{C8DA4E66-6279-4020-974C-035B4B6ABC26} = {D22A2301-3D1B-4EF3-B52D-BF9FC3C3E7F3}
+		{7D759469-6C09-46A4-89AC-6DE310D00464} = {D22A2301-3D1B-4EF3-B52D-BF9FC3C3E7F3}
+		{03A4ABC8-F993-4A0C-AAEC-997885B54B26} = {D22A2301-3D1B-4EF3-B52D-BF9FC3C3E7F3}
+		{3A6046C0-B372-4DB6-A9B8-10BF47A06121} = {D22A2301-3D1B-4EF3-B52D-BF9FC3C3E7F3}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C0062C7F-7F87-41DC-9A63-BE15C14E7A43}
+	EndGlobalSection
+EndGlobal
