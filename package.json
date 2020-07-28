@@ -56,7 +56,9 @@
 	"activationEvents": [
 		"onCommand:extension.mono-debug.configureExceptions",
 		"onCommand:extension.mono-debug.startSession",
-		"onStartupFinished"
+		"onStartupFinished",
+		"workspaceContains:*.csproj",
+		"workspaceContains:**/*.csproj"
 	],
 	"contributes": {
 		"views": {
