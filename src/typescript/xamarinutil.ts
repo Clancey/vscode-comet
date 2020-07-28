@@ -55,11 +55,7 @@ export class XamarinUtil
 
 	public async Debug(jsonConfig: string): Promise<SimpleResult>
 	{
-		var proc = execa('dotnet', [ this.UtilPath, `-c=debug` ]);
-
-		proc.stdin.pipe(jsonConfig);
-		
-		await proc;
+		var proc = await execa('dotnet', [ this.UtilPath, `-c=debug` ], { input: jsonConfig + '\r\n' });
 
 		var txt = proc['stdout'];
 
@@ -89,6 +85,12 @@ export class XamarinUtil
 	public async StartAndroidEmulator(name: string)
 	{
 		var r = await this.RunCommand<SimpleResult>("android-start-emulator", [ name ]);
+		return r.response;
+	}
+
+	public async DebugProject(config: any)
+	{
+		var r = await this.RunCommand<SimpleResult>("debug", [ config.toJSON() ]);
 		return r.response;
 	}
 }

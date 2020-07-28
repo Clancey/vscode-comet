@@ -122,15 +122,9 @@ namespace VsCodeXamarinUtil
 
 		static SimpleResult Debug()
 		{
-			var stdin = Console.OpenStandardInput();
+			var json = Console.ReadLine();
 
-			using (var sr = new StreamReader(stdin))
-			{
-				var jsonConfig = sr.ReadToEnd();
-
-				Console.WriteLine(jsonConfig);
-				// TODO: Clancey's magic
-			}
+			// TODO: Clancey's magic
 
 			return new SimpleResult { Success = true };
 		}
