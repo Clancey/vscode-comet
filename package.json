@@ -41,8 +41,6 @@
 		"url": "https://github.com/joshspicer/vscode-mono-debug/issues"
 	},
 	"devDependencies": {
-		"@types/es6-collections": "^0.5.29",
-		"@types/es6-promise": "0.0.32",
 		"@types/mocha": "^2.2.32",
 		"@types/node": "^6.0.39",
 		"mocha": "^2.4.5",
