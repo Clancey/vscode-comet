@@ -10,5 +10,12 @@ namespace VsCodeXamarinUtil
 		public string Serial { get; set; }
 		public bool IsEmulator { get; set; }
 		public bool IsRunning { get; set; }
+		public string Version { get; set; }
+		public string Platform { get; set; }
+	}
+
+	public class SimpleResult
+	{
+		public bool Success { get; set; }
 	}
 }
