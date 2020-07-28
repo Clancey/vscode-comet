@@ -7,7 +7,7 @@
 import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import XamarinEmulatorProvider from "./sidebar"
+import { EmulatorItem, XamarinEmulatorProvider } from "./sidebar"
 import * as XamarinCommands from './xamarin-commands';
 import { execArgv } from 'process';
 import { SimpleResult } from "./xamarin-util";
@@ -19,6 +19,7 @@ const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
 const configuration = vscode.workspace.getConfiguration('mono-debug');
 
+var treeViewProvider: XamarinEmulatorProvider; 
 var currentDebugSession: vscode.DebugSession;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -26,6 +27,12 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('extension.mono-debug.startSession', config => startSession(config)));
 	
 	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
+
+	treeViewProvider = new XamarinEmulatorProvider(vscode.workspace.rootPath);
+	const treeView = vscode.window.createTreeView("xamarinEmulator", { treeDataProvider: treeViewProvider });
+	vscode.commands.registerCommand("xamarinEmulator.refresh", () => treeViewProvider.refresh());	
+	treeView.onDidChangeSelection(evt => XamarinCommands.selectEmulator(evt, treeViewProvider));
+
 	vscode.window.registerTreeDataProvider('xamarinEmulator', new XamarinEmulatorProvider(vscode.workspace.rootPath));
 
 	const provider = new XamarinConfigurationProvider();

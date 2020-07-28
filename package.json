@@ -89,11 +89,12 @@
 		"menus": {
 			"view/title": [
 				{
-					"command": "xamarinEmulator.refreshEntry",
+					"command": "xamarinEmulator.refresh",
 					"when": "view == xamarinEmulator",
 					"group": "navigation"
 				}
-			]
+			],
+			"view/item/context": []
 		},
 		"configuration": {
 			"type": "object",
@@ -141,7 +142,7 @@
 				"category": "Debug"
 			},
 			{
-				"command": "xamarinEmulator.refreshEntry",
+				"command": "xamarinEmulator.refresh",
 				"title": "Refresh"
 			},
 			{
