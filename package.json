@@ -28,6 +28,7 @@
 		"@types/execa": "^2.0.0",
 		"@types/vscode": "^1.47.0",
 		"execa": "^4.0.3",
+		"rxjs": "^6.6.0",
 		"vscode-debugprotocol": "^1.20.0",
 		"vscode-nls": "^2.0.2",
 		"vscode-test": "^1.4.0"
