@@ -39,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
 			type = debugSessionInfo.configurationProperties.type;
 		}
 
-		if (type === "mono") {
+		if (type === "xamarin") {
 			this.currentDebugSession = s;
 			var jsonConfig = JSON.stringify(s.configuration);
 
