@@ -13,7 +13,6 @@ import { execArgv } from 'process';
 import { SimpleResult } from "./xamarin-util";
 import { XamarinUtil } from "./xamarin-util";
 import { XamarinConfigurationProvider } from "./xamarin-configuration";
-
 import { BaseEvent, WorkspaceInformationUpdated } from './omnisharp/loggingEvents';
 import { EventType } from './omnisharp/EventType';
 import { ObservableValue } from './ObservableValue';
@@ -50,13 +49,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('extension.mono-debug.configureExceptions', () => configureExceptions()));
 	context.subscriptions.push(vscode.commands.registerCommand('extension.mono-debug.startSession', config => startSession(config)));
-	
+
 	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
 	vscode.window.registerTreeDataProvider('xamarinEmulator', new XamarinEmulatorProvider(vscode.workspace.rootPath));
 
 	const provider = new XamarinConfigurationProvider();
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xamarin', provider));
-		
+
 	context.subscriptions.push(vscode.debug.onDidStartDebugSession(async (s) => {
 		let type = s.type;
 
@@ -87,6 +86,9 @@ export function activate(context: vscode.ExtensionContext) {
 			// this.disableAllServiceExtensions();
 		}
 	}));
+
+	output.appendLine("Initialization succeeded");
+	output.show();
 }
 
 export function deactivate() {
@@ -98,7 +100,7 @@ export function deactivate() {
 type ExceptionConfigurations = { [exception: string]: DebugProtocol.ExceptionBreakMode; };
 
 // if the user has not configured anything, we populate the exception configurationwith these defaults
-const DEFAULT_EXCEPTIONS : ExceptionConfigurations = {
+const DEFAULT_EXCEPTIONS: ExceptionConfigurations = {
 	"System.Exception": "never",
 	"System.SystemException": "never",
 	"System.ArithmeticException": "never",
@@ -120,7 +122,7 @@ class BreakOptionItem implements vscode.QuickPickItem {
 }
 
 // the possible exception options converted into QuickPickItem
-const OPTIONS = [ 'never', 'always', 'unhandled' ].map<BreakOptionItem>((bm: DebugProtocol.ExceptionBreakMode) => {
+const OPTIONS = ['never', 'always', 'unhandled'].map<BreakOptionItem>((bm: DebugProtocol.ExceptionBreakMode) => {
 	return {
 		label: translate(bm),
 		description: '',
@@ -147,19 +149,19 @@ function translate(mode: DebugProtocol.ExceptionBreakMode): string {
 	}
 }
 
-function getModel() : ExceptionConfigurations {
+function getModel(): ExceptionConfigurations {
 
 	let model = DEFAULT_EXCEPTIONS;
 	if (configuration) {
 		const exceptionOptions = configuration.get('exceptionOptions');
 		if (exceptionOptions) {
-			model = <ExceptionConfigurations> exceptionOptions;
+			model = <ExceptionConfigurations>exceptionOptions;
 		}
 	}
 	return model;
 }
 
-function configureExceptions() : void {
+function configureExceptions(): void {
 
 	const options: vscode.QuickPickOptions = {
 		placeHolder: localize('select.exception', "First Select Exception"),
@@ -199,7 +201,7 @@ function configureExceptions() : void {
 	});
 }
 
-function setExceptionBreakpoints(model: ExceptionConfigurations) : Thenable<DebugProtocol.SetExceptionBreakpointsResponse> {
+function setExceptionBreakpoints(model: ExceptionConfigurations): Thenable<DebugProtocol.SetExceptionBreakpointsResponse> {
 
 	const args: DebugProtocol.SetExceptionBreakpointsArguments = {
 		filters: [],
@@ -209,12 +211,12 @@ function setExceptionBreakpoints(model: ExceptionConfigurations) : Thenable<Debu
 	return vscode.commands.executeCommand<DebugProtocol.SetExceptionBreakpointsResponse>('workbench.customDebugRequest', 'setExceptionBreakpoints', args);
 }
 
-function convertToExceptionOptions(model: ExceptionConfigurations) : DebugProtocol.ExceptionOptions[] {
+function convertToExceptionOptions(model: ExceptionConfigurations): DebugProtocol.ExceptionOptions[] {
 
 	const exceptionItems: DebugProtocol.ExceptionOptions[] = [];
 	for (var exception in model) {
 		exceptionItems.push({
-			path: [ { names: [ exception ] } ],
+			path: [{ names: [exception] }],
 			breakMode: model[exception]
 		});
 	}
@@ -231,12 +233,12 @@ class StartSessionResult {
 	content?: string;	// launch.json content for 'save'
 };
 
-function startSession(config: any) : StartSessionResult {
+function startSession(config: any): StartSessionResult {
 
 	if (config && !config.__exceptionOptions) {
 		config.__exceptionOptions = convertToExceptionOptions(getModel());
 	}
-	
+
 	vscode.commands.executeCommand('vscode.startDebug', config);
 
 	return {
