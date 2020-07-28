@@ -6,7 +6,7 @@ using Xamarin.HotReload;
 
 namespace VSCodeDebug.HotReload
 {
-    public class VSCodeLogger : ILogger
+	public class VSCodeLogger : ILogger
 	{
 		public void Log(LogMessage message)
 		{

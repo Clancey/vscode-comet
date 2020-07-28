@@ -13,7 +13,7 @@ using VSCodeDebug.HotReload;
 
 namespace VSCodeDebug
 {
-    public class MonoDebugSession : DebugSession
+	public class MonoDebugSession : DebugSession
 	{
 		private const string MONO = "mono";
 		private readonly string[] MONO_EXTENSIONS = new String[] {
@@ -156,7 +156,7 @@ namespace VSCodeDebug
 			};
 		}
 
-        public override void Initialize(Response response, dynamic args)
+		public override void Initialize(Response response, dynamic args)
 		{
 			OperatingSystem os = Environment.OSVersion;
 			if (os.Platform != PlatformID.MacOSX && os.Platform != PlatformID.Unix && os.Platform != PlatformID.Win32NT) {

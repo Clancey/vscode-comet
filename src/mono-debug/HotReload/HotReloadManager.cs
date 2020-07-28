@@ -13,7 +13,7 @@ using Xamarin.HotReload.Translations;
 
 namespace VSCodeDebug.HotReload
 {
-    public class HotReloadManager
+	public class HotReloadManager
 	{
 		private IdeManager _ideManager;
 
@@ -103,8 +103,8 @@ namespace VSCodeDebug.HotReload
 
 		private void AgentXamlResultReceived(object sender, ReloadTransactionMessage msg)
 		{
-            int rudeEdits = msg.Transactions.SelectMany(txn => txn.Result.RudeEdits).Count();
-            string statusText = (rudeEdits > 0) ? CommonStrings.HotReloadReloadedRudeEditStatus(rudeEdits) : CommonStrings.HotReloadXAMLReloadSuccess;
+			int rudeEdits = msg.Transactions.SelectMany(txn => txn.Result.RudeEdits).Count();
+			string statusText = (rudeEdits > 0) ? CommonStrings.HotReloadReloadedRudeEditStatus(rudeEdits) : CommonStrings.HotReloadXAMLReloadSuccess;
 
 			_ideManager.Logger.Log(LogLevel.Info, statusText);
 		}

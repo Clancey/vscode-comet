@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace VSCodeDebug.HotReload
 {
-    public static class Extensions
+	public static class Extensions
 	{
 		public static object GetStartInfo(this SoftDebuggerSession session)
 			=> session.GetType().GetProperty("StartInfo", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)

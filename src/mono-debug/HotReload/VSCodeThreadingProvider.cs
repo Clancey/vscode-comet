@@ -8,7 +8,7 @@ using Xamarin.HotReload.Ide;
 
 namespace VSCodeDebug.HotReload
 {
-    public class VSCodeThreadingProvider : IThreadingProvider
+	public class VSCodeThreadingProvider : IThreadingProvider
 	{
 		public Task InvokeOnMainThreadAsync(Func<Task> work)
 		{

@@ -7,16 +7,16 @@ using Xamarin.HotReload.Ide;
 
 namespace VSCodeDebug.HotReload
 {
-    class VSCodeDialogProvider : IDialogProvider
+	class VSCodeDialogProvider : IDialogProvider
 	{
 		public void ShowMessage(string title, string text)
 		{
 		}
 
 		public Task<bool> AskYesNoQuestionAsync(string title, string text)
-        {
+		{
 			return Task.FromResult(false);
-        }
+		}
 
 		public void CloseWaitDialog(string id, string successText)
 		{

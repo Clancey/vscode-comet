@@ -33,7 +33,7 @@ namespace VSCodeDebug.HotReload
 
 		public ProjectFlavor ProjectFlavor => ProjectFlavor.Android;
 
-        public Task ShowOptionsAsync(ProjectOptions options)
+		public Task ShowOptionsAsync(ProjectOptions options)
 		{
 			switch (options)
 			{
