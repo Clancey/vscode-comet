@@ -3,25 +3,28 @@ import { timeStamp } from 'console';
 import { DeviceData } from "./xamarin-util"
 import { XamarinUtil } from "./xamarin-util"
 
-class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
+export class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
 
     constructor(private workspaceRoot: string) {}
 
-    onDidChangeTreeData?: vscode.Event<void | EmulatorItem>;
+    public CURRENT_EMULATOR: EmulatorItem;
+
+    private _onDidChangeTreeData: vscode.EventEmitter<EmulatorItem | undefined> = new vscode.EventEmitter<EmulatorItem | undefined>();
+    readonly onDidChangeTreeData: vscode.Event<EmulatorItem | undefined> = this._onDidChangeTreeData.event;
+
+    public refresh(item: EmulatorItem = undefined): void {
+        this._onDidChangeTreeData.fire(undefined);  // TODO: don't reload everytime (pass in `item`);
+    }
 
     getTreeItem(element: EmulatorItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
+
+        if (this.CURRENT_EMULATOR && element.name == this.CURRENT_EMULATOR.name) {
+            element.label = `>>> ${element.label}`;
+        }
         return element;
     }
 
     getChildren(element?: EmulatorItem): vscode.ProviderResult<EmulatorItem[]> {
-
-        vscode.window.showInformationMessage("Starting getChildren()!");
-
-        // if (!this.workspaceRoot) {
-        //     vscode.window.showInformationMessage("Not in workspace root!")
-        //     return 
-        // }
-
         return Promise.resolve(this.getEmulatorsAndDevices());
     }
 
@@ -33,22 +36,23 @@ class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
         var util = new XamarinUtil();
 
         var results = new Array<EmulatorItem>();
-        var devices = await util.GetAndroidDevices();
+        var devices = await util.GetDevices();
 
         for (var device of devices) {
-            results.push(new EmulatorItem(device.name, "android", device.serial, device.isEmulator, device.isRunning));
+            results.push(new EmulatorItem(device.name, device.serial, device.platform, device.version, device.isEmulator, device.isRunning));
         }
 
         return results;
     }
 }
 
-class EmulatorItem extends vscode.TreeItem {
+export class EmulatorItem extends vscode.TreeItem {
 
     constructor(
-        public readonly name: string,
+        public  name: string,
         serial: string,
         platform: string,
+        version: string,
         isEmulator: boolean = false,
         isRunning: boolean = false,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None) 
@@ -58,12 +62,15 @@ class EmulatorItem extends vscode.TreeItem {
         this.serial = serial;
         this.isEmulator = isEmulator;
         this.isRunning = isRunning;
+
+        this.platform = platform;
     }
 
     get tooltip(): string {
-		return `${this.label}-Android emulator`;
+        var devem = this.isEmulator ? (this.platform === "ios" ? "Simulator" : "Emulator") : "Device";
+		return `${this.label} (${this.platform} ${devem})`;
     }
-    
+
     serial: string;
     isEmulator: boolean;
     isRunning: boolean;
@@ -73,5 +80,3 @@ class EmulatorItem extends vscode.TreeItem {
     // contextValue = 
 
 }
-
- export default XamarinEmulatorProvider;

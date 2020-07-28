@@ -89,11 +89,12 @@
 		"menus": {
 			"view/title": [
 				{
-					"command": "xamarinEmulator.refreshEntry",
+					"command": "xamarinEmulator.refresh",
 					"when": "view == xamarinEmulator",
 					"group": "navigation"
 				}
-			]
+			],
+			"view/item/context": []
 		},
 		"configuration": {
 			"type": "object",
@@ -141,8 +142,12 @@
 				"category": "Debug"
 			},
 			{
+<<<<<<< HEAD
 <<<<<<< master
 				"command": "xamarinEmulator.refreshEntry",
+=======
+				"command": "xamarinEmulator.refresh",
+>>>>>>> 2e4d191e36cd87e4744c32085fe3234eddb1a0c1
 				"title": "Refresh"
 =======
 				"command": "xamarinEmulator.refresh",
@@ -168,7 +173,7 @@
 		],
 		"debuggers": [
 			{
-				"type": "mono",
+				"type": "xamarin",
 				"label": "Xamarin (Mono C#)",
 				"program": "./src/mono-debug/bin/Release/net472/mono-debug.exe",
 				"osx": {
