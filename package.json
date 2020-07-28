@@ -141,12 +141,21 @@
 				"category": "Debug"
 			},
 			{
+<<<<<<< master
 				"command": "xamarinEmulator.refreshEntry",
 				"title": "Refresh"
+=======
+				"command": "xamarinEmulator.refresh",
+				"title": "Xamarin: Refresh Emulator List"
+			},
+			{
+				"command": "xamarinEmulator.select",
+				"title": "Xamarin: Select Emulator"
+>>>>>>> local
 			},
 			{
 				"command": "xamarinNewProject.newProject",
-				"title": "new project"
+				"title": "Xamarin: New Project"
 			}
 		],
 		"breakpoints": [

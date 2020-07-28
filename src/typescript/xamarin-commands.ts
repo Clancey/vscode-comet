@@ -26,5 +26,25 @@ export async function newProject() {
         console.log('error: ' + err);
         vscode.window.showErrorMessage("Uh oh!");
     }
+<<<<<<< master
 });
 } 
+=======
+
+    vscode.workspace.updateWorkspaceFolders(0, 1, { uri: folder });
+    });
+}   
+
+export async function selectEmulator(evt: vscode.TreeViewSelectionChangeEvent<EmulatorItem>, treeViewProvider: XamarinEmulatorProvider) {
+
+    if (evt.selection.length !== 1) {
+        vscode.window.showErrorMessage(`There are ${evt.selection.length} emulators selected!`);
+        return;
+    }
+
+    evt.selection.forEach(element => {
+        treeViewProvider.CURRENT_EMULATOR = element;   
+        treeViewProvider.refresh(element);  
+    });
+}
+>>>>>>> local
