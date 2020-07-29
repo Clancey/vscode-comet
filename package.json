@@ -13,6 +13,9 @@
 	},
 	"license": "MIT",
 	"private": true,
+	"extensionDependencies": [
+		"ms-dotnettools.csharp"
+	],
 	"scripts": {
 		"prepublish": "pwsh ./build.ps1 build",
 		"vscode:prepublish": "pwsh ./build.ps1 build",
@@ -26,11 +29,16 @@
 	},
 	"dependencies": {
 		"@types/execa": "^2.0.0",
+		"@types/lodash": "^4.14.158",
 		"@types/vscode": "^1.47.0",
+		"@types/xml2js": "^0.4.5",
 		"execa": "^4.0.3",
+		"lodash": "^4.17.19",
+		"rxjs": "^6.6.0",
 		"vscode-debugprotocol": "^1.20.0",
 		"vscode-nls": "^2.0.2",
-		"vscode-test": "^1.4.0"
+		"vscode-test": "^1.4.0",
+		"xml2js": "^0.4.23"
 	},
 	"repository": {
 		"type": "git",
@@ -40,23 +48,22 @@
 		"url": "https://github.com/joshspicer/vscode-mono-debug/issues"
 	},
 	"devDependencies": {
-		"@types/es6-collections": "^0.5.29",
-		"@types/es6-promise": "0.0.32",
 		"@types/mocha": "^2.2.32",
 		"@types/node": "^6.0.39",
 		"mocha": "^2.4.5",
-		"typescript": "^2.0.3",
+		"typescript": "^3.7.5",
 		"vsce": "^1.20.0",
 		"vscode-debugadapter-testsupport": "^1.20.0",
 		"vscode-nls-dev": "^2.0.1",
-		"webpack-cli": "^3.3.12",
-		"webpack": "^4.44.0"
+		"webpack": "^4.44.0",
+		"webpack-cli": "^3.3.12"
 	},
 	"main": "./out/extension",
 	"activationEvents": [
-		"onCommand:extension.mono-debug.configureExceptions",
-		"onCommand:extension.mono-debug.startSession",
-		"onStartupFinished"
+		"onCommand:extension.xamarin-debug.configureExceptions",
+		"onCommand:extension.xamarin-debug.startSession",
+		"workspaceContains:*.csproj",
+		"workspaceContains:**/*.csproj"
 	],
 	"contributes": {
 		"views": {
@@ -100,7 +107,7 @@
 			"type": "object",
 			"title": "%configuration.title%",
 			"properties": {
-				"mono-debug.exceptionOptions": {
+				"xamarin-debug.exceptionOptions": {
 					"type": "object",
 					"additionalProperties": {
 						"type": "string",
@@ -135,14 +142,23 @@
 				}
 			}
 		},
+		"languages": [{
+			  "id": "XAML",
+			  "aliases": ["XAML", "xaml"],
+			  "extensions": [".xaml"]
+			}],
+		"grammars": [{
+			  "language": "XAML",
+			  "scopeName": "source.XAML",
+			  "path": "./syntaxes/XAML.tmLanguage.json"
+			}],
 		"commands": [
 			{
-				"command": "extension.mono-debug.configureExceptions",
+				"command": "extension.xamarin-debug.configureExceptions",
 				"title": "%configure.exceptions.command%",
 				"category": "Debug"
 			},
 			{
-
 				"command": "xamarinEmulator.refresh",
 				"title": "Refresh"
 			},
@@ -167,7 +183,7 @@
 			{
 				"type": "xamarin",
 				"label": "Xamarin (Mono C#)",
-				"program": "./src/mono-debug/bin/Release/net472/mono-debug.exe",
+				"program": "./src/mono-debug/bin/Debug/net472/mono-debug.exe",
 				"osx": {
 					"runtime": "mono"
 				},
@@ -175,7 +191,7 @@
 					"runtime": "mono"
 				},
 				"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-				"startSessionCommand": "extension.mono-debug.startSession",
+				"startSessionCommand": "extension.xamarin-debug.startSession",
 				"initialConfigurations": [
 					{
 						"name": "%mono.launch.config.name%",

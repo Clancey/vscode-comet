@@ -13,21 +13,12 @@ function Vsix
 }
 function Build
 {
-	& msbuild /r /p:Configuration=Release ./src/mono-debug/mono-debug.csproj
-	& msbuild /r /p:Configuration=Release ./src/xamarin-util/xamarin-util.csproj
-
-	& node_modules/.bin/tsc -p ./src/typescript
-
-	Write-Host "build finished"
-}
-
-function Debug
-{
 	& msbuild /r /p:Configuration=Debug ./src/mono-debug/mono-debug.csproj
 	& msbuild /r /p:Configuration=Debug ./src/xamarin-util/xamarin-util.csproj
 
 	& node_modules/.bin/tsc -p ./src/typescript
-	Write-Host "debug build finished"
+
+	Write-Host "build finished"
 }
 
 switch ($cmd) {
@@ -44,6 +35,6 @@ switch ($cmd) {
 		Build
 	}
 	"debug" {
-		Debug
+		Build
 	}
 }

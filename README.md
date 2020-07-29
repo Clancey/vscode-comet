@@ -13,3 +13,19 @@ All the above experiences should work in VS Code on both Windows and Mac
 * Build and launch the app on the emulator
 * Locals, Stacks, breakpoints, etc.
 * Support both Android & iOS
+
+
+## Run from Source
+
+### Prereqs
+- [Powershell Core](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell?view=powershell-7)
+- [Node (npm)](https://nodejs.org/en/download/)
+- On mac: [Mono](https://www.mono-project.com/download/stable/)
+- dotnet [dotnet core + cli](https://dotnet.microsoft.com/download/dotnet-core/3.1)
+
+0. For now we'll expect you have the Xamarin SDK, etc present via a Visual Studio (proper) install
+1. Clone repo recursively `git clone --recursive git@github.com:joshspicer/vscode-xamarin-ext.git`
+2. `npm i`
+3. `pwsh build.ps1`
+4. Press F5 to debug 
+

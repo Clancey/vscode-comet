@@ -34,7 +34,7 @@ export class XamarinUtil
 
 		var extPath = thisExtension.extensionPath;
 
-		this.UtilPath = path.join(extPath, 'src', 'xamarin-util', 'bin', 'Release', 'netcoreapp3.1', 'xamarin-util.dll');
+		this.UtilPath = path.join(extPath, 'src', 'xamarin-util', 'bin', 'Debug', 'netcoreapp3.1', 'xamarin-util.dll');
 	}
 	
 	async RunCommand<TResult>(cmd: string, args: string[] = null)

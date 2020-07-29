@@ -1,6 +1,4 @@
 import * as vscode from 'vscode';
-import { timeStamp } from 'console';
-import { DeviceData } from "./xamarin-util"
 import { XamarinUtil } from "./xamarin-util"
 
 export class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {

@@ -1,8 +1,8 @@
 *
 */**
 **/.DS_Store
-!src/mono-debug/bin/Release/netcoreapp3.1/**/*
-!src/xamarin-util/bin/Release/netcoreapp3.1/**/*
+!src/mono-debug/bin/Debug/net472/**/*
+!src/xamarin-util/bin/Debug/netcoreapp3.1/**/*
 !out/extension.js
 !node_modules/vscode-nls/**/*
 !node_modules/vscode-debugprotocol/**/*

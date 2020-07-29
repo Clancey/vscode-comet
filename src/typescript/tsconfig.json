@@ -5,8 +5,9 @@
 		"noImplicitAny": false,
 		"removeComments": false,
 		"preserveConstEnums": true,
-		"target": "es5",
+		"target": "es6",
 		"outDir": "../../out",
-		"sourceMap": true
+		"sourceMap": true,
+		"lib": ["ES6"]
 	}
 }

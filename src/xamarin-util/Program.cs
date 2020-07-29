@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace VsCodeXamarinUtil
 {
@@ -60,13 +61,12 @@ namespace VsCodeXamarinUtil
 
 			response.Response = responseObject;
 
-			var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
-			{
-				IgnoreNullValues = true,
-				PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-				DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-				WriteIndented = true
-			});
+			var json = Newtonsoft.Json.JsonConvert.SerializeObject(response,
+				Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.JsonSerializerSettings
+				{
+					Formatting = Newtonsoft.Json.Formatting.None,
+					NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+				});
 			
 			Console.WriteLine(json);
 		}
@@ -93,10 +93,19 @@ namespace VsCodeXamarinUtil
 		}
 
 		static IEnumerable<DeviceData> AndroidDevices()
-			=> AndroidSdk.GetEmulatorsAndDevices(GetAndroidSdkHome());
+			=> AndroidSdk.GetEmulatorsAndDevices(GetAndroidSdkHome()).Result;
 
-		static IEnumerable<DeviceData> iOSDevices()
-			=> XCode.GetSimulatorsAndDevices();
+		static AppleDevicesAndSimulators iOSDevices()
+		{
+			var result = new AppleDevicesAndSimulators();
+
+			Task.WhenAll(
+				Task.Run(() => result.Devices = XCode.GetInstrumentsDevices(true)),
+				Task.Run(async () => result.Simulators = await XCode.GetDevicePairs()))
+				.Wait();
+
+			return result;
+		}
 
 		static IEnumerable<DeviceData> AllDevices()
 		{
@@ -105,7 +114,9 @@ namespace VsCodeXamarinUtil
 			if (Util.IsWindows)
 				return result;
 
-			return result.Concat(iOSDevices());
+			var iosDevices = XCode.GetSimulatorsAndDevices();
+
+			return result.Concat(iosDevices);
 		}
 
 		static SimpleResult AndroidStartEmulator(IEnumerable<string> args)
