@@ -1,4 +1,3 @@
-
 interface CommandResponse<T> {
 	id: string;
 	command: string;
@@ -6,23 +5,63 @@ interface CommandResponse<T> {
 	response?: T;
 }
 
-export interface DeviceData {
+export interface SimpleResult {
+	sucess: boolean;
+}
+
+export interface AppleDevicesAndSimulators {
+	devices: DeviceData[];
+	simulators: SimCtlDeviceType[];
+}
+export interface SimCtlRuntime {
+	bundlePath: string;
+	buildVersion: string;
+	runtimeRoot: string;
+	identifier: string;
+	version: string;
+	isAvailable: boolean;
+	name: string;
+}
+
+export interface SimCtlDeviceType {
+
+	minRuntimeVersion: number;
+	bundlePath: string;
+	maxRuntimeVersion: number;
+	name: string;
+	identifier: string;
+	productFamily: string;
+	devices: SimCtlDevice[];
+}
+
+export interface SimCtlDevice {
+	dataPath: string;
+	logPath: string;
+	udid: string;
+	isAvailable: boolean;
+	deviceTypeIdentifier: string;
+	state: string;
+	name: string;
+	availabilityError: string;
+	deviceType: SimCtlDeviceType;
+	runtime: SimCtlRuntime;
+}
+
+export class DeviceData {
 	name: string;
 	serial: string;
 	platform: string;
 	version: string;
 	isEmulator: boolean;
 	isRunning: boolean;
-}
-
-export interface SimpleResult {
-	sucess: boolean;
+	iosSimulatorDevice?: SimCtlDevice;
 }
 
 const path = require('path');
 const execa = require('execa');
 
 import * as vscode from 'vscode';
+import { LookupOneOptions } from 'dns';
 
 export class XamarinUtil
 {
@@ -72,7 +111,7 @@ export class XamarinUtil
 
 	public async GetiOSDevices()
 	{
-		var r = await this.RunCommand<Array<DeviceData>>("ios-devices");
+		var r = await this.RunCommand<AppleDevicesAndSimulators>("ios-devices");
 		return r.response;
 	}
 
