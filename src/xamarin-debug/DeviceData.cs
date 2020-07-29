@@ -36,6 +36,7 @@ namespace VsCodeXamarinUtil
 		Mono,
 		Android,
 		iOS,
+		Mac,
 		UWP,
 		Unknown,
 		WPF,
@@ -43,7 +44,7 @@ namespace VsCodeXamarinUtil
 
 	}
 	public class LaunchData {
-		public string AppName { get; set; }
+		public string AppName { get; set; } = "";
 		public string Project { get; set; }
 		public string Configuration { get; set; }
 		public string Platform { get; set; }
@@ -51,7 +52,8 @@ namespace VsCodeXamarinUtil
 		public string OutputDirectory { get; set; }
 		public bool EnableHotReload { get; set; }
 		public string iOSDeviceId { get; set; }
-		public string iOSSimulatorDeviceOS { get; set; }
+		public string iOSSimulatorVersion { get; set; }
+		public string iOSSimulatorDevice { get; set; }
 		public string iOSSimulatorDeviceType { get; set; }
 		public string AdbDeviceName { get; set; }
 		public string AdbDeviceId { get; set; }
@@ -66,16 +68,18 @@ namespace VsCodeXamarinUtil
 			Project = getString (args, VSCodeKeys.LaunchConfig.ProjectPath);
 			Configuration = getString (args, VSCodeKeys.LaunchConfig.Configuration);
 			Platform = getString (args, VSCodeKeys.LaunchConfig.Platform, "AnyCPU");
-			OutputDirectory = getString (args, VSCodeKeys.LaunchConfig.Output);
+			OutputDirectory = cleanseStringPaths(getString (args, VSCodeKeys.LaunchConfig.Output));
 			EnableHotReload = getBool (args, nameof (EnableHotReload));
 			iOSDeviceId = getString (args, VSCodeKeys.LaunchConfig.iosDeviceId);
-			iOSSimulatorDeviceOS = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorOS);
+			iOSSimulatorDevice = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorDeviceRuntime);
+			iOSSimulatorVersion = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorVersion);
 			iOSSimulatorDeviceType = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorDeviceType);
 			AdbDeviceName = getString (args, VSCodeKeys.LaunchConfig.AdbEmulatorName);
 			AdbDeviceId = getString (args, VSCodeKeys.LaunchConfig.AdbDeviceId);
-			var projectTypeString = getString (args, VSCodeKeys.LaunchConfig.ProjectType);
-			if(string.IsNullOrWhiteSpace(projectTypeString))
-				ProjectType = Enum.Parse (typeof(ProjectType), projectTypeString,true);
+			var projectTypeString = getInt (args, VSCodeKeys.LaunchConfig.ProjectType,0);
+			ProjectType = (ProjectType)projectTypeString;
+			//if(string.IsNullOrWhiteSpace(projectTypeString))
+			//	ProjectType = Enum.Parse (typeof(ProjectType), projectTypeString,true);
 		}
 
 		public (bool success, string message) Validate ()
@@ -87,14 +91,16 @@ namespace VsCodeXamarinUtil
 				validateString(Configuration,nameof(Configuration)),
 				validateString(OutputDirectory,nameof(OutputDirectory)),
 			};
-			var failed = checks.FirstOrDefault (x => !x.success);	
-			if (!failed.success)
-				return failed;
+			foreach(var check in checks) {
+				if (!check.success)
+					return check;
+			}
+			
 			if(ProjectType == ProjectType.iOS) {
-				if ((string.IsNullOrWhiteSpace (iOSSimulatorDeviceOS) || string.IsNullOrWhiteSpace (iOSSimulatorDeviceType))
+				if ((string.IsNullOrWhiteSpace (iOSSimulatorVersion) || string.IsNullOrWhiteSpace (iOSSimulatorDeviceType))
 					&& !string.IsNullOrWhiteSpace(iOSDeviceId))
 					return (false, "iOS simulator is not valid");
-				else if (string.IsNullOrWhiteSpace (iOSDeviceId))
+				if (string.IsNullOrWhiteSpace (iOSDeviceId) && string.IsNullOrWhiteSpace(iOSSimulatorVersion))
 					return (false, $"{nameof (iOSDeviceId)} is not valid");
 			}
 			else if(ProjectType == ProjectType.Android) {
@@ -103,6 +109,13 @@ namespace VsCodeXamarinUtil
 			}
 		
 			return (true, "");
+		}
+
+		static string cleanseStringPaths(string path)
+		{
+			if (Util.IsWindows)
+				return path;
+			return path.Replace ("\\", "/");
 		}
 
 		private static bool getBool (dynamic container, string propertyName, bool dflt = false)

@@ -59,7 +59,7 @@ namespace VSCodeDebug
 			return false;
 		}
 
-		public static string ConcatArgs(string[] args)
+		public static string ConcatArgs (string [] args, bool quote = true)
 		{
 			var arg = "";
 			if (args != null) {
@@ -67,7 +67,7 @@ namespace VSCodeDebug
 					if (arg.Length > 0) {
 						arg += " ";
 					}
-					arg += Utilities.Quote(r);
+					arg += quote ? Utilities.Quote (r) : r;
 				}
 			}
 			return arg;
@@ -130,6 +130,8 @@ namespace VSCodeDebug
 
 		public static string ExpandVariables(string format, dynamic variables, bool underscoredOnly = true)
 		{
+			if (string.IsNullOrWhiteSpace (format))
+				return format;
 			if (variables == null) {
 				variables = new { };
 			}

@@ -9,10 +9,14 @@ let fs = require('fs');
 
 export enum ProjectType
 {
-	None,
+	Mono,
 	Android,
 	iOS,
-	Mac
+	Mac,
+	UWP,
+	Unknown,
+	WPF,
+	Blazor,
 }
 
 export class MSBuildProjectInfo implements MSBuildProject {
@@ -273,7 +277,7 @@ export class XamarinProjectManager {
 			targetFramework = XamarinProjectManager.SelectedTargetFramework;
 
 		if (!targetFramework)
-			return ProjectType.None;
+			return ProjectType.Mono;
 		
 		var tfm = targetFramework.toLowerCase();
 

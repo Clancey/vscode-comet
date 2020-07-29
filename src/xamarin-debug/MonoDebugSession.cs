@@ -207,10 +207,18 @@ namespace VSCodeDebug
 
 
 			if (launchOptions.ProjectType == ProjectType.Android) {
-				var s = LaunchAndroid (launchOptions, port);
+				var r = LaunchAndroid (launchOptions, port);
+				if (!r.Success) {
+					SendErrorResponse (response, 3002, r.message);
+					return;
+				}
 			}
-			if (launchOptions.ProjectType == ProjectType.iOS)
-				await LaunchiOS (launchOptions, port);
+			if (launchOptions.ProjectType == ProjectType.iOS) {
+				var r = await LaunchiOS (launchOptions, port);
+				if (!r.Success) {
+					SendErrorResponse (response, 3002, r.message ?? "Error launching simulator");
+					return;
+			}
 
 			Connect (launchOptions, address, port);
 
@@ -220,22 +228,21 @@ namespace VSCodeDebug
 		}
 
 		const string MlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch";
-		async Task LaunchiOS (LaunchData options, int port)
+		async Task<(bool Success, string message)> LaunchiOS (LaunchData options, int port)
 		{
 			var workingDir = Path.GetDirectoryName (options.Project);
 			const string sdkRoot = "-sdkroot /Applications/Xcode.app/Contents/Developer";
+			var output = Path.Combine (workingDir, options.OutputDirectory);
 
-
-			var appPath = Directory.EnumerateDirectories (options.OutputDirectory, "*.app").FirstOrDefault ();
-			var iOSSdkVersion = options.iOSSimulatorDeviceOS;
+			var appPath = Directory.EnumerateDirectories (output, "*.app").FirstOrDefault ();
 
 			var success = await RunMlaumchComand (MlaunchPath, workingDir,
 				sdkRoot,
-				$"--launchsim {appPath}",
+				$"--launchsim \"{appPath}\"",
 				$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
-				$"--sdk {iOSSdkVersion} --device={iOSSdkVersion},devicetype={options.iOSSimulatorDeviceType}"
+				$"--sdk {options.iOSSimulatorVersion} --device={options.iOSSimulatorDevice},devicetype={options.iOSSimulatorDeviceType}"
 				);
-			Console.WriteLine (success);
+			return success;
 		}
 		System.Diagnostics.Process iOSDebuggerProcess;
 		public Task<(bool Success, string Output)> RunMlaumchComand (string command, string workingDirectory, params string [] args)
@@ -270,7 +277,7 @@ namespace VSCodeDebug
 			});
 		}
 
-		bool LaunchAndroid (LaunchData options, int port)
+		(bool Success, string message) LaunchAndroid (LaunchData options, int port)
 		{
 			var home = AndroidSdk.FindHome ();
 			AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
@@ -292,7 +299,7 @@ namespace VSCodeDebug
 				, $"-p:AndroidSdbTargetPort={port}"
 				, $"-p:AndroidSdbHostPort={port}"
 				);
-			return result.Success;
+			return result;
 		}
 
 		private void Connect (LaunchData options, IPAddress address, int port)

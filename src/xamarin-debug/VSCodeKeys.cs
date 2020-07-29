@@ -9,7 +9,8 @@ namespace VsCodeXamarinUtil {
 			public const string ProjectType = "projectType";
 
 			public const string iosDeviceId = "iosDeviceId";
-			public const string iOSSimulatorOS = "iosSimulatorRuntime";
+			public const string iOSSimulatorVersion = "iosSimulatorVersion";
+			public const string iOSSimulatorDeviceRuntime = "iosSimulatorRuntime";
 			public const string iOSSimulatorDeviceType = "iosSimulatorDeviceType";
 			public const string AdbDeviceId = "adbDeviceId";
 			public const string AdbEmulatorName = "adbEmulatorName";
