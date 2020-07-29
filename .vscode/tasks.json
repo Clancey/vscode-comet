@@ -23,7 +23,7 @@
 		{
 			"label": "build",
 			"type": "shell",
-			"command": "msbuild /r /t:Build /p:Configuration=Debug ./src/mono-debug/mono-debug.csproj"
+			"command": "msbuild /r /t:Build /p:Configuration=Debug ./src/xamarin-debug/xamarin-debug.csproj"
 		},
 	]
 }

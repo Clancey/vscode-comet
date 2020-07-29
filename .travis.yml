@@ -15,8 +15,7 @@ before_install:
   - nvm use 6.5
 
 install:
-  - nuget restore mono-debug.sln
-  - nuget restore external/debugger-libs/debugger-libs.sln
+  - nuget restore src/xamarin-debug/xamarin-debug.csproj
   - npm install
 
 script:

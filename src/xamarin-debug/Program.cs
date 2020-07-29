@@ -4,8 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using VsCodeXamarinUtil;
 
 namespace VSCodeDebug
 {
@@ -19,6 +21,12 @@ namespace VSCodeDebug
 
 		private static void Main(string[] argv)
 		{
+			if (argv.Length > 0 && argv[0] == "util")
+			{
+				UtilRunner.UtilMain(argv.ToList().Skip(1).ToArray());
+				return;
+			}
+
 			int port = -1;
 
 			// parse command line arguments

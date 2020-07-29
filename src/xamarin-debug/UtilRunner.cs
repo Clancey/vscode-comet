@@ -5,16 +5,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace VsCodeXamarinUtil
 {
-	class Program
+	class UtilRunner
 	{
 		const string helpCommand = "help";
 
-		static void Main(string[] args)
+		public static void UtilMain(string[] args)
 		{
 			var options = new OptionSet();
 

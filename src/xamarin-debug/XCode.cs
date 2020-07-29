@@ -39,7 +39,7 @@ namespace VsCodeXamarinUtil
 				if (string.IsNullOrWhiteSpace(line))
 					continue;
 
-				var match = rxInstrumentDevices.Matches(line)?.FirstOrDefault();
+				var match = rxInstrumentDevices.Match(line);
 
 				if (match == null)
 					continue;
@@ -195,7 +195,7 @@ namespace VsCodeXamarinUtil
 				{
 					IsEmulator = true,
 					Name = $"{s.Name} ({s.Runtime.Name})",
-					IsRunning = s.State?.Contains("Booted", StringComparison.OrdinalIgnoreCase) ?? false,
+					IsRunning = s.State != null && s.State.ToLowerInvariant().Contains("booted"),
 					Serial = s.Udid,
 					Version = s.Runtime.Version,
 					Platform = "ios"

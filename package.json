@@ -192,7 +192,7 @@
 			{
 				"type": "xamarin",
 				"label": "Xamarin (Mono C#)",
-				"program": "./src/mono-debug/bin/Debug/net472/mono-debug.exe",
+				"program": "./src/xamarin-debug/bin/Debug/net472/xamarin-debug.exe",
 				"osx": {
 					"runtime": "mono"
 				},
