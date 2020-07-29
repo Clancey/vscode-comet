@@ -98,7 +98,6 @@ export class XamarinProjectManager
 
 	public StartupProjects = new Array<MSBuildProjectInfo>();
 
-	
 	public async showProjectPicker(): Promise<void> {
 		var projects = this.StartupProjects
 			.map(x => ({
