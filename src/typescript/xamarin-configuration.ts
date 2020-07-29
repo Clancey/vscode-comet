@@ -31,6 +31,14 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 
 			var project = XamarinProjectManager.SelectedProject;
 
+			if (!project)
+				await XamarinProjectManager.Shared.showProjectPicker();
+
+			if (!project) {
+				vscode.window.showErrorMessage("Startup Project not selected!");
+				return undefined;
+			}
+
 			if (project) {
 
 				if (!config['projectPath'])
@@ -46,12 +54,20 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 
 				config['projectType'] = projectType;
 
+				config['projectPlatform'] = XamarinProjectManager.getSelectedProjectPlatform();
+
 				var device = XamarinProjectManager.SelectedDevice;
+
+				if (!device)
+					await XamarinProjectManager.Shared.showDevicePicker();
+
+				if (!device) {
+					vscode.window.showErrorMessage("Device not selected!");
+					return undefined;
+				}
 
 				if (device) {
 					if (projectType === ProjectType.Android) {
-						config['projectPlatform'] = 'Any CPU';
-
 						if (device.serial)
 							config['adbDeviceId'] = device.serial;
 						else if (device.isEmulator)
@@ -79,7 +95,7 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 							config['device'] = device.name;
 					}
 
-					config['platform'] = device.platform;
+					config['devicePlatform'] = device.platform;
 				}
 			}
 		}

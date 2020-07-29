@@ -63,9 +63,13 @@ export class XamarinProjectManager {
 	static SelectedDevice: DeviceData;
 	static Devices: DeviceData[];
 
+	static Shared: XamarinProjectManager;
+
 	omnisharp: any;
 
 	constructor(context: vscode.ExtensionContext) {
+		XamarinProjectManager.Shared = this;
+		
 		this.omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
 
 		this.omnisharp.eventStream.subscribe(async (e: BaseEvent) => {
@@ -279,5 +283,26 @@ export class XamarinProjectManager {
 			return ProjectType.iOS;
 		else if (tfm.indexOf('xamarinmac') >= 0 || tfm.indexOf('xamarin.mac') >= 0 || tfm.indexOf('-mac') >= 0)
 			return ProjectType.Mac;
+	}
+
+	public static getSelectedProjectPlatform():string
+	{
+		var projectType = this.getProjectType(XamarinProjectManager.SelectedTargetFramework);
+
+		if (projectType)
+		{
+			if (projectType === ProjectType.iOS)
+			{
+				if (XamarinProjectManager.SelectedDevice)
+				{
+					if (XamarinProjectManager.SelectedDevice.iosSimulatorDevice)
+						return 'iPhoneSimulator';
+				}
+
+				return 'iPhone';
+			}
+		}
+		
+		return null;
 	}
 }
