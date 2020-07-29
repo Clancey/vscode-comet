@@ -154,6 +154,16 @@ namespace VSCodeDebug
 			_session.OutputWriter = (isStdErr, text) => {
 				SendOutput(isStdErr ? "stderr" : "stdout", text);
 			};
+
+			this.HandleUnknownRequest = (s) => {
+				if (s.command == "DocumentChanged")
+				{
+					string fileName = s.args.fileName;
+					_hotReloadManager.DocumentChanged(fileName);
+					return true;
+				}
+				return false;
+			};
 		}
 
 		public override void Initialize(Response response, dynamic args)
