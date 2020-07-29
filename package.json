@@ -29,12 +29,16 @@
 	},
 	"dependencies": {
 		"@types/execa": "^2.0.0",
+		"@types/lodash": "^4.14.158",
 		"@types/vscode": "^1.47.0",
+		"@types/xml2js": "^0.4.5",
 		"execa": "^4.0.3",
+		"lodash": "^4.17.19",
 		"rxjs": "^6.6.0",
 		"vscode-debugprotocol": "^1.20.0",
 		"vscode-nls": "^2.0.2",
-		"vscode-test": "^1.4.0"
+		"vscode-test": "^1.4.0",
+		"xml2js": "^0.4.23"
 	},
 	"repository": {
 		"type": "git",
@@ -58,7 +62,6 @@
 	"activationEvents": [
 		"onCommand:extension.xamarin-debug.configureExceptions",
 		"onCommand:extension.xamarin-debug.startSession",
-		"onStartupFinished",
 		"workspaceContains:*.csproj",
 		"workspaceContains:**/*.csproj"
 	],
@@ -146,7 +149,6 @@
 				"category": "Debug"
 			},
 			{
-
 				"command": "xamarinEmulator.refresh",
 				"title": "Refresh"
 			},

@@ -14,9 +14,6 @@ import { SimpleResult } from "./xamarin-util";
 import { XamarinUtil } from "./xamarin-util";
 import { XamarinProjectManager } from "./xamarin-project-manager";
 import { XamarinConfigurationProvider } from "./xamarin-configuration";
-import { BaseEvent, WorkspaceInformationUpdated } from './omnisharp/loggingEvents';
-import { EventType } from './omnisharp/EventType';
-import { ObservableValue } from './ObservableValue';
 import { OutputChannel } from 'vscode';
 import { MSBuildProject } from './omnisharp/protocol';
 
@@ -40,14 +37,6 @@ export function activate(context: vscode.ExtensionContext) {
 	omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
 
 	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
-
-	omnisharp.eventStream.subscribe((e: BaseEvent) => {
-		if (e.type === EventType.WorkspaceInformationUpdated) {
-			this.xamarinProjectManager.StartupProjects.next((<WorkspaceInformationUpdated>e).info.MsBuild.Projects
-				.filter(project => project.TargetFramework.startsWith("MonoAndroid") || project.TargetFramework.startsWith("Xamarin"))
-				.map(project => project));
-		}
-	});
 
 	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.configureExceptions', () => configureExceptions()));
 	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.startSession', config => startSession(config)));
