@@ -20,7 +20,7 @@
 			"request": "launch",
 			"preLaunchTask": "build",
 			// If you have changed target frameworks, make sure to update the program path.
-			"program": "${workspaceFolder}/src/mono-debug/bin/Debug/net472/mono-debug.exe",
+			"program": "${workspaceFolder}/src/xamarin-debug/bin/Debug/net472/xamarin-debug.exe",
 			"args": [ "--server", "--trace=response" ],
 			"cwd": "${workspaceFolder}",
 			// For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace VsCodeXamarinUtil
@@ -15,7 +16,7 @@ namespace VsCodeXamarinUtil
 
 		static Regex rxInstrumentDevices = new Regex(patternInstrumentsDevices, RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
-		static List<DeviceData> GetInstrumentsDevices()
+		public static List<DeviceData> GetInstrumentsDevices(bool onlyDevices = false)
 		{
 			var results = new List<DeviceData>();
 
@@ -38,7 +39,7 @@ namespace VsCodeXamarinUtil
 				if (string.IsNullOrWhiteSpace(line))
 					continue;
 
-				var match = rxInstrumentDevices.Matches(line)?.FirstOrDefault();
+				var match = rxInstrumentDevices.Match(line);
 
 				if (match == null)
 					continue;
@@ -54,15 +55,16 @@ namespace VsCodeXamarinUtil
 					{
 						var isSim = !string.IsNullOrWhiteSpace(sim);
 
-						results.Add(new DeviceData
-						{
-							Serial = serial,
-							IsEmulator = isSim,
-							IsRunning = !isSim,
-							Name = name?.Trim(),
-							Version = version,
-							Platform = "ios"
-						});
+						if (!onlyDevices || (onlyDevices && !isSim))
+							results.Add(new DeviceData
+							{
+								Serial = serial,
+								IsEmulator = isSim,
+								IsRunning = !isSim,
+								Name = name?.Trim(),
+								Version = version,
+								Platform = "ios"
+							});
 					}
 				}
 			}
@@ -110,6 +112,29 @@ namespace VsCodeXamarinUtil
 			var dict = JsonConvert.DeserializeObject<Dictionary<string, List<SimCtlRuntime>>>(json);
 
 			return dict?["runtimes"] ?? new List<SimCtlRuntime>();
+		}
+
+		static Dictionary<string, List<SimCtlDevice>> GetSimulatorDevices()
+		{
+			var xcrun = new FileInfo("/usr/bin/xcrun");
+
+			if (!xcrun.Exists)
+				throw new FileNotFoundException(xcrun.FullName);
+
+			var results = new List<SimCtlDevice>();
+
+			var ir = ProcessRunner.Run(xcrun,
+				new ProcessArgumentBuilder()
+					.Append("simctl")
+					.Append("list")
+					.Append("-j")
+					.Append("devices"));
+
+			var json = string.Join(Environment.NewLine, ir.StandardOutput);
+
+			var dict = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<SimCtlDevice>>>>(json);
+
+			return dict?["devices"] ?? new Dictionary<string, List<SimCtlDevice>>();
 		}
 
 		static List<SimCtlDevice> GetSimulators()
@@ -170,7 +195,7 @@ namespace VsCodeXamarinUtil
 				{
 					IsEmulator = true,
 					Name = $"{s.Name} ({s.Runtime.Name})",
-					IsRunning = s.State?.Contains("Booted", StringComparison.OrdinalIgnoreCase) ?? false,
+					IsRunning = s.State != null && s.State.ToLowerInvariant().Contains("booted"),
 					Serial = s.Udid,
 					Version = s.Runtime.Version,
 					Platform = "ios"
@@ -178,9 +203,63 @@ namespace VsCodeXamarinUtil
 
 			return devices.Concat(simulators).ToList();
 		}
+
+
+		public static async Task<List<SimCtlDeviceType>> GetDevicePairs()
+		{
+			var results = new List<SimCtlDeviceType>();
+
+			List<SimCtlDeviceType> deviceTypes = new List<SimCtlDeviceType>();
+			List<SimCtlRuntime> runtimes = new List<SimCtlRuntime>();
+			Dictionary<string, List<SimCtlDevice>> devices = new Dictionary<string, List<SimCtlDevice>>();
+
+			await Task.WhenAll(
+				Task.Run(() => deviceTypes = GetSimulatorDeviceTypes()),
+				Task.Run(() => runtimes = GetSimulatorRuntimes()),
+				Task.Run(() => devices = GetSimulatorDevices()));
+
+			foreach (var deviceType in deviceTypes)
+			{
+				foreach (var kvp in devices)
+				{
+					var deviceRuntimeIdentifier = kvp.Key;
+
+					// Find all the devices for all the runtimes
+					foreach (var device in kvp.Value)
+					{
+						if (device.IsAvailable && device.Name.Equals(deviceType.Name))
+						{
+							var runtime = runtimes.FirstOrDefault(r =>
+								r.IsAvailable
+								&& r.Identifier.Equals(deviceRuntimeIdentifier, StringComparison.OrdinalIgnoreCase));
+
+							if (runtime != null)
+							{
+								device.Runtime = runtime;
+								deviceType.Devices.Add(device);
+							}
+						}
+					}
+				}
+
+				if (deviceType.Devices.Any())
+					results.Add(deviceType);
+			}
+
+			return results;
+		}
 	}
 
-	class SimCtlRuntime
+	public class AppleDevicesAndSimulators
+	{
+		[JsonProperty("devices")]
+		public List<DeviceData> Devices { get; set; }
+
+		[JsonProperty("simulators")]
+		public List<SimCtlDeviceType> Simulators { get; set; }
+	}
+
+	public class SimCtlRuntime
 	{
 		[JsonProperty("bundlePath")]
 		public string BundlePath { get; set; }
@@ -204,7 +283,7 @@ namespace VsCodeXamarinUtil
 		public string Name { get; set; }
 	}
 
-	class SimCtlDeviceType
+	public class SimCtlDeviceType
 	{
 		[JsonProperty("minRuntimeVersion")]
 		public long MinRuntimeVersion { get; set; }
@@ -223,9 +302,12 @@ namespace VsCodeXamarinUtil
 
 		[JsonProperty("productFamily")]
 		public string ProductFamily { get; set; }
+
+		[JsonProperty("devices")]
+		public List<SimCtlDevice> Devices { get; set; } = new List<SimCtlDevice>();
 	}
 
-	class SimCtlDevice
+	public class SimCtlDevice
 	{
 		[JsonProperty("dataPath")]
 		public string DataPath { get; set; }
@@ -251,10 +333,10 @@ namespace VsCodeXamarinUtil
 		[JsonProperty("availabilityError")]
 		public string AvailabilityError { get; set; }
 
-		[JsonIgnore]
+		[JsonProperty("deviceType")]
 		public SimCtlDeviceType DeviceType { get; set; }
 
-		[JsonIgnore]
+		[JsonProperty("runtime")]
 		public SimCtlRuntime Runtime { get; set; }
 	}
 }

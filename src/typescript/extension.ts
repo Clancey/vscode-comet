@@ -16,6 +16,7 @@ import { XamarinProjectManager } from "./xamarin-project-manager";
 import { XamarinConfigurationProvider } from "./xamarin-configuration";
 import { OutputChannel } from 'vscode';
 import { MSBuildProject } from './omnisharp/protocol';
+import { XamarinBuildTaskProvider } from './xamarin-build-task';
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
@@ -28,12 +29,18 @@ let output: OutputChannel = null;
 var treeViewProvider: XamarinEmulatorProvider; 
 var currentDebugSession: vscode.DebugSession;
 
+var xamarinBuildTaskProvider: XamarinBuildTaskProvider;
+
 export function activate(context: vscode.ExtensionContext) {
 
 	output = vscode.window.createOutputChannel("Xamarin");
 
 	this.xamarinProjectManager = new XamarinProjectManager(context);
 
+	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
+
+	this.xamarinBuildTaskProvider = vscode.tasks.registerTaskProvider(XamarinBuildTaskProvider.XamarinBuildScriptType, new XamarinBuildTaskProvider(vscode.workspace.rootPath));
+	
 	omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
 
 	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
@@ -41,9 +48,6 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.configureExceptions', () => configureExceptions()));
 	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.startSession', config => startSession(config)));
 
-	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
-
-	// Debug Start
 	const provider = new XamarinConfigurationProvider();
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xamarin', provider));
 
@@ -57,19 +61,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if (type === "xamarin") {
 			this.currentDebugSession = s;
-
-
-			this.xamarinProjectManager.applyDebugConfiguration(s.configuration);
-
-			var jsonConfig = JSON.stringify(s.configuration);
-
-			console.log(jsonConfig);
-
-			// JSON config sent over to xamarin util to do things first before debugging
-			var util = new XamarinUtil();
-
-			var r = await util.Debug(jsonConfig);
-
 		}
 	}));
 	context.subscriptions.push(vscode.debug.onDidTerminateDebugSession((s) => {
