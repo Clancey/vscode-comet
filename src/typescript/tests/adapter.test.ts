@@ -15,7 +15,7 @@ suite('Node Debug Adapter', () => {
 	const PROJECT_ROOT = Path.join(__dirname, '../../');
 	const DATA_ROOT = Path.join(PROJECT_ROOT, 'testdata/');
 
-	const DEBUG_ADAPTER = Path.join(PROJECT_ROOT, 'src/mono-debug/bin/Debug/net472/mono-debug.exe');
+	const DEBUG_ADAPTER = Path.join(PROJECT_ROOT, 'src/xamarin-debug/bin/Debug/net472/xamarin-debug.exe');
 
 
 	let dc: DebugClient;

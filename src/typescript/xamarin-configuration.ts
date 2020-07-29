@@ -11,7 +11,7 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 
 		// if launch.json is missing or empty
 		if (config.type == 'xamarin') {
-			config.request = 'attach';
+			// config.request = 'attach';
 
 			if (XamarinProjectManager.SelectedProject !== undefined) {
 			
@@ -28,6 +28,11 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 						config['device'] = device.serial;
 					else if (device.name)
 						config['device'] = device.name;
+
+					// config['ios-devicetypeidentifier'] = device.iosSimulatorDevice.deviceTypeIdentifier;
+					// config['ios-runtimeidentifier'] = device.iosSimulatorDevice.runtime.identifier;
+
+					config['platform'] = device.platform;
 				}
 			}
 		}

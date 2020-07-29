@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "xamarin-debug": {
+      "commandName": "Project",
+      "commandLineArgs": "util -c=android-devices"
+    }
+  }
+}

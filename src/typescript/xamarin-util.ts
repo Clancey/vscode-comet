@@ -67,18 +67,26 @@ export class XamarinUtil
 {
 	public UtilPath: string;
 
+	isUnix: boolean = true;
+
 	constructor()
 	{
 		var thisExtension = vscode.extensions.getExtension('ms-vscode.xamarin');
 
+		var os = require('os');
+
+		if (os.platform().indexOf('win') >= 0)
+			this.isUnix = false;
+
 		var extPath = thisExtension.extensionPath;
 
-		this.UtilPath = path.join(extPath, 'src', 'xamarin-util', 'bin', 'Debug', 'netcoreapp3.1', 'xamarin-util.dll');
+		this.UtilPath = path.join(extPath, 'src', 'xamarin-debug', 'bin', 'Debug', 'net472', 'xamarin-debug.exe');
 	}
-	
+
 	async RunCommand<TResult>(cmd: string, args: string[] = null)
 	{
-		var stdargs = [`-c=${cmd}`];
+		
+		var stdargs = [`util`, `-c=${cmd}`];
 		
 		if (args && args.length > 0)
 		{
@@ -86,7 +94,13 @@ export class XamarinUtil
 				stdargs.push(a);
 		}
 
-		var proc = await execa('dotnet', [ this.UtilPath ].concat(stdargs));
+		var proc: any;
+
+		if (this.isUnix)
+			proc = await execa('mono', [ this.UtilPath ].concat(stdargs));
+		else
+			proc = await execa(this.UtilPath, stdargs);
+
 		var txt = proc['stdout'];
 
 		return JSON.parse(txt) as CommandResponse<TResult>;
@@ -94,7 +108,12 @@ export class XamarinUtil
 
 	public async Debug(jsonConfig: string): Promise<SimpleResult>
 	{
-		var proc = await execa('dotnet', [ this.UtilPath, `-c=debug` ], { input: jsonConfig + '\r\n' });
+		var proc: any;
+
+		if (this.isUnix)
+			proc = await execa('mono', [ this.UtilPath, `util`, `-c=debug` ], { input: jsonConfig + '\r\n' });
+		else
+			proc = await execa(this.UtilPath, [ `util`, `-c=debug` ], { input: jsonConfig + '\r\n' });
 
 		var txt = proc['stdout'];
 
