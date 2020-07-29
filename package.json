@@ -200,9 +200,10 @@
 				},
 				"initialConfigurations": [
 					{
-						"name": "%xamarin.attach.config.name%",
+						"name": "%xamarin.launch.config.name%",
 						"type": "xamarin",
-						"request": "attach"
+						"request": "launch",
+						"preLaunchTask": "build"
 					}
 				],
 				"configurationAttributes": {
@@ -212,12 +213,12 @@
 						"properties": {
 							"projectPath": {
 								"type": "string",
-								"description": "%xamarin.attach.projectPath.description%",
+								"description": "%xamarin.launch.projectPath.description%",
 								"default": "undefined"
 							},
 							"projectConfiguration": {
 								"type": "string",
-								"description": "%xamarin.attach.projectConfiguration.description%",
+								"description": "%xamarin.launch.projectConfiguration.description%",
 								"default": "undefined"
 							}
 						}

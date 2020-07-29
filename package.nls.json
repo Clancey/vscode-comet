@@ -12,7 +12,7 @@
 	"breakMode.always": "breaks when exception handled or unhandled",
 	"breakMode.unhandled": "breaks when exception unhandled",
 
-	"xamarin.attach.config.name": "Debug",
-	"xamarin.attach.projectConfiguration.description": "Project Configuration to Debug",
-	"xamarin.attach.projectPath.description": "Path to startup project"
+	"xamarin.launch.config.name": "Debug",
+	"xamarin.launch.projectConfiguration.description": "Project Configuration to Debug",
+	"xamarin.launch.projectPath.description": "Path to startup project"
 }
