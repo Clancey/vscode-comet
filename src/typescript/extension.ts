@@ -39,26 +39,15 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
 
-	// Emulator TreeView
-	// treeViewProvider = new XamarinEmulatorProvider(vscode.workspace.rootPath);
-	// const treeView = vscode.window.createTreeView("xamarinEmulator", { treeDataProvider: treeViewProvider });
-	// vscode.commands.registerCommand("xamarinEmulator.refresh", () => treeViewProvider.refresh());	
-	// treeView.onDidChangeSelection(evt => XamarinCommands.selectEmulatorTreeView(evt, treeViewProvider));
-
-	// Emulator (command palette) Command
-	// vscode.commands.registerCommand("xamarinEmulator.select", () => XamarinCommands.selectEmulatorCommandPalette());
-
 	this.xamarinBuildTaskProvider = vscode.tasks.registerTaskProvider(XamarinBuildTaskProvider.XamarinBuildScriptType, new XamarinBuildTaskProvider(vscode.workspace.rootPath));
 	
 	omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
 
 	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
 
-
 	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.configureExceptions', () => configureExceptions()));
 	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.startSession', config => startSession(config)));
 
-	// Debug Start
 	const provider = new XamarinConfigurationProvider();
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xamarin', provider));
 
