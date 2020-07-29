@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { BaseEvent, WorkspaceInformationUpdated } from './omnisharp/loggingEvents';
 import { EventType } from './omnisharp/EventType';
 import { MsBuildProjectAnalyzer } from './msbuild-project-analyzer';
-import { DeviceData, XamarinUtil, SimCtlDevice } from "./xamarin-util";
+import { DeviceData, XamarinUtil, SimCtlDevice, AppleDevicesAndSimulators } from "./xamarin-util";
 
 let fs = require('fs');
 
@@ -161,7 +161,19 @@ export class XamarinProjectManager {
 			var tfmlc = tfm.toLowerCase();
 
 			if (tfmlc.indexOf('monoandroid') >= 0 || tfmlc.indexOf('-android') >= 0) {
-				var androidDevices = await util.GetAndroidDevices();
+
+				var androidDevices : DeviceData[] = [];
+
+				await vscode.window.withProgress({
+					location: vscode.ProgressLocation.Notification,
+					cancellable: false,
+					title: 'Loading Android Devices'
+				}, async (progress) => {
+					
+					progress.report({  increment: 0 });
+					androidDevices = await util.GetAndroidDevices();
+					progress.report({ increment: 100 });
+				});
 
 				var androidPickerDevices = androidDevices
 					.map(x => ({
@@ -176,7 +188,19 @@ export class XamarinProjectManager {
 				}
 			}
 			else if (tfmlc.indexOf('xamarin.ios') >= 0 || tfmlc.indexOf('xamarinios') >= 0 || tfmlc.indexOf('-ios') >= 0) {
-				var iosDevices = await util.GetiOSDevices();
+				
+				var iosDevices : AppleDevicesAndSimulators;
+
+				await vscode.window.withProgress({
+					location: vscode.ProgressLocation.Notification,
+					cancellable: false,
+					title: 'Loading iOS Devices'
+				}, async (progress) => {
+					
+					progress.report({  increment: 0 });
+					iosDevices = await util.GetiOSDevices();
+					progress.report({ increment: 100 });
+				});
 
 				var iosPickerDevices = iosDevices.devices
 					.map(x => ({
