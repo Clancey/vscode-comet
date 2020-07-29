@@ -147,6 +147,14 @@
 				"path": "./syntaxes/XAML.tmLanguage.json"
 			}
 		],
+		"taskDefinitions": [
+			{
+				"type": "xamarin",
+				"required": [],
+				"properties": {
+				}
+			}
+		],
 		"commands": [
 			{
 				"command": "extension.xamarin-debug.configureExceptions",
@@ -186,8 +194,9 @@
 					}
 				],
 				"configurationAttributes": {
-					"attach": {
-						"required": [],
+					"launch": {
+						"required": [
+						],
 						"properties": {
 							"projectPath": {
 								"type": "string",
