@@ -34,24 +34,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 	this.xamarinProjectManager = new XamarinProjectManager(context);
 
+	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
+
+	// Emulator TreeView
+	// treeViewProvider = new XamarinEmulatorProvider(vscode.workspace.rootPath);
+	// const treeView = vscode.window.createTreeView("xamarinEmulator", { treeDataProvider: treeViewProvider });
+	// vscode.commands.registerCommand("xamarinEmulator.refresh", () => treeViewProvider.refresh());	
+	// treeView.onDidChangeSelection(evt => XamarinCommands.selectEmulatorTreeView(evt, treeViewProvider));
+
+	// Emulator (command palette) Command
+	// vscode.commands.registerCommand("xamarinEmulator.select", () => XamarinCommands.selectEmulatorCommandPalette());
+
 	omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
 
 	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
 
 	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.configureExceptions', () => configureExceptions()));
 	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.startSession', config => startSession(config)));
-
-	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
-
-	// Emulator TreeView
-	treeViewProvider = new XamarinEmulatorProvider(vscode.workspace.rootPath);
-	const treeView = vscode.window.createTreeView("xamarinEmulator", { treeDataProvider: treeViewProvider });
-	vscode.commands.registerCommand("xamarinEmulator.refresh", () => treeViewProvider.refresh());	
-	treeView.onDidChangeSelection(evt => XamarinCommands.selectEmulatorTreeView(evt, treeViewProvider));
-
-	// Emulator (command palette) Command
-	// vscode.commands.registerCommand("xamarinEmulator.select", () => XamarinCommands.selectEmulatorCommandPalette());
-
 
 	// Debug Start
 	const provider = new XamarinConfigurationProvider();
@@ -67,19 +66,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if (type === "xamarin") {
 			this.currentDebugSession = s;
-
-
-			// this.xamarinProjectManager.applyDebugConfiguration(s.configuration);
-
-			var jsonConfig = JSON.stringify(s.configuration);
-
-			console.log(jsonConfig);
-
-			// JSON config sent over to xamarin util to do things first before debugging
-			var util = new XamarinUtil();
-
-			var r = await util.Debug(jsonConfig);
-
 		}
 	}));
 	context.subscriptions.push(vscode.debug.onDidTerminateDebugSession((s) => {
