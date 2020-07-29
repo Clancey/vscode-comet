@@ -92,11 +92,48 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}));
 
+	setUpHotReload(context);
+
 	output.appendLine("Initialization succeeded");
 	output.show();
 }
 
 export function deactivate() {
+}
+
+export function setUpHotReload(context: vscode.ExtensionContext)
+{
+    let hotReloadDelayTimer: NodeJS.Timer;
+
+    context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((td) => {
+		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
+		// Hopefully we can improve in future: https://github.com/Microsoft/vscode/issues/42913
+		if (hotReloadDelayTimer) {
+			clearTimeout(hotReloadDelayTimer);
+		}
+
+		hotReloadDelayTimer = setTimeout(() => {
+			hotReloadDelayTimer = null;
+			if(this.currentDebugSession === undefined)
+				return;
+			this.currentDebugSession.customRequest("DocumentChanged", { fileName: td.fileName });
+		}, 200);
+    }));
+
+	/*
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((td) => {
+		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
+		// Hopefully we can improve in future: https://github.com/Microsoft/vscode/issues/42913
+		if (hotReloadDelayTimer) {
+			clearTimeout(hotReloadDelayTimer);
+		}
+
+		hotReloadDelayTimer = setTimeout(() => {
+            hotReloadDelayTimer = null;
+            CometDebugger.Shared.SendDocumentChanged(td.document.fileName, td.document.getText());
+		}, 800);
+	}));
+	*/
 }
 
 //----- configureExceptions ---------------------------------------------------------------------------------------------------
