@@ -62,7 +62,7 @@
 	"activationEvents": [
 		"onStartupFinished",
 		"onCommand:extension.xamarin-debug.configureExceptions",
-		"onCommand:extension.xamarin-debug.startSession",
+		"onCommand:extension.xamarin-debug.startSession"
 	],
 	"contributes": {
 		"views": {
@@ -160,6 +160,14 @@
 				"path": "./syntaxes/XAML.tmLanguage.json"
 			}
 		],
+		"taskDefinitions": [
+			{
+				"type": "xamarin",
+				"required": [],
+				"properties": {
+				}
+			}
+		],
 		"commands": [
 			{
 				"command": "extension.xamarin-debug.configureExceptions",
@@ -207,7 +215,7 @@
 					}
 				],
 				"configurationAttributes": {
-					"attach": {
+					"launch": {
 						"required": [
 						],
 						"properties": {
