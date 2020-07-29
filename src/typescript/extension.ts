@@ -7,7 +7,7 @@
 import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import XamarinEmulatorProvider from "./sidebar"
+import { EmulatorItem, XamarinEmulatorProvider } from "./sidebar"
 import * as XamarinCommands from './xamarin-commands';
 import { execArgv } from 'process';
 import { SimpleResult } from "./xamarin-util";
@@ -28,9 +28,11 @@ xamarinProjectManager: XamarinProjectManager;
 let omnisharp: any = null;
 let output: OutputChannel = null;
 
+var treeViewProvider: XamarinEmulatorProvider; 
 var currentDebugSession: vscode.DebugSession;
 
 export function activate(context: vscode.ExtensionContext) {
+
 	output = vscode.window.createOutputChannel("Xamarin");
 
 	this.xamarinProjectManager = new XamarinProjectManager(context);
@@ -51,8 +53,18 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.startSession', config => startSession(config)));
 
 	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
-	vscode.window.registerTreeDataProvider('xamarinEmulator', new XamarinEmulatorProvider(vscode.workspace.rootPath));
 
+	// Emulator TreeView
+	treeViewProvider = new XamarinEmulatorProvider(vscode.workspace.rootPath);
+	const treeView = vscode.window.createTreeView("xamarinEmulator", { treeDataProvider: treeViewProvider });
+	vscode.commands.registerCommand("xamarinEmulator.refresh", () => treeViewProvider.refresh());	
+	treeView.onDidChangeSelection(evt => XamarinCommands.selectEmulatorTreeView(evt, treeViewProvider));
+
+	// Emulator (command palette) Command
+	// vscode.commands.registerCommand("xamarinEmulator.select", () => XamarinCommands.selectEmulatorCommandPalette());
+
+
+	// Debug Start
 	const provider = new XamarinConfigurationProvider();
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xamarin', provider));
 

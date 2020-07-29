@@ -90,11 +90,12 @@
 		"menus": {
 			"view/title": [
 				{
-					"command": "xamarinEmulator.refreshEntry",
+					"command": "xamarinEmulator.refresh",
 					"when": "view == xamarinEmulator",
 					"group": "navigation"
 				}
-			]
+			],
+			"view/item/context": []
 		},
 		"configuration": {
 			"type": "object",
@@ -142,12 +143,17 @@
 				"category": "Debug"
 			},
 			{
-				"command": "xamarinEmulator.refreshEntry",
+
+				"command": "xamarinEmulator.refresh",
 				"title": "Refresh"
 			},
 			{
+				"command": "xamarinEmulator.select",
+				"title": "Xamarin: Select Emulator"
+			},
+			{
 				"command": "xamarinNewProject.newProject",
-				"title": "new project"
+				"title": "Xamarin: New Project"
 			}
 		],
 		"breakpoints": [
