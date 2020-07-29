@@ -7,6 +7,14 @@ import { DeviceData, XamarinUtil, SimCtlDevice, AppleDevicesAndSimulators } from
 
 let fs = require('fs');
 
+export enum ProjectType
+{
+	None,
+	Android,
+	iOS,
+	Mac
+}
+
 export class MSBuildProjectInfo implements MSBuildProject {
 	public static async fromProject(project: MSBuildProject): Promise<MSBuildProjectInfo> {
 		var r = new MSBuildProjectInfo();
@@ -158,9 +166,9 @@ export class XamarinProjectManager {
 		else {
 			var util = new XamarinUtil();
 
-			var tfmlc = tfm.toLowerCase();
+			var platform = XamarinProjectManager.getProjectType(tfm);
 
-			if (tfmlc.indexOf('monoandroid') >= 0 || tfmlc.indexOf('-android') >= 0) {
+			if (platform === ProjectType.Android) {
 
 				var androidDevices : DeviceData[] = [];
 
@@ -187,7 +195,7 @@ export class XamarinProjectManager {
 					XamarinProjectManager.SelectedDevice = p.device;
 				}
 			}
-			else if (tfmlc.indexOf('xamarin.ios') >= 0 || tfmlc.indexOf('xamarinios') >= 0 || tfmlc.indexOf('-ios') >= 0) {
+			else if (platform === ProjectType.iOS) {
 				
 				var iosDevices : AppleDevicesAndSimulators;
 
@@ -253,5 +261,23 @@ export class XamarinProjectManager {
 		this.deviceStatusBarItem.tooltip = XamarinProjectManager.SelectedProject === undefined ? "Select a Device" : XamarinProjectManager.SelectedDevice.name;
 		this.deviceStatusBarItem.command = "xamarin.selectDevice";
 		this.deviceStatusBarItem.show();
+	}
+
+	public static getProjectType(targetFramework: string): ProjectType
+	{
+		if (!targetFramework)
+			targetFramework = XamarinProjectManager.SelectedTargetFramework;
+
+		if (!targetFramework)
+			return ProjectType.None;
+		
+		var tfm = targetFramework.toLowerCase();
+
+		if (tfm.indexOf('monoandroid') >= 0 || tfm.indexOf('-android') >= 0)
+			return ProjectType.Android;
+		else if (tfm.indexOf('xamarin.ios') >= 0 || tfm.indexOf('xamarinios') >= 0 || tfm.indexOf('-ios') >= 0)
+			return ProjectType.iOS;
+		else if (tfm.indexOf('xamarinmac') >= 0 || tfm.indexOf('xamarin.mac') >= 0 || tfm.indexOf('-mac') >= 0)
+			return ProjectType.Mac;
 	}
 }
