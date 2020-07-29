@@ -207,7 +207,7 @@ namespace VSCodeDebug
 
 
 			if (launchOptions.ProjectType == ProjectType.Android) {
-				await LaunchAndroid (launchOptions, port);
+				var s = LaunchAndroid (launchOptions, port);
 			}
 			if (launchOptions.ProjectType == ProjectType.iOS)
 				await LaunchiOS (launchOptions, port);
@@ -233,7 +233,7 @@ namespace VSCodeDebug
 				sdkRoot,
 				$"--launchsim {appPath}",
 				$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
-				$"--sdk {iOSSdkVersion} --device=:v2:runtime=com.apple.CoreSimulator.SimRuntime.iOS-{iOSSdkVersion.Replace (".", "-")},devicetype=com.apple.CoreSimulator.SimDeviceType.{options.iOSSimulatorDeviceType}"
+				$"--sdk {iOSSdkVersion} --device={iOSSdkVersion},devicetype={options.iOSSimulatorDeviceType}"
 				);
 			Console.WriteLine (success);
 		}
@@ -247,7 +247,7 @@ namespace VSCodeDebug
 					p.StartInfo.FileName = command;
 					//p.StartInfo.WorkingDirectory = workingDirectory;
 					p.StartInfo.RedirectStandardOutput = true;
-					p.StartInfo.Arguments = Utilities.ConcatArgs (args, false);
+					p.StartInfo.Arguments = Utilities.ConcatArgs (args);
 					p.StartInfo.UseShellExecute = false;
 					p.StartInfo.RedirectStandardInput = true;
 					p.Start ();
@@ -270,7 +270,7 @@ namespace VSCodeDebug
 			});
 		}
 
-		async Task LaunchAndroid (LaunchData options, int port)
+		bool LaunchAndroid (LaunchData options, int port)
 		{
 			var home = AndroidSdk.FindHome ();
 			AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
@@ -285,13 +285,14 @@ namespace VSCodeDebug
 
 			Console.WriteLine ($"Launching Android: {options.AdbDeviceName}");
 
-			await RunMSBuildComand (workingDir, options.Project
+			var result = MSBuild.Run (workingDir, options.Project
 				, "/t:Install,_Run"
 				, "/p:AndroidAttachDebugger=true"
 				, $"/p:SelectedDevice={options.AdbDeviceName}"
 				, $"-p:AndroidSdbTargetPort={port}"
 				, $"-p:AndroidSdbHostPort={port}"
 				);
+			return result.Success;
 		}
 
 		private void Connect (LaunchData options, IPAddress address, int port)
@@ -311,10 +312,7 @@ namespace VSCodeDebug
 
 					};
 				} else if (options.ProjectType == ProjectType.iOS) {
-					if (options.IsSim)
-						args = new IPhoneSimulatorDebuggerArgs (options.AppName, new IPhoneTcpCommandConnection (IPAddress.Loopback, port)) { MaxConnectionAttempts = 10 };
-					else
-						args = new Mono.Debugging.Soft.SoftDebuggerListenArgs (options.AppName, IPAddress.Loopback, port);
+					args = new StreamCommandConnectionDebuggerArgs (options.AppName, new IPhoneTcpCommandConnection (IPAddress.Loopback, port)) { MaxConnectionAttempts = 10 };
 				}
 
 				Console.WriteLine ("Listening for debugger!");

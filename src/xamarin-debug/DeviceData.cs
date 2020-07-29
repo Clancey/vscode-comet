@@ -49,7 +49,6 @@ namespace VsCodeXamarinUtil
 		public string Platform { get; set; }
 		public ProjectType ProjectType { get; set; }
 		public string OutputDirectory { get; set; }
-		public bool IsSim { get; set; }
 		public bool EnableHotReload { get; set; }
 		public string iOSDeviceId { get; set; }
 		public string iOSSimulatorDeviceOS { get; set; }
@@ -64,19 +63,19 @@ namespace VsCodeXamarinUtil
 		}
 		public LaunchData(dynamic args)
 		{
-			Project = getString (args, nameof(Project));
-			Configuration = getString (args, nameof(Configuration));
-			Platform = getString (args, nameof(Platform), "AnyCPU");
-			OutputDirectory = getString (args, nameof (OutputDirectory));
-			IsSim = getBool (args, nameof (IsSim));
+			Project = getString (args, VSCodeKeys.LaunchConfig.ProjectPath);
+			Configuration = getString (args, VSCodeKeys.LaunchConfig.Configuration);
+			Platform = getString (args, VSCodeKeys.LaunchConfig.Platform, "AnyCPU");
+			OutputDirectory = getString (args, VSCodeKeys.LaunchConfig.Output);
 			EnableHotReload = getBool (args, nameof (EnableHotReload));
-			iOSDeviceId = getString (args, nameof (iOSDeviceId));
-			iOSSimulatorDeviceOS = getString (args, nameof (iOSSimulatorDeviceOS));
-			iOSSimulatorDeviceType = getString (args, nameof (iOSSimulatorDeviceType));
-			AdbDeviceName = getString (args, nameof (AdbDeviceName));
-			AdbDeviceId = getString (args, nameof (AdbDeviceId));
-			var projectTypeString = getString (args, nameof (ProjectType));
-			ProjectType = Enum.Parse (typeof(ProjectType), projectTypeString);
+			iOSDeviceId = getString (args, VSCodeKeys.LaunchConfig.iosDeviceId);
+			iOSSimulatorDeviceOS = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorOS);
+			iOSSimulatorDeviceType = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorDeviceType);
+			AdbDeviceName = getString (args, VSCodeKeys.LaunchConfig.AdbEmulatorName);
+			AdbDeviceId = getString (args, VSCodeKeys.LaunchConfig.AdbDeviceId);
+			var projectTypeString = getString (args, VSCodeKeys.LaunchConfig.ProjectType);
+			if(string.IsNullOrWhiteSpace(projectTypeString))
+				ProjectType = Enum.Parse (typeof(ProjectType), projectTypeString,true);
 		}
 
 		public (bool success, string message) Validate ()
@@ -92,15 +91,15 @@ namespace VsCodeXamarinUtil
 			if (!failed.success)
 				return failed;
 			if(ProjectType == ProjectType.iOS) {
-				if (IsSim) {
-					if (string.IsNullOrWhiteSpace (iOSSimulatorDeviceOS) || string.IsNullOrWhiteSpace (iOSSimulatorDeviceType))
-						return (false, "iOS simulator is not valid");
-
-				} else if (string.IsNullOrWhiteSpace (iOSDeviceId))
+				if ((string.IsNullOrWhiteSpace (iOSSimulatorDeviceOS) || string.IsNullOrWhiteSpace (iOSSimulatorDeviceType))
+					&& !string.IsNullOrWhiteSpace(iOSDeviceId))
+					return (false, "iOS simulator is not valid");
+				else if (string.IsNullOrWhiteSpace (iOSDeviceId))
 					return (false, $"{nameof (iOSDeviceId)} is not valid");
 			}
 			else if(ProjectType == ProjectType.Android) {
-
+				if (string.IsNullOrWhiteSpace (AdbDeviceId) && string.IsNullOrWhiteSpace (AdbDeviceName))
+					return (false, "Android device is not valid");
 			}
 		
 			return (true, "");

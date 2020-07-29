@@ -21,7 +21,7 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 		if (!config.type && !config.request && !config.name)
 		{
 			config.type = 'xamarin';
-			config.request = 'attach';
+			config.request = 'launch';
 			return config;
 		}
 
