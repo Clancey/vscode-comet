@@ -38,7 +38,7 @@ namespace VSCodeDebug {
 
 			try {
 				p.StartInfo.CreateNoWindow = false;
-				p.StartInfo.FileName = "/bin/bash";
+				p.StartInfo.FileName = exePath;
 				p.StartInfo.WorkingDirectory = workingDirectory;
 				//p.StartInfo.RedirectStandardOutput = true;
 				p.StartInfo.Arguments = "-c \"" + Utilities.ConcatArgs (newArgs) + "\"";
