@@ -60,10 +60,9 @@
 	},
 	"main": "./out/extension",
 	"activationEvents": [
+		"onStartupFinished",
 		"onCommand:extension.xamarin-debug.configureExceptions",
 		"onCommand:extension.xamarin-debug.startSession",
-		"workspaceContains:*.csproj",
-		"workspaceContains:**/*.csproj"
 	],
 	"contributes": {
 		"views": {
