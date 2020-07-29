@@ -213,12 +213,12 @@ namespace VSCodeDebug
 					return;
 				}
 			}
+			//on IOS we need to do the connect before we launch the sim.
 			if (launchOptions.ProjectType == ProjectType.iOS) {
+				Connect (launchOptions, address, port);
 				var r = await LaunchiOS (launchOptions, port);
-				if (!r.Success) {
-					SendErrorResponse (response, 3002, r.message ?? "Error launching simulator");
-					return;
-				}
+				SendResponse (response);
+				return;
 			}
 
 			Connect (launchOptions, address, port);
@@ -237,6 +237,7 @@ namespace VSCodeDebug
 
 			var appPath = Directory.EnumerateDirectories (output, "*.app").FirstOrDefault ();
 
+
 			var success = await RunMlaumchComand (MlaunchPath, workingDir,
 				sdkRoot,
 				$"--launchsim \"{appPath}\"",
@@ -246,37 +247,50 @@ namespace VSCodeDebug
 			return success;
 		}
 		System.Diagnostics.Process iOSDebuggerProcess;
-		public Task<(bool Success, string Output)> RunMlaumchComand (string command, string workingDirectory, params string [] args)
+		public async Task<(bool Success, string Output)> RunMlaumchComand (string command, string workingDirectory, params string [] args)
 		{
+
+			TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool> ();
 			var p = new System.Diagnostics.Process ();
-			return Task.Run (() => {
-				try {
-					p.StartInfo.CreateNoWindow = false;
-					p.StartInfo.FileName = command;
-					//p.StartInfo.WorkingDirectory = workingDirectory;
-					p.StartInfo.RedirectStandardOutput = true;
-					p.StartInfo.Arguments = Utilities.ConcatArgs (args,false);
-					p.StartInfo.UseShellExecute = false;
-					p.StartInfo.RedirectStandardInput = true;
-					p.Start ();
 
-				} catch (Exception ex) {
+			const string iOSRunningText = "Press enter to terminate the application";
+			//await Task.Run (() => {
+			try {
+				p.StartInfo.CreateNoWindow = false;
+				p.StartInfo.FileName = command;
+				p.StartInfo.WorkingDirectory = workingDirectory;
+				p.StartInfo.Arguments = Utilities.ConcatArgs (args, false);
+				p.StartInfo.UseShellExecute = false;
+				p.StartInfo.RedirectStandardOutput = true;
+				p.StartInfo.RedirectStandardInput = true;
+				p.OutputDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
+					if (e.Data == iOSRunningText)
+						tcs.TrySetResult (true);
+					tcs.TrySetResult (true);
+				};
+				p.Exited += (object sender, EventArgs e) => {
+					tcs.TrySetResult (false);
+				};
+				p.Start ();
+				p.BeginOutputReadLine ();
+				//p.BeginErrorReadLine ();
 
-					Console.WriteLine (ex);
-				}
-				const string iOSRunningText = "Press enter to terminate the application";
-				bool isFinished = false;
-				while (!isFinished && !p.HasExited) {
-					var resp = p.StandardOutput.ReadLine ();
-					if (resp == iOSRunningText)
-						isFinished = true;
-					else
-						return (false, resp);
-				}
-				iOSDebuggerProcess = p;
-				return (isFinished, "");
+			} catch (Exception ex) {
+
+				Console.WriteLine (ex);
+				tcs.TrySetException (ex);
+			}
+			Task.Run (() => {
+				p.WaitForExit ();
+				tcs.TrySetResult (false);
 			});
+			iOSDebuggerProcess = p;
+			//});
+			var s = await tcs.Task;
+			return (s, "");
 		}
+
+
 
 		(bool Success, string message) LaunchAndroid (LaunchData options, int port)
 		{
@@ -363,6 +377,16 @@ namespace VSCodeDebug
 
 		public override void Disconnect(Response response, dynamic args)
 		{
+			try {
+				if (!(iOSDebuggerProcess?.HasExited ?? true)) {
+					iOSDebuggerProcess?.StandardInput?.WriteLine ("\r\n");
+					iOSDebuggerProcess?.Kill ();
+					iOSDebuggerProcess = null;
+				}
+			} catch (Exception ex) {
+				Console.WriteLine (ex);
+			}
+
 			if (_attachMode) {
 
 				lock (_lock) {
