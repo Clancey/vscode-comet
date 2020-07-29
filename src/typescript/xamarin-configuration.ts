@@ -59,7 +59,10 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 				var device = XamarinProjectManager.SelectedDevice;
 
 				if (!device)
+				{ 
 					await XamarinProjectManager.Shared.showDevicePicker();
+					device = XamarinProjectManager.SelectedDevice;
+				}
 
 				if (!device) {
 					vscode.window.showErrorMessage("Device not selected!");
