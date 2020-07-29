@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 //import {ProjectType } from './msbuild-project-analyzer';
 import { XamarinProjectManager, ProjectType } from './xamarin-project-manager';
 
-interface CometBuildTaskDefinition extends vscode.TaskDefinition {
+interface XamarinBuildTaskDefinition extends vscode.TaskDefinition {
 	/**
 	 * Additional build flags
 	 */
@@ -32,8 +32,6 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 	private csproj:string;
 	private configuration:string;
 	private platform:string;
-
-	private tasks: vscode.Task[] | undefined;
 	
 	// We use a CustomExecution task when state needs to be shared accross runs of the task or when 
 	// the task requires use of some VS Code API to run.
@@ -68,19 +66,17 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		this.configuration = XamarinProjectManager.SelectedProjectConfiguration;
 		this.platform = XamarinProjectManager.getSelectedProjectPlatform();
 
-		this.tasks = [];
 		var flags = [];
 		var target = "Build";
 
-		this.tasks.push(this.getTask(XamarinBuildTaskProvider.msBuildCommand,target,flags));
-	
-		return this.tasks;
+		return [ this.getTask(XamarinBuildTaskProvider.msBuildCommand,target,flags) ]
 	}
 
-	private getTask(command:string ,target: string, flags: string[], definition?: CometBuildTaskDefinition): vscode.Task{
+	private getTask(command:string ,target: string, flags: string[], definition?: XamarinBuildTaskDefinition): vscode.Task{
 		var configuration = XamarinProjectManager.SelectedProjectConfiguration;
 		var csproj = XamarinProjectManager.SelectedProject.Path;
-		var platform = '';
+		var platform = XamarinProjectManager.getSelectedProjectPlatform();
+		var projectType = XamarinProjectManager.getProjectType(XamarinProjectManager.SelectedTargetFramework);
 		if (definition === undefined) {
 			definition = {
 				task: "MSBuild",
@@ -88,7 +84,7 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 				type: XamarinBuildTaskProvider.XamarinBuildScriptType,
 				csproj,
 				configuration,
-				projectType: null,// CometProjectManager.CurrentProjectType(),
+				projectType,
 				platform,
 				target,
 				flags
