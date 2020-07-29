@@ -241,7 +241,7 @@ namespace VSCodeDebug
 				sdkRoot,
 				$"--launchsim \"{appPath}\"",
 				$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
-				$"--sdk {options.iOSSimulatorVersion} --device={options.iOSSimulatorDevice},devicetype={options.iOSSimulatorDeviceType}"
+				$"--sdk {options.iOSSimulatorVersion} --device=:v2:runtime={options.iOSSimulatorDevice},devicetype={options.iOSSimulatorDeviceType}"
 				);
 			return success;
 		}
