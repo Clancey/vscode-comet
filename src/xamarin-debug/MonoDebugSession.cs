@@ -218,6 +218,7 @@ namespace VSCodeDebug
 				if (!r.Success) {
 					SendErrorResponse (response, 3002, r.message ?? "Error launching simulator");
 					return;
+				}
 			}
 
 			Connect (launchOptions, address, port);
