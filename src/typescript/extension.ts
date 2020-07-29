@@ -16,6 +16,7 @@ import { XamarinProjectManager } from "./xamarin-project-manager";
 import { XamarinConfigurationProvider } from "./xamarin-configuration";
 import { OutputChannel } from 'vscode';
 import { MSBuildProject } from './omnisharp/protocol';
+import { XamarinBuildTaskProvider } from './xamarin-build-task';
 
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
@@ -27,6 +28,8 @@ let output: OutputChannel = null;
 
 var treeViewProvider: XamarinEmulatorProvider; 
 var currentDebugSession: vscode.DebugSession;
+
+var xamarinBuildTaskProvider: XamarinBuildTaskProvider;
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -45,9 +48,12 @@ export function activate(context: vscode.ExtensionContext) {
 	// Emulator (command palette) Command
 	// vscode.commands.registerCommand("xamarinEmulator.select", () => XamarinCommands.selectEmulatorCommandPalette());
 
+	this.xamarinBuildTaskProvider = vscode.tasks.registerTaskProvider(XamarinBuildTaskProvider.XamarinBuildScriptType, new XamarinBuildTaskProvider(vscode.workspace.rootPath));
+	
 	omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
 
 	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
+
 
 	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.configureExceptions', () => configureExceptions()));
 	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.startSession', config => startSession(config)));

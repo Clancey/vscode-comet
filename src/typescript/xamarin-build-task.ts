@@ -2,8 +2,8 @@
 let fs = require("fs");
 let path = require('path')
 import * as vscode from 'vscode';
-import {ProjectType } from './msbuild-project-analyzer';
-import { XamarinProjectManager } from './xamarin-project-manager';
+//import {ProjectType } from './msbuild-project-analyzer';
+import { XamarinProjectManager, ProjectType } from './xamarin-project-manager';
 
 interface CometBuildTaskDefinition extends vscode.TaskDefinition {
 	/**
@@ -58,43 +58,21 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 
 	private getTasks(): vscode.Task[] {
 		
-		// if(CometProjectManager.Shared().CurrentCSProj() === this.csproj
-		//  && CometProjectManager.CurrentConfig() === this.configuration
-		//   && CometProjectManager.CurrentPlatform()=== this.platform  
-		//   && this.tasks !== undefined && this.tasks.length > 0)
-		//  	return this.tasks;
+		if (!XamarinProjectManager.SelectedProject)
+		{
+			vscode.window.showInformationMessage("Startup Project not selected!");
+			return undefined;
+		}
 
-		
-		// this.csproj = CometProjectManager.Shared().CurrentCSProj();
-		// if(this.csproj === undefined)
-		// {
+		this.csproj = XamarinProjectManager.SelectedProject.Path;
+		this.configuration = XamarinProjectManager.SelectedProjectConfiguration;
+		this.platform = XamarinProjectManager.getSelectedProjectPlatform();
 
-		// 	vscode.window.showInformationMessage("csproj is not set");
-		// 	return undefined;
-		// }
-		// this.configuration = CometProjectManager.CurrentConfig();
-		// this.platform = CometProjectManager.CurrentPlatform();
+		this.tasks = [];
+		var flags = [];
+		var target = "Build";
 
-		// this.tasks = [];
-		// var flags = [];
-		// var target = "Build";
-		// if(CometProjectManager.CurrentProjectType() === ProjectType.Android)
-		// {
-		// 	// var device = CometProjectManager.Shared().CurrentDevice();
-		// 	// if(device === undefined ||device.projectType != ProjectType.Android)
-		// 	// {
-		// 	// 	vscode.window.showInformationMessage("csproj is not set");
-		// 	// 	return undefined;
-		// 	// }
-		// 	target = "Install";
-		// 	// flags.push("/p:AndroidAttachDebugger=true");
-		// 	// flags.push(`-p:SelectedDevice=${device.id}`);
-		// 	// flags.push(`/p:SelectedDevice=android_api_28`);
-			
-		// 	//TODO: target install
-		// 	//TODO: Target: _run
-		// }
-		//this.tasks.push(this.getTask(XamarinBuildTaskProvider.msBuildCommand,target,flags));
+		this.tasks.push(this.getTask(XamarinBuildTaskProvider.msBuildCommand,target,flags));
 	
 		return this.tasks;
 	}
@@ -117,7 +95,11 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 			};
 		}
 
-		var fullCommand = `${command} ${csproj} /t:${target} /p:Configuration=${configuration};Platform=${platform} ${flags.join(' ')}`;
+		var platformArg = '';
+		if (this.platform)
+			platformArg = `;Platform=${platform}`;
+
+		var fullCommand = `${command} ${csproj} /t:${target} /p:Configuration=${configuration}${platformArg} ${flags.join(' ')}`;
 		var task = new vscode.Task(definition, definition.target, 'xamarin', new vscode.ShellExecution(fullCommand));
 		return task;
 	}
