@@ -1,0 +1,19 @@
+﻿using System;
+namespace VsCodeXamarinUtil {
+	public static class VSCodeKeys {
+		public static class LaunchConfig {
+			public const string Configuration = "projectConfiguration";
+			public const string Output = "projectOutputPath";
+			public const string Platform = "projectPlatform";
+			public const string ProjectPath = "projectPath";
+			public const string ProjectType = "projectType";
+
+			public const string iosDeviceId = "iosDeviceId";
+			public const string iOSSimulatorOS = "iosSimulatorRuntime";
+			public const string iOSSimulatorDeviceType = "iosSimulatorDeviceType";
+			public const string AdbDeviceId = "adbDeviceId";
+			public const string AdbEmulatorName = "adbEmulatorName";
+
+		}
+	}
+}
