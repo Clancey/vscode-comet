@@ -295,22 +295,19 @@ namespace VSCodeDebug
 		(bool Success, string message) LaunchAndroid (LaunchData options, int port)
 		{
 			var home = AndroidSdk.FindHome ();
-			AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
+
+			Console.WriteLine($"Launching Android: {options.AdbDeviceName}");
+
+			var adbSerial = AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
 			var workingDir = Path.GetDirectoryName (options.Project);
-		
-			Console.WriteLine ($"Trying ADB Device: {options.AdbDeviceId}");
 
-			if (string.IsNullOrWhiteSpace (options.AdbDeviceId)) {
-				//It's an emulator! And it's not running
-				AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
-			}
-
-			Console.WriteLine ($"Launching Android: {options.AdbDeviceName}");
+			if (string.IsNullOrWhiteSpace (adbSerial))
+				return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");
 
 			var result = MSBuild.Run (workingDir, options.Project
-				, "/t:Install,_Run"
-				, "/p:AndroidAttachDebugger=true"
-				, $"/p:SelectedDevice={options.AdbDeviceName}"
+				, "-t:Install,_Run"
+				, "-p:AndroidAttachDebugger=true"
+				, $"-p:AdbTarget=-s%20{adbSerial}"
 				, $"-p:AndroidSdbTargetPort={port}"
 				, $"-p:AndroidSdbHostPort={port}"
 				);

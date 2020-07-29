@@ -48,12 +48,15 @@ namespace VsCodeXamarinUtil
 			return null;
 		}
 
-		public static bool StartEmulatorAndWaitForBoot(DirectoryInfo sdkHome, string avdName)
+		public static string StartEmulatorAndWaitForBoot(DirectoryInfo sdkHome, string avdName)
 		{
 			var emulator = new Emulator(sdkHome);
 			var e = emulator.Start(avdName);
 
-			return e.WaitForBootComplete(TimeSpan.FromSeconds(60));
+			if (e.WaitForBootComplete(TimeSpan.FromSeconds(60)))
+				return e.Serial;
+
+			return null;
 		}
 
 		public static async Task<List<DeviceData>> GetEmulatorsAndDevices(DirectoryInfo sdkHome)
