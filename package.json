@@ -142,16 +142,25 @@
 				}
 			}
 		},
-		"languages": [{
-			  "id": "XAML",
-			  "aliases": ["XAML", "xaml"],
-			  "extensions": [".xaml"]
-			}],
-		"grammars": [{
-			  "language": "XAML",
-			  "scopeName": "source.XAML",
-			  "path": "./syntaxes/XAML.tmLanguage.json"
-			}],
+		"languages": [
+			{
+				"id": "XAML",
+				"aliases": [
+					"XAML",
+					"xaml"
+				],
+				"extensions": [
+					".xaml"
+				]
+			}
+		],
+		"grammars": [
+			{
+				"language": "XAML",
+				"scopeName": "source.XAML",
+				"path": "./syntaxes/XAML.tmLanguage.json"
+			}
+		],
 		"commands": [
 			{
 				"command": "extension.xamarin-debug.configureExceptions",
