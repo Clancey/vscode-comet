@@ -13,6 +13,9 @@
 	},
 	"license": "MIT",
 	"private": true,
+	"extensionDependencies": [
+		"ms-dotnettools.csharp"
+	],
 	"scripts": {
 		"prepublish": "pwsh ./build.ps1 build",
 		"vscode:prepublish": "pwsh ./build.ps1 build",
