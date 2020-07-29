@@ -83,11 +83,11 @@ export class XamarinProjectManager
 	
 		this.projectStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
 		this.projectStatusBarItem.tooltip = "Select a Project";
-		this.projectStatusBarItem.text = "Select a Project";
+		this.projectStatusBarItem.text = "$(project) Select a Project";
 
 		this.deviceStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
 		this.deviceStatusBarItem.tooltip = "Select a Device";
-		this.deviceStatusBarItem.text = "Select a Device";
+		this.deviceStatusBarItem.text = "$(device-mobile) Select a Device";
 
 		this.updateProjectStatus();
 		this.updateDeviceStatus();
@@ -122,7 +122,7 @@ export class XamarinProjectManager
 	public async updateProjectStatus()
 	{
 		var projectString = XamarinProjectManager.SelectedProject === undefined ? " Select a Project" : ` ${XamarinProjectManager.SelectedProject.Name} | ${XamarinProjectManager.SelectedProjectConfiguration}`;
-		this.projectStatusBarItem.text = projectString;
+		this.projectStatusBarItem.text = "$(project) " + projectString;
 		this.projectStatusBarItem.tooltip = XamarinProjectManager.SelectedProject === undefined ? "Xamarin Startup Project" : XamarinProjectManager.SelectedProject.Path;
 		this.projectStatusBarItem.command = "xamarin.selectProject";
 		this.projectStatusBarItem.show();
@@ -154,7 +154,8 @@ export class XamarinProjectManager
 
 	public async updateDeviceStatus()
 	{
-		this.deviceStatusBarItem.text = XamarinProjectManager.SelectedDevice === undefined ? " Select a Device" : ` ${XamarinProjectManager.SelectedDevice.name}`;
+		var deviceStr = XamarinProjectManager.SelectedDevice === undefined ? " Select a Device" : ` ${XamarinProjectManager.SelectedDevice.name}`;
+		this.deviceStatusBarItem.text = "$(device-mobile) " + deviceStr;
 		this.deviceStatusBarItem.tooltip = XamarinProjectManager.SelectedProject === undefined ? "Select a Device" : XamarinProjectManager.SelectedDevice.name;
 		this.deviceStatusBarItem.command = "xamarin.selectDevice";
 		this.deviceStatusBarItem.show();
