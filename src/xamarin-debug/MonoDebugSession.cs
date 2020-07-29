@@ -255,7 +255,7 @@ namespace VSCodeDebug
 					p.StartInfo.FileName = command;
 					//p.StartInfo.WorkingDirectory = workingDirectory;
 					p.StartInfo.RedirectStandardOutput = true;
-					p.StartInfo.Arguments = Utilities.ConcatArgs (args);
+					p.StartInfo.Arguments = Utilities.ConcatArgs (args,false);
 					p.StartInfo.UseShellExecute = false;
 					p.StartInfo.RedirectStandardInput = true;
 					p.Start ();
