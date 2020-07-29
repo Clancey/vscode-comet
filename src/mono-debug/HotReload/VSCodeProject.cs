@@ -13,6 +13,14 @@ namespace VSCodeDebug.HotReload
 {
 	public class VSCodeProject : IProject
 	{
+		public VSCodeProject(SoftDebuggerSession debugger)
+        {
+			// Hardcode for now
+			RunConfiguration = new RunConfiguration(this, false, "");
+
+			Debugger = debugger;
+        }
+
 		public string Name => "HotReloadProject";
 
 		public LinkerSetting LinkerSetting => LinkerSetting.None;
@@ -25,7 +33,7 @@ namespace VSCodeDebug.HotReload
 
 		public SoftDebuggerSession Debugger { get; }
 
-		public ILogger Logger { get; }
+		public ILogger Logger { get; } = new VSCodeLogger();
 
 		public bool MonoInterpreterEnabled => true;
 

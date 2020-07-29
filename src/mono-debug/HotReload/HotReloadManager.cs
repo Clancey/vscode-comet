@@ -53,10 +53,12 @@ namespace VSCodeDebug.HotReload
 
 			var untypedStartInfo = debugger.GetStartInfo();
 
+			// We can't do this check as debugger.GetStartInfo() returns null; maybe it's not needed
+			/*
 			var startInfo = untypedStartInfo as SoftDebuggerStartInfo;
 			if (startInfo is null)
 			{
-				_ideManager.Logger.Log(LogLevel.Warn, "Hot Reload disabled due to unexpected type of DebuggerStartInfo");
+				_ideManager.Logger.Log(LogLevel.Warn, $"Hot Reload disabled due to unexpected type of DebuggerStartInfo: {untypedStartInfo.GetType()}");
 				_ideManager.Telemetry.Post(TelemetryEventType.Fault, TelemetryEvents.SessionUnsupported,
 					properties: new (string, TelemetryValue)[] {
 						("Reason", "UnexpectedType"),
@@ -77,13 +79,20 @@ namespace VSCodeDebug.HotReload
 				_ideManager.Telemetry.ReportException(TelemetryEvents.SessionUnsupported, ex);
 				return;
 			}
+			*/
 
-			var project = new VSCodeProject();
+			var project = new VSCodeProject(debugger);
 
 			// ide.StartHotReloadAsync checks if the project can run. If it can't, it'll return
 			// and throw error bars for the user.
 			_ideManager.StartHotReloadAsync(project).LogIfFaulted(_ideManager?.Logger);
 		}
+
+		public void DocumentChanged(string filePath)
+        {
+			var fileIdentity = new FileIdentity(new AssemblyName(), filePath, filePath);
+			_ideManager.XamlChanged(fileIdentity);
+        }
 
 		private void AgentStatusChanged(object sender, AgentStatusMessage e)
 		{
