@@ -3,8 +3,8 @@
 	"displayName": "Xamarin",
 	"version": "0.1.0",
 	"publisher": "ms-vscode",
-	"description": "Visual Studio Code debugger extension to enable Xamarin ",
-	"icon": "images/mono-debug-icon.png",
+	"description": "Lightweight Xamarin Forms Tooling",
+	"icon": "images/xam-vscode.png",
 	"categories": [
 		"Debuggers"
 	],
@@ -69,12 +69,8 @@
 		"views": {
 			"xamarin": [
 				{
-					"id": "xamarinEmulator",
-					"name": "Available Emulators"
-				},
-				{
 					"id": "xamarinNewProject",
-					"name": "File > New"
+					"name": "Create New Project"
 				}
 			]
 		},
@@ -93,16 +89,6 @@
 				"contents": "Start a new project. \n [New App](command:xamarinNewProject.newProject)"
 			}
 		],
-		"menus": {
-			"view/title": [
-				{
-					"command": "xamarinEmulator.refresh",
-					"when": "view == xamarinEmulator",
-					"group": "navigation"
-				}
-			],
-			"view/item/context": []
-		},
 		"configuration": {
 			"type": "object",
 			"title": "%configuration.title%",
@@ -142,29 +128,30 @@
 				}
 			}
 		},
-		"languages": [{
-			  "id": "XAML",
-			  "aliases": ["XAML", "xaml"],
-			  "extensions": [".xaml"]
-			}],
-		"grammars": [{
-			  "language": "XAML",
-			  "scopeName": "source.XAML",
-			  "path": "./syntaxes/XAML.tmLanguage.json"
-			}],
+		"languages": [
+			{
+				"id": "XAML",
+				"aliases": [
+					"XAML",
+					"xaml"
+				],
+				"extensions": [
+					".xaml"
+				]
+			}
+		],
+		"grammars": [
+			{
+				"language": "XAML",
+				"scopeName": "source.XAML",
+				"path": "./syntaxes/XAML.tmLanguage.json"
+			}
+		],
 		"commands": [
 			{
 				"command": "extension.xamarin-debug.configureExceptions",
 				"title": "%configure.exceptions.command%",
 				"category": "Debug"
-			},
-			{
-				"command": "xamarinEmulator.refresh",
-				"title": "Refresh"
-			},
-			{
-				"command": "xamarinEmulator.select",
-				"title": "Xamarin: Select Emulator"
 			},
 			{
 				"command": "xamarinNewProject.newProject",

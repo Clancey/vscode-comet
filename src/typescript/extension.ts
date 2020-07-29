@@ -43,16 +43,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
 
-	// Emulator TreeView
-	treeViewProvider = new XamarinEmulatorProvider(vscode.workspace.rootPath);
-	const treeView = vscode.window.createTreeView("xamarinEmulator", { treeDataProvider: treeViewProvider });
-	vscode.commands.registerCommand("xamarinEmulator.refresh", () => treeViewProvider.refresh());	
-	treeView.onDidChangeSelection(evt => XamarinCommands.selectEmulatorTreeView(evt, treeViewProvider));
-
-	// Emulator (command palette) Command
-	// vscode.commands.registerCommand("xamarinEmulator.select", () => XamarinCommands.selectEmulatorCommandPalette());
-
-
 	// Debug Start
 	const provider = new XamarinConfigurationProvider();
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xamarin', provider));
