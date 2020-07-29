@@ -75,7 +75,9 @@ export class XamarinUtil
 
 		var os = require('os');
 
-		if (os.platform().indexOf('win') >= 0)
+		var plat = os.platform();
+
+		if (plat.indexOf('win32') >= 0)
 			this.isUnix = false;
 
 		var extPath = thisExtension.extensionPath;
