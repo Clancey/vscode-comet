@@ -69,7 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
 			this.currentDebugSession = s;
 
 
-			this.xamarinProjectManager.applyDebugConfiguration(s.configuration);
+			// this.xamarinProjectManager.applyDebugConfiguration(s.configuration);
 
 			var jsonConfig = JSON.stringify(s.configuration);
 
