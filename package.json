@@ -14,7 +14,8 @@
 	"license": "MIT",
 	"private": true,
 	"extensionDependencies": [
-		"ms-dotnettools.csharp"
+		"ms-dotnettools.csharp",
+		"maxbrister.vscode-nuget-package-manager-improved"
 	],
 	"scripts": {
 		"prepublish": "pwsh ./build.ps1 build",
