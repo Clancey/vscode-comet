@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { EmulatorItem, XamarinEmulatorProvider } from "./sidebar"
 import { create } from 'lodash';
+import * as child from 'child_process';
 
 // Initiates the flow of creating a new project.  Is opinionated.
 export async function newProject() {
@@ -13,59 +14,50 @@ export async function newProject() {
     var folderURI: vscode.Uri[] = await vscode.window.showOpenDialog(dialogOpts);
     var folder: vscode.Uri = folderURI[0];
 
-    vscode.window.showInformationMessage(`Creating project at ${folder.path}...`);
+    var templateName: string = "forms-app";
+    var templateKinds = ["blank", "master-detail", "tabbed", "shell"];
 
-    
-    var templateName: string = "forms-app"
-    var status = createProject(templateName, folder.path);
+    var quickpicks = await vscode.window.showQuickPick(templateKinds, {
+        canPickMany: false,
+        placeHolder: "Choose a Xamarin Forms template"
+    });
+    var templateKind: string = quickpicks[0];
 
-    if (status) {
-        vscode.window.showInformationMessage(`Created! template=${templateName}`);
-        vscode.workspace.updateWorkspaceFolders(0, 1, { uri: folder });
-    }
+    vscode.window.showInformationMessage(`Creating project....`);
 
-    // TODO: Move focus to Explorer somehow to make it obvious!
+    await createProject(templateName, templateKind, folder);
 }   
 
+async function createProject(templateName: string, templateKind: string, folder: vscode.Uri, haveTriedInstallingTemplate: boolean = false) {
 
-function createProject(templateName: string, folderPath: string, recalled: boolean = false) : boolean {
-    
-    const cprocess = require('child_process');
+    const cmd1 = `dotnet new ${templateName} -o ${folder.path} -k ${templateKind}`;
+    var extPath = vscode.extensions.getExtension('ms-vscode.xamarin').extensionPath;
+    const cmd2 = `dotnet new --install ${extPath}/templates/Xamarin.Templates.Multiplatform.0.0.1.nupkg > /dev/null`;
 
-    cprocess.exec(`dotnet new ${templateName} -o ${folderPath}`, (err, stdout, stderr) => {
-        console.log('stdout 1: ' + stdout);
-        console.log('stderr 1: ' + stderr);
+    child.exec(cmd1, async (err1, stdout, stderr) => {
 
-        if (recalled)
-            return err == 0;
-
-        // Don't have the template installed
-        if (err) {
-            console.log(`error 1: ${err}`)
-            vscode.window.showErrorMessage("Template not found...adding.");
-
-            var thisExtension = vscode.extensions.getExtension('ms-vscode.xamarin');
-            var extPath = thisExtension.extensionPath;
-            cprocess.exec(`dotnet new --install ${extPath}/templates/Xamarin.Templates.Multiplatform.0.0.1.nupkg > /dev/null`, (err, sout, serr) => {
-                
-                console.log('stdout 2: ' + sout);
-                console.log('stderr 2: ' + serr);
-                
-                if (err) {
-                    console.log(`error 2: ${err}`)
-                    vscode.window.showErrorMessage("Could not add template :(");  
-                    return false;
-                }
-
-                // Success
-                return createProject(templateName, folderPath, true);
-                
-            });
+        // Error expected if user doesnt have templates installed
+        if (err1) {
+            if (!haveTriedInstallingTemplate) {
+                // Install embedded Xamarin Forms templates
+                child.exec(cmd2, (err2, stdout, stderr) => {
+                    if (!err2)
+                        return createProject(templateName, templateKind, folder, true);
+                });
+            } else {
+                vscode.window.showErrorMessage("Error! Make sure you have the dotnet cli tool installed.")
+            }
+            return;
         }
-        return true;
+
+        // Success Messages
+        vscode.window.showInformationMessage(`Created a ${templateKind}!`);
+        await vscode.commands.executeCommand("vscode.openFolder", folder);
+      
+
     });
-    return true
 }
+
 
 export async function selectEmulatorTreeView(evt: vscode.TreeViewSelectionChangeEvent<EmulatorItem>, treeViewProvider: XamarinEmulatorProvider) {
 
