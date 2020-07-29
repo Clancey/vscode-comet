@@ -3,7 +3,7 @@
 	"displayName": "Xamarin",
 	"version": "0.1.0",
 	"publisher": "ms-vscode",
-	"description": "Lightweight Xamarin Forms Tooling",
+	"description": "A lightweight Xamarin extension",
 	"icon": "images/xam-vscode.png",
 	"categories": [
 		"Debuggers"
@@ -86,7 +86,7 @@
 		"viewsWelcome": [
 			{
 				"view": "xamarinNewProject",
-				"contents": "Start a new project. \n [New App](command:xamarinNewProject.newProject)"
+				"contents": "Start a new project. \n [New Forms App](command:xamarinNewProject.newProject)"
 			}
 		],
 		"configuration": {
