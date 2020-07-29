@@ -150,7 +150,7 @@ export class XamarinProjectManager {
 			return;
 		}
 
-		var tfm = XamarinProjectManager.SelectedTargetFramework?.toLowerCase();
+		var tfm = XamarinProjectManager.SelectedTargetFramework;
 
 		if (!tfm) {
 			XamarinProjectManager.Devices = [];
@@ -158,7 +158,9 @@ export class XamarinProjectManager {
 		else {
 			var util = new XamarinUtil();
 
-			if (tfm.indexOf('monoandroid') >= 0 || tfm.indexOf('-android') >= 0) {
+			var tfmlc = tfm.toLowerCase();
+
+			if (tfmlc.indexOf('monoandroid') >= 0 || tfmlc.indexOf('-android') >= 0) {
 				var androidDevices = await util.GetAndroidDevices();
 
 				var androidPickerDevices = androidDevices
@@ -173,9 +175,8 @@ export class XamarinProjectManager {
 					XamarinProjectManager.SelectedDevice = p.device;
 				}
 			}
-			else if (tfm.indexOf('xamarin.ios') >= 0 || tfm.indexOf('xamarinios') >= 0 || tfm.indexOf('-ios') >= 0) {
+			else if (tfmlc.indexOf('xamarin.ios') >= 0 || tfmlc.indexOf('xamarinios') >= 0 || tfmlc.indexOf('-ios') >= 0) {
 				var iosDevices = await util.GetiOSDevices();
-
 
 				var iosPickerDevices = iosDevices.devices
 					.map(x => ({
@@ -198,13 +199,13 @@ export class XamarinProjectManager {
 					else {
 						var devicePickerItems = p.devices
 							.map(z => ({
-								label: z.name,
+								label: z.runtime.name,
 								device: z
 							}));
 						const d = await vscode.window.showQuickPick(devicePickerItems, { placeHolder: "Select a Runtime Version" });
 						if (d) {
 							var deviceData = new DeviceData();
-							deviceData.name = d.device.name;
+							deviceData.name = d.device.name + ' | ' + d.device.runtime.name;
 							deviceData.iosSimulatorDevice = d.device;
 							deviceData.isEmulator = true;
 							deviceData.isRunning = false;
@@ -228,25 +229,5 @@ export class XamarinProjectManager {
 		this.deviceStatusBarItem.tooltip = XamarinProjectManager.SelectedProject === undefined ? "Select a Device" : XamarinProjectManager.SelectedDevice.name;
 		this.deviceStatusBarItem.command = "xamarin.selectDevice";
 		this.deviceStatusBarItem.show();
-	}
-
-	public async ReloadDevices(): Promise<DeviceData[]> {
-		var tfm = XamarinProjectManager.SelectedTargetFramework?.toLowerCase();
-
-		if (!tfm) {
-			XamarinProjectManager.Devices = [];
-			return [];
-		}
-
-		if (tfm.indexOf('monoandroid') >= 0 || tfm.indexOf('-android') >= 0) {
-
-		}
-		else if (tfm.indexOf('xamarin.ios') >= 0 || tfm.indexOf('xamarinios') >= 0 || tfm.indexOf('-ios') >= 0) {
-
-		}
-
-		var util = new XamarinUtil();
-		XamarinProjectManager.Devices = await util.GetDevices();
-		return XamarinProjectManager.Devices;
 	}
 }
