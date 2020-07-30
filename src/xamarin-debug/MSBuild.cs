@@ -43,7 +43,11 @@ namespace VSCodeDebug {
 				p.StartInfo.FileName = exePath;
 				p.StartInfo.WorkingDirectory = workingDirectory;
 				//p.StartInfo.RedirectStandardOutput = true;
-				p.StartInfo.Arguments = "-c \"" + Utilities.ConcatArgs (newArgs) + "\"";
+				if (Util.IsWindows)
+					p.StartInfo.Arguments = Utilities.ConcatArgs (newArgs);
+				else
+					p.StartInfo.Arguments = "-c \"" + Utilities.ConcatArgs(newArgs) + "\"";
+
 				p.StartInfo.UseShellExecute = false;
 				p.StartInfo.RedirectStandardOutput = true;
 				p.Start ();
