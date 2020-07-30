@@ -190,7 +190,7 @@
 						"name": "%xamarin.launch.config.name%",
 						"type": "xamarin",
 						"request": "launch",
-						"preLaunchTask": "build"
+						"preLaunchTask": "xamarin: Build"
 					}
 				],
 				"configurationAttributes": {
