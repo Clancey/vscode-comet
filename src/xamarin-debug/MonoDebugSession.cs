@@ -296,10 +296,13 @@ namespace VSCodeDebug
 		{
 			var home = AndroidSdk.FindHome ();
 
+			var adbSerial = options.AdbDeviceId;
 			Console.WriteLine($"Launching Android: {options.AdbDeviceName}");
-
-			var adbSerial = AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
+			if (!string.IsNullOrWhiteSpace (options.AdbDeviceName)) {
+				adbSerial = AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
+			}
 			var workingDir = Path.GetDirectoryName (options.Project);
+
 
 			if (string.IsNullOrWhiteSpace (adbSerial))
 				return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");
@@ -326,9 +329,8 @@ namespace VSCodeDebug
 				Mono.Debugging.Soft.SoftDebuggerStartArgs args = null;
 				if (options.ProjectType == ProjectType.Android) {
 					args = new Mono.Debugging.Soft.SoftDebuggerConnectArgs (options.AppName, address, port) {
-						MaxConnectionAttempts = 100,
-						TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL,
-
+						MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
+						TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL
 					};
 				} else if (options.ProjectType == ProjectType.iOS) {
 					args = new StreamCommandConnectionDebuggerArgs (options.AppName, new IPhoneTcpCommandConnection (IPAddress.Loopback, port)) { MaxConnectionAttempts = 10 };
