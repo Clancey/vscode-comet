@@ -9,7 +9,7 @@ namespace VSCodeDebug {
 		static MSBuild ()
 		{
 			if (Util.IsWindows)
-				exePath = GetWindowsMSBuildPath ()?.Trim();
+				exePath = GetWindowsMSBuildPath ();
 		}
 		static string GetWindowsMSBuildPath ()
 		{
@@ -29,7 +29,7 @@ namespace VSCodeDebug {
 			};
 			p.Start ();
 			p.WaitForExit ();
-			return p.StandardOutput.ReadToEnd ();
+			return p.StandardOutput.ReadToEnd ()?.Trim();
 		}
 		public static (bool Success, string Output) Run (string workingDirectory, params string [] args)
 		{
