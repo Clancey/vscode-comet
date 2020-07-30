@@ -14,6 +14,8 @@ All the above experiences should work in VS Code on both Windows and Mac
 * Locals, Stacks, breakpoints, etc.
 * Support both Android & iOS
 
+[See the project's hackathon video demo here!](https://youtu.be/olkDN-2h5NU)
+
 
 ## Run from Source
 
