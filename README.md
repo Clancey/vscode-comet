@@ -40,25 +40,9 @@ All the above experiences should work in VS Code on both Windows and Mac
 			"name": "Debug",
 			"type": "xamarin",
 			"request": "launch",
-			"preLaunchTask": "build"
+			"preLaunchTask": "xamarin: Build"
 		}
 	]
-}
-```
-2. Create a `tasks.json` file - currently this is a manual step:
-```json
-{
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "build",
-            "type": "xamarin",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        }
-    ]
 }
 ```
 3. Choose a _Startup Project_ from the status bar menu.
