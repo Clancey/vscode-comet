@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { EmulatorItem, XamarinEmulatorProvider } from "./sidebar"
 import { create } from 'lodash';
 import * as child from 'child_process';
+import * as path from 'path';
 
 // Initiates the flow of creating a new project.  Is opinionated.
 export async function newProject() {
@@ -30,22 +31,24 @@ export async function newProject() {
 
 async function createProject(templateName: string, templateKind: string, folder: vscode.Uri, haveTriedInstallingTemplate: boolean = false) {
 
-    const cmd1 = `dotnet new ${templateName} -o ${folder.path} -k ${templateKind}`;
+    const cmd1 = ["new", templateName, "-o", folder.fsPath, "-k", templateKind];
     var extPath = vscode.extensions.getExtension('ms-vscode.xamarin').extensionPath;
-    const cmd2 = `dotnet new --install ${extPath}/templates/Xamarin.Templates.Multiplatform.0.0.1.nupkg > /dev/null`;
+    const cmd2 = ["new", "--install", path.join(extPath, "templates", "Xamarin.Templates.Multiplatform.0.0.1.nupkg")];
+    child.execFile("dotnet", cmd1, async (err1) => {
 
-    child.exec(cmd1, async (err1, stdout, stderr) => {
-
-        // Error expected if user doesnt have templates installed
+        // Error expected if user doesn't have templates installed
         if (err1) {
             if (!haveTriedInstallingTemplate) {
                 // Install embedded Xamarin Forms templates
-                child.exec(cmd2, (err2, stdout, stderr) => {
-                    if (!err2)
+                child.execFile("dotnet", cmd2, (err2) => {
+                    if (!err2) {
                         return createProject(templateName, templateKind, folder, true);
+                    } else {
+                        vscode.window.showErrorMessage(err2.message);
+                    }
                 });
             } else {
-                vscode.window.showErrorMessage("Error! Make sure you have the dotnet cli tool installed.")
+                vscode.window.showErrorMessage(err1.message);
             }
             return;
         }
@@ -53,8 +56,6 @@ async function createProject(templateName: string, templateKind: string, folder:
         // Success Messages
         vscode.window.showInformationMessage(`Created a ${templateKind}!`);
         await vscode.commands.executeCommand("vscode.openFolder", folder);
-      
-
     });
 }
 
