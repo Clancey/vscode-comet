@@ -34,9 +34,6 @@ All the above experiences should work in VS Code on both Windows and Mac
 1. Create a `launch.json` file (vscode can help you do this or you can create it with the text below:)
 ```json
 {
-	// Use IntelliSense to learn about possible attributes.
-	// Hover to view descriptions of existing attributes.
-	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 	"version": "0.2.0",
 	"configurations": [
 		{
@@ -51,8 +48,6 @@ All the above experiences should work in VS Code on both Windows and Mac
 2. Create a `tasks.json` file - currently this is a manual step:
 ```json
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558 
-    // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
         {
