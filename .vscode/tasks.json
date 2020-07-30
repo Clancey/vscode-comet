@@ -23,7 +23,7 @@
 		{
 			"label": "build",
 			"type": "shell",
-			"command": "msbuild /r /t:Build /p:Configuration=Debug ./src/xamarin-debug/xamarin-debug.csproj"
+			"command": "msbuild /r /t:Build /p:Configuration=Debug /p:nugetInteractive=true ./src/xamarin-debug/xamarin-debug.csproj"
 		},
 	]
 }

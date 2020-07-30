@@ -13,7 +13,7 @@ function Vsix
 }
 function Build
 {
-	& msbuild /r /p:Configuration=Debug ./src/xamarin-debug/xamarin-debug.csproj
+	& msbuild /r /p:Configuration=Debug /p:nugetInteractive=true ./src/xamarin-debug/xamarin-debug.csproj
 
 	& node_modules/.bin/tsc -p ./src/typescript
 
