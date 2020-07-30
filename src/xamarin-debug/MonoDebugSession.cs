@@ -8,8 +8,10 @@ using System.IO;
 using System.Threading;
 using System.Linq;
 using System.Net;
+using VsCodeXamarinUtil;
 using Mono.Debugging.Client;
 using VSCodeDebug.HotReload;
+using System.Threading.Tasks;
 
 namespace VSCodeDebug
 {
@@ -205,201 +207,157 @@ namespace VSCodeDebug
 
 			SetExceptionBreakpoints(args.__exceptionOptions);
 
-			// validate argument 'program'
-			string programPath = getString(args, "program");
-			if (programPath == null) {
-				SendErrorResponse(response, 3001, "Property 'program' is missing or empty.", null);
-				return;
-			}
-			programPath = ConvertClientPathToDebugger(programPath);
-			if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
-				SendErrorResponse(response, 3002, "Program '{path}' does not exist.", new { path = programPath });
+			var launchOptions = new LaunchData (args);
+			var valid = launchOptions.Validate ();
+			if(!valid.success) {
+				SendErrorResponse (response, 3002, valid.message);
 				return;
 			}
 
-			// validate argument 'cwd'
-			var workingDirectory = (string)args.cwd;
-			if (workingDirectory != null) {
-				workingDirectory = workingDirectory.Trim();
-				if (workingDirectory.Length == 0) {
-					SendErrorResponse(response, 3003, "Property 'cwd' is empty.");
-					return;
-				}
-				workingDirectory = ConvertClientPathToDebugger(workingDirectory);
-				if (!Directory.Exists(workingDirectory)) {
-					SendErrorResponse(response, 3004, "Working directory '{path}' does not exist.", new { path = workingDirectory });
-					return;
-				}
-			}
-
-			// validate argument 'runtimeExecutable'
-			var runtimeExecutable = (string)args.runtimeExecutable;
-			if (runtimeExecutable != null) {
-				runtimeExecutable = runtimeExecutable.Trim();
-				if (runtimeExecutable.Length == 0) {
-					SendErrorResponse(response, 3005, "Property 'runtimeExecutable' is empty.");
-					return;
-				}
-				runtimeExecutable = ConvertClientPathToDebugger(runtimeExecutable);
-				if (!File.Exists(runtimeExecutable)) {
-					SendErrorResponse(response, 3006, "Runtime executable '{path}' does not exist.", new { path = runtimeExecutable });
-					return;
-				}
-			}
-
-
-			// validate argument 'env'
-			Dictionary<string, string> env = null;
-			var environmentVariables = args.env;
-			if (environmentVariables != null) {
-				env = new Dictionary<string, string>();
-				foreach (var entry in environmentVariables) {
-					env.Add((string)entry.Name, (string)entry.Value);
-				}
-				if (env.Count == 0) {
-					env = null;
-				}
-			}
-
-			const string host = "127.0.0.1";
 			int port = Utilities.FindFreePort(55555);
 
-			string mono_path = runtimeExecutable;
-			if (mono_path == null) {
-				if (!Utilities.IsOnPath(MONO)) {
-					SendErrorResponse(response, 3011, "Can't find runtime '{_runtime}' on PATH.", new { _runtime = MONO });
-					return;
-				}
-				mono_path = MONO;     // try to find mono through PATH
+			var host = getString (args, "address");
+			IPAddress address = string.IsNullOrWhiteSpace (host) ? IPAddress.Loopback : Utilities.ResolveIPAddress (host);
+			if (address == null) {
+				SendErrorResponse (response, 3013, "Invalid address '{address}'.", new { address = address });
+				return;
 			}
 
 
-			var cmdLine = new List<String>();
-
-			bool debug = !getBool(args, "noDebug", false);
-			if (debug) {
-				cmdLine.Add("--debug");
-				cmdLine.Add(String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port));
-			}
-
-			// add 'runtimeArgs'
-			if (args.runtimeArgs != null) {
-				string[] runtimeArguments = args.runtimeArgs.ToObject<string[]>();
-				if (runtimeArguments != null && runtimeArguments.Length > 0) {
-					cmdLine.AddRange(runtimeArguments);
-				}
-			}
-
-			// add 'program'
-			if (workingDirectory == null) {
-				// if no working dir given, we use the direct folder of the executable
-				workingDirectory = Path.GetDirectoryName(programPath);
-				cmdLine.Add(Path.GetFileName(programPath));
-			}
-			else {
-				// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
-				cmdLine.Add(Utilities.MakeRelativePath(workingDirectory, programPath));
-			}
-
-			// add 'args'
-			if (args.args != null) {
-				string[] arguments = args.args.ToObject<string[]>();
-				if (arguments != null && arguments.Length > 0) {
-					cmdLine.AddRange(arguments);
-				}
-			}
-
-			// what console?
-			var console = getString(args, "console", null);
-			if (console == null) {
-				// continue to read the deprecated "externalConsole" attribute
-				bool externalConsole = getBool(args, "externalConsole", false);
-				if (externalConsole) {
-					console = "externalTerminal";
-				}
-			}
-
-			if (console == "externalTerminal" || console == "integratedTerminal") {
-
-				cmdLine.Insert(0, mono_path);
-
-				var termArgs = new {
-					kind = console == "integratedTerminal" ? "integrated" : "external",
-					title = "Node Debug Console",
-					cwd = workingDirectory,
-					args = cmdLine.ToArray(),
-					env = environmentVariables
-				};
-
-				var resp = await SendRequest("runInTerminal", termArgs);
-				if (!resp.success) {
-					SendErrorResponse(response, 3011, "Cannot launch debug target in terminal ({_error}).", new { _error = resp.message });
-					return;
-				}
-
-			} else { // internalConsole
-
-				_process = new System.Diagnostics.Process();
-				_process.StartInfo.CreateNoWindow = true;
-				_process.StartInfo.UseShellExecute = false;
-				_process.StartInfo.WorkingDirectory = workingDirectory;
-				_process.StartInfo.FileName = mono_path;
-				_process.StartInfo.Arguments = Utilities.ConcatArgs(cmdLine.ToArray());
-
-				_stdoutEOF = false;
-				_process.StartInfo.RedirectStandardOutput = true;
-				_process.OutputDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
-					if (e.Data == null) {
-						_stdoutEOF = true;
-					}
-					SendOutput("stdout", e.Data);
-				};
-
-				_stderrEOF = false;
-				_process.StartInfo.RedirectStandardError = true;
-				_process.ErrorDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
-					if (e.Data == null) {
-						_stderrEOF = true;
-					}
-					SendOutput("stderr", e.Data);
-				};
-
-				_process.EnableRaisingEvents = true;
-				_process.Exited += (object sender, EventArgs e) => {
-					Terminate("runtime process exited");
-				};
-
-				if (env != null) {
-					// we cannot set the env vars on the process StartInfo because we need to set StartInfo.UseShellExecute to true at the same time.
-					// instead we set the env vars on MonoDebug itself because we know that MonoDebug lives as long as a debug session.
-					foreach (var entry in env) {
-						System.Environment.SetEnvironmentVariable(entry.Key, entry.Value);
-					}
-				}
-
-				var cmd = string.Format("{0} {1}", mono_path, _process.StartInfo.Arguments);
-				SendOutput("console", cmd);
-
-				try {
-					_process.Start();
-					_process.BeginOutputReadLine();
-					_process.BeginErrorReadLine();
-				}
-				catch (Exception e) {
-					SendErrorResponse(response, 3012, "Can't launch terminal ({reason}).", new { reason = e.Message });
+			if (launchOptions.ProjectType == ProjectType.Android) {
+				var r = LaunchAndroid (launchOptions, port);
+				if (!r.Success) {
+					SendErrorResponse (response, 3002, r.message);
 					return;
 				}
 			}
-
-			if (debug) {
-				Connect(IPAddress.Parse(host), port);
+			//on IOS we need to do the connect before we launch the sim.
+			if (launchOptions.ProjectType == ProjectType.iOS) {
+				Connect (launchOptions, address, port);
+				var r = await LaunchiOS (launchOptions, port);
+				SendResponse (response);
+				return;
 			}
 
-			SendResponse(response);
+			Connect (launchOptions, address, port);
 
-			if (_process == null && !debug) {
-				// we cannot track mono runtime process so terminate this session
-				Terminate("cannot track mono runtime");
+
+
+			SendResponse (response);
+		}
+
+		const string MlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch";
+		async Task<(bool Success, string message)> LaunchiOS (LaunchData options, int port)
+		{
+			var workingDir = Path.GetDirectoryName (options.Project);
+			const string sdkRoot = "-sdkroot /Applications/Xcode.app/Contents/Developer";
+			var output = Path.Combine (workingDir, options.OutputDirectory);
+
+			var appPath = Directory.EnumerateDirectories (output, "*.app").FirstOrDefault ();
+
+
+			var success = await RunMlaumchComand (MlaunchPath, workingDir,
+				sdkRoot,
+				$"--launchsim \"{appPath}\"",
+				$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
+				$"--sdk {options.iOSSimulatorVersion} --device=:v2:runtime={options.iOSSimulatorDevice},devicetype={options.iOSSimulatorDeviceType}"
+				);
+			return success;
+		}
+		System.Diagnostics.Process iOSDebuggerProcess;
+		public async Task<(bool Success, string Output)> RunMlaumchComand (string command, string workingDirectory, params string [] args)
+		{
+
+			TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool> ();
+			var p = new System.Diagnostics.Process ();
+
+			const string iOSRunningText = "Press enter to terminate the application";
+			//await Task.Run (() => {
+			try {
+				p.StartInfo.CreateNoWindow = false;
+				p.StartInfo.FileName = command;
+				p.StartInfo.WorkingDirectory = workingDirectory;
+				p.StartInfo.Arguments = Utilities.ConcatArgs (args, false);
+				p.StartInfo.UseShellExecute = false;
+				p.StartInfo.RedirectStandardOutput = true;
+				p.StartInfo.RedirectStandardInput = true;
+				p.OutputDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
+					if (e.Data == iOSRunningText)
+						tcs.TrySetResult (true);
+					tcs.TrySetResult (true);
+				};
+				p.Exited += (object sender, EventArgs e) => {
+					tcs.TrySetResult (false);
+				};
+				p.Start ();
+				p.BeginOutputReadLine ();
+				//p.BeginErrorReadLine ();
+
+			} catch (Exception ex) {
+
+				Console.WriteLine (ex);
+				tcs.TrySetException (ex);
+			}
+			Task.Run (() => {
+				p.WaitForExit ();
+				tcs.TrySetResult (false);
+			});
+			iOSDebuggerProcess = p;
+			//});
+			var s = await tcs.Task;
+			return (s, "");
+		}
+
+
+
+		(bool Success, string message) LaunchAndroid (LaunchData options, int port)
+		{
+			var home = AndroidSdk.FindHome ();
+
+			var adbSerial = options.AdbDeviceId;
+			Console.WriteLine($"Launching Android: {options.AdbDeviceName}");
+			if (!string.IsNullOrWhiteSpace (options.AdbDeviceName)) {
+				adbSerial = AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
+			}
+			var workingDir = Path.GetDirectoryName (options.Project);
+
+
+			if (string.IsNullOrWhiteSpace (adbSerial))
+				return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");
+
+			var result = MSBuild.Run (workingDir, options.Project
+				, "-t:Install,_Run"
+				, "-p:AndroidAttachDebugger=true"
+				, $"-p:AdbTarget=-s%20{adbSerial}"
+				, $"-p:AndroidSdbTargetPort={port}"
+				, $"-p:AndroidSdbHostPort={port}"
+				);
+			return result;
+		}
+
+		private void Connect (LaunchData options, IPAddress address, int port)
+		{
+#if BUILD_HOT_RELOAD
+			IDEManager.Shared.StartMonitoring();
+#endif
+			lock (_lock) {
+
+				_debuggeeKilled = false;
+
+				Mono.Debugging.Soft.SoftDebuggerStartArgs args = null;
+				if (options.ProjectType == ProjectType.Android) {
+					args = new Mono.Debugging.Soft.SoftDebuggerConnectArgs (options.AppName, address, port) {
+						MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
+						TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL
+					};
+				} else if (options.ProjectType == ProjectType.iOS) {
+					args = new StreamCommandConnectionDebuggerArgs (options.AppName, new IPhoneTcpCommandConnection (IPAddress.Loopback, port)) { MaxConnectionAttempts = 10 };
+				}
+
+				Console.WriteLine ("Listening for debugger!");
+				_debuggeeExecuting = true;
+				_session.Run (new Mono.Debugging.Soft.SoftDebuggerStartInfo (args), _debuggerSessionOptions);
+
 			}
 		}
 
@@ -436,6 +394,16 @@ namespace VSCodeDebug
 
 		public override void Disconnect(Response response, dynamic args)
 		{
+			try {
+				if (!(iOSDebuggerProcess?.HasExited ?? true)) {
+					iOSDebuggerProcess?.StandardInput?.WriteLine ("\r\n");
+					iOSDebuggerProcess?.Kill ();
+					iOSDebuggerProcess = null;
+				}
+			} catch (Exception ex) {
+				Console.WriteLine (ex);
+			}
+
 			if (_attachMode) {
 
 				lock (_lock) {

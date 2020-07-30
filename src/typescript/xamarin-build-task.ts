@@ -2,10 +2,10 @@
 let fs = require("fs");
 let path = require('path')
 import * as vscode from 'vscode';
-import {ProjectType } from './msbuild-project-analyzer';
-import { XamarinProjectManager } from './xamarin-project-manager';
+//import {ProjectType } from './msbuild-project-analyzer';
+import { XamarinProjectManager, ProjectType } from './xamarin-project-manager';
 
-interface CometBuildTaskDefinition extends vscode.TaskDefinition {
+interface XamarinBuildTaskDefinition extends vscode.TaskDefinition {
 	/**
 	 * Additional build flags
 	 */
@@ -32,8 +32,6 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 	private csproj:string;
 	private configuration:string;
 	private platform:string;
-
-	private tasks: vscode.Task[] | undefined;
 	
 	// We use a CustomExecution task when state needs to be shared accross runs of the task or when 
 	// the task requires use of some VS Code API to run.
@@ -58,51 +56,27 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 
 	private getTasks(): vscode.Task[] {
 		
-		// if(CometProjectManager.Shared().CurrentCSProj() === this.csproj
-		//  && CometProjectManager.CurrentConfig() === this.configuration
-		//   && CometProjectManager.CurrentPlatform()=== this.platform  
-		//   && this.tasks !== undefined && this.tasks.length > 0)
-		//  	return this.tasks;
+		if (!XamarinProjectManager.SelectedProject)
+		{
+			vscode.window.showInformationMessage("Startup Project not selected!");
+			return undefined;
+		}
 
-		
-		// this.csproj = CometProjectManager.Shared().CurrentCSProj();
-		// if(this.csproj === undefined)
-		// {
+		this.csproj = XamarinProjectManager.SelectedProject.Path;
+		this.configuration = XamarinProjectManager.SelectedProjectConfiguration;
+		this.platform = XamarinProjectManager.getSelectedProjectPlatform();
 
-		// 	vscode.window.showInformationMessage("csproj is not set");
-		// 	return undefined;
-		// }
-		// this.configuration = CometProjectManager.CurrentConfig();
-		// this.platform = CometProjectManager.CurrentPlatform();
+		var flags = [];
+		var target = "Build";
 
-		// this.tasks = [];
-		// var flags = [];
-		// var target = "Build";
-		// if(CometProjectManager.CurrentProjectType() === ProjectType.Android)
-		// {
-		// 	// var device = CometProjectManager.Shared().CurrentDevice();
-		// 	// if(device === undefined ||device.projectType != ProjectType.Android)
-		// 	// {
-		// 	// 	vscode.window.showInformationMessage("csproj is not set");
-		// 	// 	return undefined;
-		// 	// }
-		// 	target = "Install";
-		// 	// flags.push("/p:AndroidAttachDebugger=true");
-		// 	// flags.push(`-p:SelectedDevice=${device.id}`);
-		// 	// flags.push(`/p:SelectedDevice=android_api_28`);
-			
-		// 	//TODO: target install
-		// 	//TODO: Target: _run
-		// }
-		//this.tasks.push(this.getTask(XamarinBuildTaskProvider.msBuildCommand,target,flags));
-	
-		return this.tasks;
+		return [ this.getTask(XamarinBuildTaskProvider.msBuildCommand,target,flags) ]
 	}
 
-	private getTask(command:string ,target: string, flags: string[], definition?: CometBuildTaskDefinition): vscode.Task{
+	private getTask(command:string ,target: string, flags: string[], definition?: XamarinBuildTaskDefinition): vscode.Task{
 		var configuration = XamarinProjectManager.SelectedProjectConfiguration;
 		var csproj = XamarinProjectManager.SelectedProject.Path;
-		var platform = '';
+		var platform = XamarinProjectManager.getSelectedProjectPlatform();
+		var projectType = XamarinProjectManager.getProjectType(XamarinProjectManager.SelectedTargetFramework);
 		if (definition === undefined) {
 			definition = {
 				task: "MSBuild",
@@ -110,14 +84,18 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 				type: XamarinBuildTaskProvider.XamarinBuildScriptType,
 				csproj,
 				configuration,
-				projectType: null,// CometProjectManager.CurrentProjectType(),
+				projectType,
 				platform,
 				target,
 				flags
 			};
 		}
 
-		var fullCommand = `${command} ${csproj} /t:${target} /p:Configuration=${configuration};Platform=${platform} ${flags.join(' ')}`;
+		var platformArg = '';
+		if (this.platform)
+			platformArg = `;Platform=${platform}`;
+
+		var fullCommand = `${command} ${csproj} /t:${target} /p:Configuration=${configuration}${platformArg} ${flags.join(' ')}`;
 		var task = new vscode.Task(definition, definition.target, 'xamarin', new vscode.ShellExecution(fullCommand));
 		return task;
 	}

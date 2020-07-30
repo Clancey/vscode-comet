@@ -16,6 +16,22 @@ namespace VsCodeXamarinUtil.Android
 			AndroidSdkHome = androidSdkHome;
 		}
 
+		public static string GetAvdSerial(string avdName, Adb adb)
+		{
+			var devices = adb.GetDevices ();
+
+			// Find the device we just started and get it's adb serial
+			foreach (var d in devices) {
+				try {
+					var name = adb.GetEmulatorName (d.Serial);
+					if (name.Equals (avdName, StringComparison.OrdinalIgnoreCase)) {
+						return d.Serial;
+					}
+				} catch { }
+			}
+			return null;
+		}
+
 		public DirectoryInfo AndroidSdkHome { get; }
 
 		FileInfo GetEmulatorTool(DirectoryInfo sdkHome)
@@ -246,24 +262,7 @@ namespace VsCodeXamarinUtil.Android
 						return false;
 
 					Thread.Sleep(1000);
-
-					// Get a list of devices, we need to find the device we started
-					var devices = adb.GetDevices();
-
-					// Find the device we just started and get it's adb serial
-					foreach (var d in devices)
-					{
-						try
-						{
-							var name = adb.GetEmulatorName(d.Serial);
-							if (name.Equals(AvdName, StringComparison.OrdinalIgnoreCase))
-							{
-								Serial = d.Serial;
-								break;
-							}
-						}
-						catch { }
-					}
+					Serial = GetAvdSerial (AvdName, adb);
 				}
 
 				while (!token.IsCancellationRequested)

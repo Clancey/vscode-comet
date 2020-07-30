@@ -2,6 +2,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"preLaunchTask": "NPM",
 			"type": "extensionHost",
 			"request": "launch",
 			"name": "Extension",
@@ -59,7 +60,6 @@
 			"args": ["-c=android-devices"],
 			"cwd": "${workspaceFolder}",
 			"console": "internalConsole",
-			"stopOnEntry": false,
 			"internalConsoleOptions": "openOnSessionStart"
 		}
 	],

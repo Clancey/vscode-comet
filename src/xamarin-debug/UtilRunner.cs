@@ -125,16 +125,14 @@ namespace VsCodeXamarinUtil
 			if (string.IsNullOrWhiteSpace(avdName))
 				throw new ArgumentNullException("AvdName");
 
-			var ok = AndroidSdk.StartEmulatorAndWaitForBoot(GetAndroidSdkHome(), avdName);
+			var serial = AndroidSdk.StartEmulatorAndWaitForBoot(GetAndroidSdkHome(), avdName);
 
-			return new SimpleResult { Success = ok };
+			return new SimpleResult { Success = !string.IsNullOrWhiteSpace(serial) };
 		}
 
 		static SimpleResult Debug()
 		{
 			var json = Console.ReadLine();
-
-			// TODO: Clancey's magic
 
 			return new SimpleResult { Success = true };
 		}

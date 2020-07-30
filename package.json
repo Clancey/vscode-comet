@@ -3,8 +3,8 @@
 	"displayName": "Xamarin",
 	"version": "0.1.0",
 	"publisher": "ms-vscode",
-	"description": "Visual Studio Code debugger extension to enable Xamarin ",
-	"icon": "images/mono-debug-icon.png",
+	"description": "A lightweight Xamarin extension",
+	"icon": "images/xam-vscode.png",
 	"categories": [
 		"Debuggers"
 	],
@@ -14,7 +14,8 @@
 	"license": "MIT",
 	"private": true,
 	"extensionDependencies": [
-		"ms-dotnettools.csharp"
+		"ms-dotnettools.csharp",
+		"maxbrister.vscode-nuget-package-manager-improved"
 	],
 	"scripts": {
 		"prepublish": "pwsh ./build.ps1 build",
@@ -60,21 +61,16 @@
 	},
 	"main": "./out/extension",
 	"activationEvents": [
+		"onStartupFinished",
 		"onCommand:extension.xamarin-debug.configureExceptions",
-		"onCommand:extension.xamarin-debug.startSession",
-		"workspaceContains:*.csproj",
-		"workspaceContains:**/*.csproj"
+		"onCommand:extension.xamarin-debug.startSession"
 	],
 	"contributes": {
 		"views": {
 			"xamarin": [
 				{
-					"id": "xamarinEmulator",
-					"name": "Available Emulators"
-				},
-				{
 					"id": "xamarinNewProject",
-					"name": "File > New"
+					"name": "Create New Project"
 				}
 			]
 		},
@@ -90,19 +86,9 @@
 		"viewsWelcome": [
 			{
 				"view": "xamarinNewProject",
-				"contents": "Start a new project. \n [New App](command:xamarinNewProject.newProject)"
+				"contents": "Start a new project. \n [New Forms App](command:xamarinNewProject.newProject)"
 			}
 		],
-		"menus": {
-			"view/title": [
-				{
-					"command": "xamarinEmulator.refresh",
-					"when": "view == xamarinEmulator",
-					"group": "navigation"
-				}
-			],
-			"view/item/context": []
-		},
 		"configuration": {
 			"type": "object",
 			"title": "%configuration.title%",
@@ -161,19 +147,19 @@
 				"path": "./syntaxes/XAML.tmLanguage.json"
 			}
 		],
+		"taskDefinitions": [
+			{
+				"type": "xamarin",
+				"required": [],
+				"properties": {
+				}
+			}
+		],
 		"commands": [
 			{
 				"command": "extension.xamarin-debug.configureExceptions",
 				"title": "%configure.exceptions.command%",
 				"category": "Debug"
-			},
-			{
-				"command": "xamarinEmulator.refresh",
-				"title": "Refresh"
-			},
-			{
-				"command": "xamarinEmulator.select",
-				"title": "Xamarin: Select Emulator"
 			},
 			{
 				"command": "xamarinNewProject.newProject",
@@ -191,7 +177,7 @@
 		"debuggers": [
 			{
 				"type": "xamarin",
-				"label": "Xamarin (Mono C#)",
+				"label": "Xamarin",
 				"program": "./src/xamarin-debug/bin/Debug/net472/xamarin-debug.exe",
 				"osx": {
 					"runtime": "mono"
@@ -199,103 +185,27 @@
 				"linux": {
 					"runtime": "mono"
 				},
-				"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-				"startSessionCommand": "extension.xamarin-debug.startSession",
 				"initialConfigurations": [
 					{
-						"name": "%mono.launch.config.name%",
-						"type": "mono",
+						"name": "%xamarin.launch.config.name%",
+						"type": "xamarin",
 						"request": "launch",
-						"program": "${workspaceRoot}/program.exe",
-						"cwd": "${workspaceRoot}"
-					},
-					{
-						"name": "%mono.attach.config.name%",
-						"type": "mono",
-						"request": "attach",
-						"address": "localhost",
-						"port": 55555
+						"preLaunchTask": "build"
 					}
 				],
 				"configurationAttributes": {
 					"launch": {
 						"required": [
-							"program"
 						],
 						"properties": {
-							"program": {
+							"projectPath": {
 								"type": "string",
-								"description": "%mono.launch.program.description%"
+								"description": "%xamarin.launch.projectPath.description%",
+								"default": "undefined"
 							},
-							"args": {
-								"type": "array",
-								"description": "%mono.launch.args.description%",
-								"items": {
-									"type": "string"
-								},
-								"default": []
-							},
-							"cwd": {
+							"projectConfiguration": {
 								"type": "string",
-								"description": "%mono.launch.cwd.description%",
-								"default": "."
-							},
-							"runtimeExecutable": {
-								"type": [
-									"string",
-									"null"
-								],
-								"description": "%mono.launch.runtimeExecutable.description%",
-								"default": null
-							},
-							"runtimeArgs": {
-								"type": "array",
-								"description": "%mono.launch.runtimeArgs.description%",
-								"items": {
-									"type": "string"
-								},
-								"default": []
-							},
-							"env": {
-								"type": "object",
-								"description": "%mono.launch.env.description%",
-								"default": {}
-							},
-							"externalConsole": {
-								"type": "boolean",
-								"deprecationMessage": "%mono.launch.externalConsole.deprecationMessage%",
-								"default": true
-							},
-							"console": {
-								"type": "string",
-								"enum": [
-									"internalConsole",
-									"integratedTerminal",
-									"externalTerminal"
-								],
-								"enumDescriptions": [
-									"%mono.launch.console.internalConsole.description%",
-									"%mono.launch.console.integratedTerminal.description%",
-									"%mono.launch.console.externalTerminal.description%"
-								],
-								"description": "%mono.launch.console.description%",
-								"default": "internalConsole"
-							}
-						}
-					},
-					"attach": {
-						"required": [
-							"port"
-						],
-						"properties": {
-							"port": {
-								"type": "number",
-								"description": "%mono.attach.port.description%",
-								"default": 55555
-							},
-							"address": {
-								"type": "string",
-								"description": "%mono.attach.address.description%",
+								"description": "%xamarin.launch.projectConfiguration.description%",
 								"default": "undefined"
 							}
 						}
