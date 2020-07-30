@@ -207,11 +207,13 @@ namespace VSCodeDebug
 
 
 			if (launchOptions.ProjectType == ProjectType.Android) {
-				var r = LaunchAndroid (launchOptions, port);
+				var r = await LaunchAndroid (launchOptions, port);
 				if (!r.Success) {
 					SendErrorResponse (response, 3002, r.message);
 					return;
 				}
+				//Android takes a few seconds to get the debugger ready....
+				await Task.Delay (3000);
 			}
 			//on IOS we need to do the connect before we launch the sim.
 			if (launchOptions.ProjectType == ProjectType.iOS) {
@@ -292,7 +294,7 @@ namespace VSCodeDebug
 
 
 
-		(bool Success, string message) LaunchAndroid (LaunchData options, int port)
+		async Task<(bool Success, string message)> LaunchAndroid (LaunchData options, int port)
 		{
 			var home = AndroidSdk.FindHome ();
 
@@ -307,13 +309,13 @@ namespace VSCodeDebug
 			if (string.IsNullOrWhiteSpace (adbSerial))
 				return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");
 
-			var result = MSBuild.Run (workingDir, options.Project
+			var result = await Task.Run(()=> MSBuild.Run (workingDir, options.Project
 				, "-t:Install,_Run"
 				, "-p:AndroidAttachDebugger=true"
 				, $"-p:AdbTarget=-s%20{adbSerial}"
 				, $"-p:AndroidSdbTargetPort={port}"
 				, $"-p:AndroidSdbHostPort={port}"
-				);
+				));
 			return result;
 		}
 
