@@ -29,6 +29,10 @@ All the above experiences should work in VS Code on both Windows and Mac
 3. `npm i`
 4. Press F5 to debug 
 
+## Create a Xamarin App from Template
+
+(After installing extension) Open up the VS Code [command palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) and start typing `Xamarin`.  Select "Xamarin: New Project", and you'll be guided through the project creation process.  This extension has preloaded the four Multiplatform templates currently in Visual Studio proper.
+
 ## Debugging a Xamarin app with the Extension
 
 1. Create a `launch.json` file (vscode can help you do this or you can create it with the text below:)
