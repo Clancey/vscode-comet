@@ -3,6 +3,7 @@ import { EmulatorItem, XamarinEmulatorProvider } from "./sidebar"
 import { create } from 'lodash';
 import * as child from 'child_process';
 import * as path from 'path';
+import * as fs from 'fs';
 
 // Initiates the flow of creating a new project.  Is opinionated.
 export async function newProject() {
@@ -27,7 +28,42 @@ export async function newProject() {
     vscode.window.showInformationMessage(`Creating project....`);
 
     await createProject(templateName, templateKind, folder);
+
+    var projectPath: string = folder.fsPath;
+    var projectName: string = projectPath.substring(projectPath.lastIndexOf('/') + 1);
+
+    var ioscsproj = path.join(projectPath, `${projectName}.iOS`, `${projectName}.iOS.csproj`);
+    var androidcsproj = path.join(projectPath, `${projectName}.Android`, `${projectName}.Android.csproj`);
+
+    console.log("ios" + ioscsproj);
+    console.log("android" + androidcsproj);
+
+    // Add correct project references
+    await rewriteProjectName(projectName, androidcsproj);
+    await rewriteProjectName(projectName, ioscsproj);
+    
 }   
+
+async function rewriteProjectName(projectName: string, pathToCsProj: string) {
+
+    fs.readFile(pathToCsProj, 'utf8', function (err,data) {
+        if (err) {
+            console.log(`${err.name} ${err.message}`);
+            vscode.window.showErrorMessage(`${err.name} ${err.message}`);
+            
+            return;
+        }
+        var result = data.replace(/LibraryProjectName/g, projectName);
+      
+        fs.writeFile(pathToCsProj, result, 'utf8', function (err) {
+           if (err) {
+            console.log(`${err.name} ${err.message}`);
+            vscode.window.showErrorMessage(`${err.name} ${err.message}`);
+            return;
+           }
+        });
+      });
+}
 
 function execFileAsync(file: string, args?: string[]): Thenable<Error> {
     

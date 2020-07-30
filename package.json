@@ -151,8 +151,7 @@
 			{
 				"type": "xamarin",
 				"required": [],
-				"properties": {
-				}
+				"properties": {}
 			}
 		],
 		"commands": [
@@ -195,8 +194,7 @@
 				],
 				"configurationAttributes": {
 					"launch": {
-						"required": [
-						],
+						"required": [],
 						"properties": {
 							"projectPath": {
 								"type": "string",
