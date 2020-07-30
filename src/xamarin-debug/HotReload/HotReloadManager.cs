@@ -88,9 +88,9 @@ namespace VSCodeDebug.HotReload
 			_ideManager.StartHotReloadAsync(project).LogIfFaulted(_ideManager?.Logger);
 		}
 
-		public void DocumentChanged(string filePath)
+		public void DocumentChanged(string fullPath, string relativePath)
         {
-			var fileIdentity = new FileIdentity(new AssemblyName(), filePath, filePath);
+			var fileIdentity = new FileIdentity(null, fullPath, relativePath);
 			_ideManager.XamlChanged(fileIdentity);
         }
 
