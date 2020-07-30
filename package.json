@@ -1,7 +1,7 @@
 {
 	"name": "xamarin",
 	"displayName": "Xamarin",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"publisher": "ms-vscode",
 	"description": "A lightweight Xamarin extension",
 	"icon": "images/xam-vscode.png",
@@ -43,10 +43,10 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/joshspicer/vscode-mono-debug.git"
+		"url": "https://github.com/xamarin/vscode-xamarin.git"
 	},
 	"bugs": {
-		"url": "https://github.com/joshspicer/vscode-mono-debug/issues"
+		"url": "https://github.com/xamarin/vscode-xamarin/issues"
 	},
 	"devDependencies": {
 		"@types/mocha": "^2.2.32",
