@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		if (type === "xamarin") {
-			this.currentDebugSession = s;
+			currentDebugSession = s;
 
 
 			// this.xamarinProjectManager.applyDebugConfiguration(s.configuration);
@@ -83,8 +83,8 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}));
 	context.subscriptions.push(vscode.debug.onDidTerminateDebugSession((s) => {
-		if (s === this.currentDebugSession) {
-			this.currentDebugSession = null;
+		if (s === currentDebugSession) {
+			currentDebugSession = null;
 			// this.reloadStatus.hide();
 			// this.debugMetrics.hide();
 			const debugSessionEnd = new Date();
@@ -114,9 +114,14 @@ export function setUpHotReload(context: vscode.ExtensionContext)
 
 		hotReloadDelayTimer = setTimeout(() => {
 			hotReloadDelayTimer = null;
-			if(this.currentDebugSession === undefined)
+			if (currentDebugSession === undefined) {
 				return;
-			this.currentDebugSession.customRequest("DocumentChanged", { fileName: td.fileName });
+			}
+
+			// TODO: Generalize this once we have knowledge of the project path, but for now assume that xaml files are at
+			// the root of the project
+			var relativePath = td.fileName.split('\\').pop().split('/').pop();
+			currentDebugSession.customRequest("DocumentChanged", { fullPath: td.fileName, relativePath: relativePath });
 		}, 200);
     }));
 
