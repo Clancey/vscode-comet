@@ -29,3 +29,43 @@ All the above experiences should work in VS Code on both Windows and Mac
 3. `pwsh build.ps1`
 4. Press F5 to debug 
 
+## Debugging a Xamarin app with the Extension
+
+1. Create a `launch.json` file (vscode can help you do this or you can create it with the text below:)
+```json
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Debug",
+			"type": "xamarin",
+			"request": "launch",
+			"preLaunchTask": "build"
+		}
+	]
+}
+```
+2. Create a `tasks.json` file - currently this is a manual step:
+```json
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558 
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "xamarin",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
+```
+3. Choose a _Startup Project_ from the status bar menu.
+4. Choose a _Device_ from the status bar menu.
+5. Start debugging!
