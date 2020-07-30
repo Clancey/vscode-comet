@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using VsCodeXamarinUtil;
 
@@ -8,19 +9,20 @@ namespace VSCodeDebug {
 		static MSBuild ()
 		{
 			if (Util.IsWindows)
-				exePath = GetWindowsMSBuildPath ();
+				exePath = GetWindowsMSBuildPath ()?.Trim();
 		}
 		static string GetWindowsMSBuildPath ()
 		{
 			//%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe
 			// -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
 
+			var workingDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "Installer");
+
 			var p = new System.Diagnostics.Process {
 				StartInfo = {
 					CreateNoWindow = true,
-					FileName = "vswhere.exe",
-					WorkingDirectory = "%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer",
-					Arguments = " -latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe",
+					FileName = Path.Combine(workingDir, "vswhere.exe"),
+					Arguments = "-latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe",
 					UseShellExecute = false,
 					RedirectStandardOutput = true,
 				}
