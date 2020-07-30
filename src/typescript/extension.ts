@@ -60,12 +60,12 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		if (type === "xamarin") {
-			currentDebugSession = s;
+			this.currentDebugSession = s;
 		}
 	}));
 	context.subscriptions.push(vscode.debug.onDidTerminateDebugSession((s) => {
-		if (s === currentDebugSession) {
-			currentDebugSession = null;
+		if (s === this.currentDebugSession) {
+			this.currentDebugSession = null;
 			// this.reloadStatus.hide();
 			// this.debugMetrics.hide();
 			const debugSessionEnd = new Date();
@@ -73,53 +73,11 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}));
 
-	setUpHotReload(context);
-
 	output.appendLine("Initialization succeeded");
 	output.show();
 }
 
 export function deactivate() {
-}
-
-export function setUpHotReload(context: vscode.ExtensionContext)
-{
-    let hotReloadDelayTimer: NodeJS.Timer;
-
-    context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((td) => {
-		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
-		// Hopefully we can improve in future: https://github.com/Microsoft/vscode/issues/42913
-		if (hotReloadDelayTimer) {
-			clearTimeout(hotReloadDelayTimer);
-		}
-
-		hotReloadDelayTimer = setTimeout(() => {
-			hotReloadDelayTimer = null;
-			if (currentDebugSession === undefined) {
-				return;
-			}
-
-			// TODO: Generalize this once we have knowledge of the project path, but for now assume that xaml files are at
-			// the root of the project
-			var relativePath = td.fileName.split('\\').pop().split('/').pop();
-			currentDebugSession.customRequest("DocumentChanged", { fullPath: td.fileName, relativePath: relativePath });
-		}, 200);
-    }));
-
-	/*
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((td) => {
-		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
-		// Hopefully we can improve in future: https://github.com/Microsoft/vscode/issues/42913
-		if (hotReloadDelayTimer) {
-			clearTimeout(hotReloadDelayTimer);
-		}
-
-		hotReloadDelayTimer = setTimeout(() => {
-            hotReloadDelayTimer = null;
-            CometDebugger.Shared.SendDocumentChanged(td.document.fileName, td.document.getText());
-		}, 800);
-	}));
-	*/
 }
 
 //----- configureExceptions ---------------------------------------------------------------------------------------------------

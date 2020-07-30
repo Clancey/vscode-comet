@@ -10,7 +10,6 @@ using System.Linq;
 using System.Net;
 using VsCodeXamarinUtil;
 using Mono.Debugging.Client;
-using VSCodeDebug.HotReload;
 using System.Threading.Tasks;
 
 namespace VSCodeDebug
@@ -49,7 +48,6 @@ namespace VSCodeDebug
 		private bool _terminated = false;
 		private bool _stderrEOF = true;
 		private bool _stdoutEOF = true;
-		private HotReloadManager _hotReloadManager;
 
 
 		public MonoDebugSession() : base()
@@ -115,8 +113,6 @@ namespace VSCodeDebug
 
 			_session.TargetReady += (sender, e) => {
 				_activeProcess = _session.GetProcesses().SingleOrDefault();
-				_hotReloadManager = new HotReloadManager();
-				_hotReloadManager.StartHR(_session);
 			};
 
 			_session.TargetExited += (sender, e) => {
@@ -155,20 +151,6 @@ namespace VSCodeDebug
 
 			_session.OutputWriter = (isStdErr, text) => {
 				SendOutput(isStdErr ? "stderr" : "stdout", text);
-			};
-
-			this.HandleUnknownRequest = (s) => {
-				if (s.command == "DocumentChanged")
-				{
-					if (_hotReloadManager == null)
-						return false;
-
-					string fullPath = s.args.fullPath;
-					string relativePath = s.args.relativePath;
-					_hotReloadManager.DocumentChanged(fullPath, relativePath);
-					return true;
-				}
-				return false;
 			};
 		}
 
@@ -567,10 +549,6 @@ namespace VSCodeDebug
 
 		public override void StackTrace(Response response, dynamic args)
 		{
-			// TODO: Getting a stack trace can hang; we need to fix it but for now just return an empty one
-			SendResponse(response, new StackTraceResponseBody(new List<StackFrame>(), 0));
-			return;
-
 			int maxLevels = getInt(args, "levels", 10);
 			int threadReference = getInt(args, "threadId", 0);
 
@@ -633,12 +611,6 @@ namespace VSCodeDebug
 			var frame = _frameHandles.Get(frameId, null);
 
 			var scopes = new List<Scope>();
-
-			// TODO: I'm not sure if this is the best response in this scenario but it at least avoids an NRE
-			if (frame == null) {
-				SendResponse(response, new ScopesResponseBody(scopes));
-				return;
-			}
 
 			if (frame.Index == 0 && _exception != null) {
 				scopes.Add(new Scope("Exception", _variableHandles.Create(new ObjectValue[] { _exception })));
@@ -851,10 +823,6 @@ namespace VSCodeDebug
 		private Variable CreateVariable(ObjectValue v)
 		{
 			var dv = v.DisplayValue;
-			if (dv == null) {
-				dv = "<error getting value>";
-			}
-
 			if (dv.Length > 1 && dv [0] == '{' && dv [dv.Length - 1] == '}') {
 				dv = dv.Substring (1, dv.Length - 2);
 			}
