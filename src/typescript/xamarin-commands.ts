@@ -29,34 +29,40 @@ export async function newProject() {
     await createProject(templateName, templateKind, folder);
 }   
 
-async function createProject(templateName: string, templateKind: string, folder: vscode.Uri, haveTriedInstallingTemplate: boolean = false) {
+function execFileAsync(file: string, args?: string[]): Thenable<Error> {
+    
+    return new Promise((resolve) => {
+        child.execFile(file, args, (error) => {
+            resolve(error);
+        });
+    });
+}
 
-    const cmd1 = ["new", templateName, "-o", folder.fsPath, "-k", templateKind];
+async function createProject(templateName: string, templateKind: string, folder: vscode.Uri) {
+
+    const createProject = ["new", templateName, "-o", folder.fsPath, "-k", templateKind];
     var extPath = vscode.extensions.getExtension('ms-vscode.xamarin').extensionPath;
-    const cmd2 = ["new", "--install", path.join(extPath, "templates", "Xamarin.Templates.Multiplatform.0.0.1.nupkg")];
-    child.execFile("dotnet", cmd1, async (err1) => {
+    const installTemplates = ["new", "--install", path.join(extPath, "templates", "Xamarin.Templates.Multiplatform.0.0.1.nupkg")];
 
-        // Error expected if user doesn't have templates installed
-        if (err1) {
-            if (!haveTriedInstallingTemplate) {
-                // Install embedded Xamarin Forms templates
-                child.execFile("dotnet", cmd2, (err2) => {
-                    if (!err2) {
-                        return createProject(templateName, templateKind, folder, true);
-                    } else {
-                        vscode.window.showErrorMessage(err2.message);
-                    }
-                });
-            } else {
-                vscode.window.showErrorMessage(err1.message);
-            }
-            return;
+    var error = await execFileAsync("dotnet", createProject);
+    if (error) {
+        error = await execFileAsync("dotnet", installTemplates);
+        if (!error) {
+            error = await execFileAsync("dotnet", createProject);
         }
+    }
 
-        // Success Messages
+    if (error) {
+        var message = error.message;
+        if ((error as any).code == "ENOENT") {
+            // Normally the error message is very informative. If dotnet can't be located the error message needs fixing.
+            message = "Error! Make sure you have the dotnet cli tool installed.";
+        }
+        vscode.window.showErrorMessage(message);
+    } else {
         vscode.window.showInformationMessage(`Created a ${templateKind}!`);
         await vscode.commands.executeCommand("vscode.openFolder", folder);
-    });
+    }
 }
 
 
