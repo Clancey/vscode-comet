@@ -50,6 +50,9 @@ namespace VsCodeXamarinUtil
 
 		public static string StartEmulatorAndWaitForBoot(DirectoryInfo sdkHome, string avdName)
 		{
+			var serial = Emulator.GetAvdSerial (avdName, new Adb (sdkHome));
+			if (!string.IsNullOrWhiteSpace (serial))
+				return serial;
 			var emulator = new Emulator(sdkHome);
 			var e = emulator.Start(avdName);
 

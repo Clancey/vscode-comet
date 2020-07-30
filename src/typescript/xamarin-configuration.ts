@@ -73,7 +73,7 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 					if (projectType === ProjectType.Android) {
 						if (device.serial)
 							config['adbDeviceId'] = device.serial;
-						else if (device.isEmulator)
+						if (device.isEmulator)
 							config['adbEmulatorName'] = device.name;
 
 					} else if (projectType === ProjectType.iOS) {
