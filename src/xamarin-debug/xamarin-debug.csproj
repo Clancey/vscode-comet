@@ -6,11 +6,20 @@
 		<OutputType>Exe</OutputType>
 		<AssemblyName>xamarin-debug</AssemblyName>
 	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(ExcludeHotReload)' == 'True' ">
+		<DefineConstants>$(DefineConstants);EXCLUDE_HOT_RELOAD</DefineConstants>
+	</PropertyGroup>
 	
+	<ItemGroup Condition=" '$(ExcludeHotReload)' == 'True' ">
+		<Compile Remove="HotReload\*.cs" />
+	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\external\debugger-libs\Mono.Debugger.Soft\Mono.Debugger.Soft.csproj" />
 		<ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging\Mono.Debugging.csproj" />
 		<ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging.Soft\Mono.Debugging.Soft.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(ExcludeHotReload)' != 'True' ">
 		<ProjectReference Include="..\..\external\nrefactory\ICSharpCode.NRefactory.CSharp\ICSharpCode.NRefactory.CSharp.csproj" />
 		<ProjectReference Include="..\..\external\nrefactory\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj" />
 		<ProjectReference Include="..\..\external\babyshark\Source\Xamarin.HotReload.Ide\Xamarin.HotReload.Ide.csproj" />
