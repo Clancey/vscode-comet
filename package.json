@@ -18,9 +18,9 @@
 		"maxbrister.vscode-nuget-package-manager-improved"
 	],
 	"scripts": {
-		"prepublish": "pwsh ./build.ps1 build",
-		"vscode:prepublish": "pwsh ./build.ps1 build",
-		"compile": "pwsh ./build.ps1 build",
+		"prepublish": "",
+		"vscode:prepublish": "",
+		"compile": "tsc -p ./src/typescript",
 		"watch": "tsc -w -p ./src/typescript",
 		"test": "make tests; mocha --timeout 10000 -u tdd ./out/tests"
 	},

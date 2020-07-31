@@ -14,31 +14,49 @@ function Vsix
 	& ./node_modules/.bin/vsce package
 	Write-Host "Done."
 }
-function Build
+function BuildNet
 {
-	Write-Host "Building...(ExcludeHotReload: $ExcludeHotReload)"
+	Write-Host "Building .NET Project...(ExcludeHotReload: $ExcludeHotReload)"
 
 	& msbuild /r /p:Configuration=Debug /p:nugetInteractive=true /p:ExcludeHotReload=$ExcludeHotReload ./src/xamarin-debug/xamarin-debug.csproj
 
+	Write-Host "Done .NET Project (ExcludeHotReload: $ExcludeHotReload)."
+}
+
+function BuildTypeScript
+{
+	Write-Host "Building TypeScript..."
+
 	& tsc -p ./src/typescript
 
-	Write-Host "Done (ExcludeHotReload: $ExcludeHotReload)."
+	Write-Host "Done TypeScript."
 }
+
 
 switch ($cmd) {
 	"all" {
 		Debug
-		Build
+		BuildNet
+		BuildTypeScript
 		Vsix
 	}
 	"vsix" {
-		Build
+		BuildNet
+		BuildTypeScript
 		Vsix
 	}
 	"build" {
-		Build
+		BuildNet
+		BuildTypeScript
 	}
 	"debug" {
-		Build
+		BuildNet
+		BuildTypeScript
+	}
+	"ts" {
+		BuildTypeScript
+	}
+	"net" {
+		BuildNet
 	}
 }
