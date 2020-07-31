@@ -22,8 +22,6 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.100
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1.0.0
     - name: Use Node.js
       uses: actions/setup-node@v1
       with:
