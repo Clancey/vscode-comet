@@ -575,9 +575,11 @@ namespace VSCodeDebug
 
 		public override void StackTrace(Response response, dynamic args)
 		{
+#if !EXCLUDE_HOT_RELOAD
 			// TODO: Getting a stack trace can hang; we need to fix it but for now just return an empty one
 			SendResponse(response, new StackTraceResponseBody(new List<StackFrame>(), 0));
 			return;
+#endif
 
 			int maxLevels = getInt(args, "levels", 10);
 			int threadReference = getInt(args, "threadId", 0);
