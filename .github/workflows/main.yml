@@ -17,10 +17,7 @@ jobs:
         git submodule deinit -f -- external/babyshark
         rm -rf .git/modules/external/babyshark
         git rm -f external/babyshark
-    - name: Checkout submodules
-      uses: srt32/git-actions@v0.0.3
-      with:
-        args: git submodule update --init --recursive
+    - run: git submodule update --init --recursive
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
