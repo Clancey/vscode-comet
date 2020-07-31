@@ -1,0 +1,48 @@
+name: VSIX
+
+on:
+  pull_request:
+  push:
+jobs:
+  build:
+    name: CI
+    env:
+      VSIX_MAJOR: 0.2
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Remove Hot Reload submodule
+      run: |
+        git submoduel deinit -f -- externals/babyshark
+        rm -rf .git/modules/externals/babyshark
+        git rm -f externals/babyshark
+    - name: Checkout submodules
+      uses: srt32/git-actions@v0.0.3
+      with:
+        args: git submodule update --init --recursive
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.100
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.0.0
+    - name: Use Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: 10.x
+    - name: NPM
+      run: npm install
+    - name: Compile TypeScript
+      run: ./node_modules/.bin/tsc -p ./src/typescript
+    - name: Build xamarin-debug
+      run: msbuild /r /p:Configuration=Debug /p:nugetInteractive=true /p:ExcludeHotReload=True ./src/xamarin-debug/xamarin-debug.csproj
+    - name: Package Version
+      run: npm version $(VSIX_MAJOR)-ci-$(GITHUB_RUN_NUMBER)
+    - name: Create VSIX
+      run: ./node_modules/.bin/vsce package
+    - name: Artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: VSIX
+        path: ./*.vsix
