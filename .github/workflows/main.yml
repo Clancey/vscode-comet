@@ -33,11 +33,11 @@ jobs:
     - name: Build xamarin-debug
       run: msbuild /r /p:Configuration=Debug /p:nugetInteractive=true /p:ExcludeHotReload=True ./src/xamarin-debug/xamarin-debug.csproj
     - name: Package Version
-      run: npm version $(VSIX_MAJOR)-ci-$(GITHUB_RUN_NUMBER)
+      run: npm version $VSIX_MAJOR-ci-$GITHUB_RUN_NUMBER
     - name: Create VSIX
       run: ./node_modules/.bin/vsce package
     - name: Artifacts
       uses: actions/upload-artifact@v1
       with:
         name: VSIX
-        path: ./*.vsix
+        path: '*.vsix'
