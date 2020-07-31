@@ -14,9 +14,9 @@ jobs:
       uses: actions/checkout@v2
     - name: Remove Hot Reload submodule
       run: |
-        git submodule deinit -f -- externals/babyshark
-        rm -rf .git/modules/externals/babyshark
-        git rm -f externals/babyshark
+        git submodule deinit -f -- external/babyshark
+        rm -rf .git/modules/external/babyshark
+        git rm -f external/babyshark
     - name: Checkout submodules
       uses: srt32/git-actions@v0.0.3
       with:
