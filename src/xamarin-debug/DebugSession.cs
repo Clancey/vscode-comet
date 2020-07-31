@@ -376,11 +376,12 @@ namespace VSCodeDebug
 					break;
 
 				default:
+#if !EXCLUDE_HOT_RELOAD
 					if (HandleUnknownRequest?.Invoke((command, args, response)) ?? false) {
 						//This was handled!
 						break;
 					}
-
+#endif
 					SendErrorResponse(response, 1014, "unrecognized request: {_request}", new { _request = command });
 					break;
 				}

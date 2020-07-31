@@ -6,18 +6,23 @@ if (-Not $cmd)
 	$cmd = "debug"
 }
 
+$ExcludeHotReload = (Test-Path -Path .\exclude-hot-reload.txt)
+
 function Vsix
 {
+	Write-Host "Creating VSIX..."
 	& ./node_modules/.bin/vsce package
-	Write-Host "vsix created"
+	Write-Host "Done."
 }
 function Build
 {
-	& msbuild /r /p:Configuration=Debug /p:nugetInteractive=true ./src/xamarin-debug/xamarin-debug.csproj
+	Write-Host "Building...(ExcludeHotReload: $ExcludeHotReload)"
 
-	& node_modules/.bin/tsc -p ./src/typescript
+	& msbuild /r /p:Configuration=Debug /p:nugetInteractive=true /p:ExcludeHotReload=$ExcludeHotReload ./src/xamarin-debug/xamarin-debug.csproj
 
-	Write-Host "build finished"
+	& tsc -p ./src/typescript
+
+	Write-Host "Done (ExcludeHotReload: $ExcludeHotReload)."
 }
 
 switch ($cmd) {

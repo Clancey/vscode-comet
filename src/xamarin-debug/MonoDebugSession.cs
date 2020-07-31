@@ -10,7 +10,9 @@ using System.Linq;
 using System.Net;
 using VsCodeXamarinUtil;
 using Mono.Debugging.Client;
+#if !EXCLUDE_HOT_RELOAD
 using VSCodeDebug.HotReload;
+#endif
 using System.Threading.Tasks;
 
 namespace VSCodeDebug
@@ -49,8 +51,10 @@ namespace VSCodeDebug
 		private bool _terminated = false;
 		private bool _stderrEOF = true;
 		private bool _stdoutEOF = true;
-		private HotReloadManager _hotReloadManager;
 
+#if !EXCLUDE_HOT_RELOAD
+		private HotReloadManager _hotReloadManager;
+#endif
 
 		public MonoDebugSession() : base()
 		{
@@ -115,8 +119,10 @@ namespace VSCodeDebug
 
 			_session.TargetReady += (sender, e) => {
 				_activeProcess = _session.GetProcesses().SingleOrDefault();
+#if !EXCLUDE_HOT_RELOAD
 				_hotReloadManager = new HotReloadManager();
 				_hotReloadManager.StartHR(_session);
+#endif
 			};
 
 			_session.TargetExited += (sender, e) => {
@@ -157,6 +163,7 @@ namespace VSCodeDebug
 				SendOutput(isStdErr ? "stderr" : "stdout", text);
 			};
 
+#if !EXCLUDE_HOT_RELOAD
 			this.HandleUnknownRequest = (s) => {
 				if (s.command == "DocumentChanged")
 				{
@@ -170,6 +177,7 @@ namespace VSCodeDebug
 				}
 				return false;
 			};
+#endif
 		}
 
 		public override void Initialize(Response response, dynamic args)
@@ -567,9 +575,11 @@ namespace VSCodeDebug
 
 		public override void StackTrace(Response response, dynamic args)
 		{
+#if !EXCLUDE_HOT_RELOAD
 			// TODO: Getting a stack trace can hang; we need to fix it but for now just return an empty one
 			SendResponse(response, new StackTraceResponseBody(new List<StackFrame>(), 0));
 			return;
+#endif
 
 			int maxLevels = getInt(args, "levels", 10);
 			int threadReference = getInt(args, "threadId", 0);
