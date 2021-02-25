@@ -37,8 +37,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	this.xamarinProjectManager = new XamarinProjectManager(context);
 
-	vscode.commands.registerCommand("xamarinNewProject.newProject", () => XamarinCommands.newProject());
-
 	this.xamarinBuildTaskProvider = vscode.tasks.registerTaskProvider(XamarinBuildTaskProvider.XamarinBuildScriptType, new XamarinBuildTaskProvider(vscode.workspace.rootPath));
 	
 	omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;

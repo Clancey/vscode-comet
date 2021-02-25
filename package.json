@@ -66,14 +66,6 @@
 		"onCommand:extension.xamarin-debug.startSession"
 	],
 	"contributes": {
-		"views": {
-			"xamarin": [
-				{
-					"id": "xamarinNewProject",
-					"name": "Create New Project"
-				}
-			]
-		},
 		"viewsContainers": {
 			"activitybar": [
 				{
@@ -83,12 +75,6 @@
 				}
 			]
 		},
-		"viewsWelcome": [
-			{
-				"view": "xamarinNewProject",
-				"contents": "Start a new project. \n [New Forms App](command:xamarinNewProject.newProject)"
-			}
-		],
 		"configuration": {
 			"type": "object",
 			"title": "%configuration.title%",
@@ -159,10 +145,6 @@
 				"command": "extension.xamarin-debug.configureExceptions",
 				"title": "%configure.exceptions.command%",
 				"category": "Debug"
-			},
-			{
-				"command": "xamarinNewProject.newProject",
-				"title": "Xamarin: New Project"
 			}
 		],
 		"breakpoints": [
