@@ -13,6 +13,7 @@ export enum ProjectType
 	Android,
 	iOS,
 	Mac,
+	MacCatalyst,
 	UWP,
 	Unknown,
 	WPF,
@@ -82,7 +83,8 @@ export class XamarinProjectManager {
 				this.StartupProjects = new Array<MSBuildProjectInfo>();
 
 				for (var p of (<WorkspaceInformationUpdated>e).info.MsBuild.Projects) {
-					if (p.TargetFramework.startsWith("MonoAndroid") || p.TargetFramework.startsWith("Xamarin")) {
+					
+					if (XamarinProjectManager.getIsSupportedProject(p)) {
 						this.StartupProjects.push(await MSBuildProjectInfo.fromProject(p));
 					}
 				}
@@ -122,6 +124,8 @@ export class XamarinProjectManager {
 			if (p.project.TargetFrameworks && p.project.TargetFrameworks.length > 0) {
 				// Multi targeted app, ask the user which TFM to startup
 				var tfms = p.project.TargetFrameworks
+					// Only return supported tfms
+					.filter(x => XamarinProjectManager.getIsSupportedTargetFramework(x.ShortName))
 					.map(x => ({
 						label: x.FriendlyName,
 						tfm: x
@@ -271,6 +275,29 @@ export class XamarinProjectManager {
 		this.deviceStatusBarItem.show();
 	}
 
+	public static getIsSupportedTargetFramework(targetFramework: string) : boolean
+	{
+		var projType = this.getProjectType(targetFramework);
+
+		return projType == ProjectType.Android || projType == ProjectType.iOS;
+	}
+
+	public static getIsSupportedProject(project: MSBuildProject): boolean
+	{
+		if (project.TargetFrameworks && project.TargetFrameworks.length > 0) {
+
+			project.TargetFrameworks.forEach(tf => {
+				if (this.getIsSupportedTargetFramework(tf.ShortName))
+					return true;
+			});
+		} else {
+			if (this.getIsSupportedTargetFramework(tf.ShortName))
+				return true;
+		}
+
+		return false;
+	}
+
 	public static getProjectType(targetFramework: string): ProjectType
 	{
 		if (!targetFramework)
@@ -279,14 +306,16 @@ export class XamarinProjectManager {
 		if (!targetFramework)
 			return ProjectType.Mono;
 		
-		var tfm = targetFramework.toLowerCase();
+		var tfm = targetFramework.toLowerCase().replace(".", "");
 
 		if (tfm.indexOf('monoandroid') >= 0 || tfm.indexOf('-android') >= 0)
 			return ProjectType.Android;
-		else if (tfm.indexOf('xamarin.ios') >= 0 || tfm.indexOf('xamarinios') >= 0 || tfm.indexOf('-ios') >= 0)
+		else if (tfm.indexOf('xamarinios') >= 0 || tfm.indexOf('-ios') >= 0)
 			return ProjectType.iOS;
-		else if (tfm.indexOf('xamarinmac') >= 0 || tfm.indexOf('xamarin.mac') >= 0 || tfm.indexOf('-mac') >= 0)
+		else if (tfm.indexOf('xamarinmac') >= 0 || tfm.indexOf('-macos') >= 0)
 			return ProjectType.Mac;
+		else if (tfm.indexOf('xamarinmaccatalyst') >= 0 || tfm.indexOf('-maccatalyst') >= 0)
+			return ProjectType.MacCatalyst;
 	}
 
 	public static getSelectedProjectPlatform():string
