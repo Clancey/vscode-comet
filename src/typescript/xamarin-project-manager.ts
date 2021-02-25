@@ -291,7 +291,7 @@ export class XamarinProjectManager {
 					return true;
 			});
 		} else {
-			if (this.getIsSupportedTargetFramework(tf.ShortName))
+			if (this.getIsSupportedTargetFramework(project.TargetFramework))
 				return true;
 		}
 
