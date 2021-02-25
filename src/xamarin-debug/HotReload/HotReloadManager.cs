@@ -6,16 +6,16 @@ using Mono.Debugging.Soft;
 using System;
 using System.Linq;
 using System.Reflection;
-using Xamarin.HotReload;
-using Xamarin.HotReload.Ide;
-using Xamarin.HotReload.Telemetry;
-using Xamarin.HotReload.Translations;
+// using Xamarin.HotReload;
+// using Xamarin.HotReload.Ide;
+// using Xamarin.HotReload.Telemetry;
+// using Xamarin.HotReload.Translations;
 
 namespace VSCodeDebug.HotReload
 {
 	public class HotReloadManager
 	{
-		private IdeManager _ideManager;
+		//private IdeManager _ideManager;
 
 		public HotReloadManager()
 		{
@@ -26,17 +26,17 @@ namespace VSCodeDebug.HotReload
 			var dialogProvider = new VSCodeDialogProvider();
 			var threadingProvider = new VSCodeThreadingProvider();
 
-			_ideManager = new IdeManager(logger, settingsProvider, infoBarProvider, errorListProvider, dialogProvider, threadingProvider, xaml: null);
+			// _ideManager = new IdeManager(logger, settingsProvider, infoBarProvider, errorListProvider, dialogProvider, threadingProvider, xaml: null);
 
-			_ideManager.AgentStatusChanged += AgentStatusChanged;
-			_ideManager.AgentReloadResultReceived += AgentXamlResultReceived;
-			_ideManager.Logger.Log(LogLevel.Info, "Hot Reload IDE Extension Loaded");
+			// _ideManager.AgentStatusChanged += AgentStatusChanged;
+			// _ideManager.AgentReloadResultReceived += AgentXamlResultReceived;
+			// _ideManager.Logger.Log(LogLevel.Info, "Hot Reload IDE Extension Loaded");
 		}
 
 		public void StartHR(SoftDebuggerSession debugger)
 		{
-			if (!_ideManager.Settings.IsHotReloadEnabled())
-				return;
+			// if (!_ideManager.Settings.IsHotReloadEnabled())
+			// 	return;
 
 #if LATER
 			var debuggingFlavor = startupProject.GetProjectFlavor();
@@ -46,7 +46,7 @@ namespace VSCodeDebug.HotReload
 			// FIXME: For now, ensure we reference forms, otherwise no need to try hot reload at this point
 			if (!startupProject.ReferencesAssembly("Xamarin.Forms.Core"))
 			{
-				ide.Logger.Log(Info, "Hot Reload disabled because project does not reference Xamarin.Forms");
+				//ide.Logger.Log(Info, "Hot Reload disabled because project does not reference Xamarin.Forms");
 				return;
 			}
 #endif
@@ -85,37 +85,37 @@ namespace VSCodeDebug.HotReload
 
 			// ide.StartHotReloadAsync checks if the project can run. If it can't, it'll return
 			// and throw error bars for the user.
-			_ideManager.StartHotReloadAsync(project).LogIfFaulted(_ideManager?.Logger);
+			//_ideManager.StartHotReloadAsync(project).LogIfFaulted(_ideManager?.Logger);
 		}
 
 		public void DocumentChanged(string fullPath, string relativePath)
         {
-			var fileIdentity = new FileIdentity(null, fullPath, relativePath);
-			_ideManager.XamlChanged(fileIdentity);
+			// var fileIdentity = new FileIdentity(null, fullPath, relativePath);
+			// _ideManager.XamlChanged(fileIdentity);
         }
 
-		private void AgentStatusChanged(object sender, AgentStatusMessage e)
-		{
-			string statusMessage = null;
-			if (e.State == HotReloadState.Starting)
-				statusMessage = CommonStrings.HotReloadStarting;
-			else if (e.State == HotReloadState.Enabled)
-				statusMessage = CommonStrings.HotReloadConnected;
-			else if (e.State == HotReloadState.Failed)
-				statusMessage = CommonStrings.HotReloadFailedInitialize;
-			else if (e.State == HotReloadState.Disabled)
-				statusMessage = CommonStrings.HotReloadDisabled;
+		// private void AgentStatusChanged(object sender, AgentStatusMessage e)
+		// {
+		// 	string statusMessage = null;
+		// 	if (e.State == HotReloadState.Starting)
+		// 		statusMessage = CommonStrings.HotReloadStarting;
+		// 	else if (e.State == HotReloadState.Enabled)
+		// 		statusMessage = CommonStrings.HotReloadConnected;
+		// 	else if (e.State == HotReloadState.Failed)
+		// 		statusMessage = CommonStrings.HotReloadFailedInitialize;
+		// 	else if (e.State == HotReloadState.Disabled)
+		// 		statusMessage = CommonStrings.HotReloadDisabled;
 
-			if (statusMessage != null)
-				_ideManager.Logger.Log(LogLevel.Info, statusMessage);
-		}
+		// 	if (statusMessage != null)
+		// 		_ideManager.Logger.Log(LogLevel.Info, statusMessage);
+		// }
 
-		private void AgentXamlResultReceived(object sender, ReloadTransactionMessage msg)
-		{
-			int rudeEdits = msg.Transactions.SelectMany(txn => txn.Result.RudeEdits).Count();
-			string statusText = (rudeEdits > 0) ? CommonStrings.HotReloadReloadedRudeEditStatus(rudeEdits) : CommonStrings.HotReloadXAMLReloadSuccess;
+		// private void AgentXamlResultReceived(object sender, ReloadTransactionMessage msg)
+		// {
+		// 	int rudeEdits = msg.Transactions.SelectMany(txn => txn.Result.RudeEdits).Count();
+		// 	string statusText = (rudeEdits > 0) ? CommonStrings.HotReloadReloadedRudeEditStatus(rudeEdits) : CommonStrings.HotReloadXAMLReloadSuccess;
 
-			_ideManager.Logger.Log(LogLevel.Info, statusText);
-		}
+		// 	_ideManager.Logger.Log(LogLevel.Info, statusText);
+		// }
 	}
 }
