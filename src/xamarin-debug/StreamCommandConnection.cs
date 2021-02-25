@@ -220,7 +220,7 @@ namespace VSCodeDebug
 								return;
 							heapshotForwarder.BeginAcceptTcpClient(callback, null);
 						}
-					} catch (Exception ex) {
+					} catch (Exception) {
 						//tracer.Error(Resources.IPhoneCommandConnection_HeapshotRequest_Error, ex);
 					}
 				});

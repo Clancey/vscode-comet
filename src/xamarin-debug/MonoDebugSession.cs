@@ -119,10 +119,9 @@ namespace VSCodeDebug
 
 			_session.TargetReady += (sender, e) => {
 				_activeProcess = _session.GetProcesses().SingleOrDefault();
-#if !EXCLUDE_HOT_RELOAD
+
 				_hotReloadManager = new HotReloadManager();
-				_hotReloadManager.StartHR(_session);
-#endif
+				_hotReloadManager.Start(_session);
 			};
 
 			_session.TargetExited += (sender, e) => {
@@ -308,10 +307,12 @@ namespace VSCodeDebug
 				Console.WriteLine (ex);
 				tcs.TrySetException (ex);
 			}
-			Task.Run (() => {
+
+			_ = Task.Run (() => {
 				p.WaitForExit ();
 				tcs.TrySetResult (false);
 			});
+
 			iOSDebuggerProcess = p;
 			//});
 			var s = await tcs.Task;
@@ -575,11 +576,10 @@ namespace VSCodeDebug
 
 		public override void StackTrace(Response response, dynamic args)
 		{
-#if !EXCLUDE_HOT_RELOAD
+			// HOT RELOAD: Seems that sometimes there's a hang here, look out for this in the future
 			// TODO: Getting a stack trace can hang; we need to fix it but for now just return an empty one
-			SendResponse(response, new StackTraceResponseBody(new List<StackFrame>(), 0));
-			return;
-#endif
+			//SendResponse(response, new StackTraceResponseBody(new List<StackFrame>(), 0));
+			//return;
 
 			int maxLevels = getInt(args, "levels", 10);
 			int threadReference = getInt(args, "threadId", 0);

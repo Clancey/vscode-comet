@@ -12,11 +12,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Remove Hot Reload submodule
-      run: |
-        git submodule deinit -f -- external/babyshark
-        rm -rf .git/modules/external/babyshark
-        git rm -f external/babyshark
     - run: git submodule update --init --recursive
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
@@ -31,7 +26,7 @@ jobs:
     - name: Compile TypeScript
       run: ./node_modules/.bin/tsc -p ./src/typescript
     - name: Build xamarin-debug
-      run: msbuild /r /p:Configuration=Debug /p:nugetInteractive=true /p:ExcludeHotReload=True ./src/xamarin-debug/xamarin-debug.csproj
+      run: msbuild /r /p:Configuration=Debug /p:nugetInteractive=true ./src/xamarin-debug/xamarin-debug.csproj
     - name: Create VSIX
       run: ./node_modules/.bin/vsce package
     - name: Artifacts
