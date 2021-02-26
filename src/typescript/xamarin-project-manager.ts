@@ -127,14 +127,14 @@ export class XamarinProjectManager {
 					// Only return supported tfms
 					.filter(x => XamarinProjectManager.getIsSupportedTargetFramework(x.ShortName))
 					.map(x => ({
-						label: x.FriendlyName,
+						label: x.ShortName,
 						tfm: x
 					}));
 
 
 				const tfm = await vscode.window.showQuickPick(tfms, { placeHolder: "Target Framework" });
 				if (tfm)
-					XamarinProjectManager.SelectedTargetFramework = tfm.tfm.Name;
+					XamarinProjectManager.SelectedTargetFramework = tfm.tfm.ShortName;
 				else
 					XamarinProjectManager.SelectedTargetFramework = p.project.TargetFramework;
 			}
@@ -143,21 +143,30 @@ export class XamarinProjectManager {
 				XamarinProjectManager.SelectedTargetFramework = p.project.TargetFramework;
 			}
 
-			const c = await vscode.window.showQuickPick(p.project.Configurations, { placeHolder: "Build Configuration" });
-			if (c) {
-				XamarinProjectManager.SelectedProject = p.project;
-				XamarinProjectManager.SelectedProjectConfiguration = c;
-				XamarinProjectManager.SelectedDevice = undefined;
+			var config = "Debug";
+
+			if (p.project.Configurations && p.project.Configurations.length > 0)
+			{
+				const c = await vscode.window.showQuickPick(p.project.Configurations, { placeHolder: "Build Configuration" });
+				if (c)
+					config = c;
 			}
+
+			XamarinProjectManager.SelectedProject = p.project;
+			XamarinProjectManager.SelectedProjectConfiguration = config;
+			XamarinProjectManager.SelectedDevice = undefined;
 		}
+		
 		this.updateProjectStatus();
 		this.updateDeviceStatus();
 	}
 
 	public async updateProjectStatus() {
-		var projectString = XamarinProjectManager.SelectedProject === undefined ? "Startup Project" : `${XamarinProjectManager.SelectedProject.Name} | ${XamarinProjectManager.SelectedProjectConfiguration}`;
+		var selProj = XamarinProjectManager.SelectedProject;
+
+		var projectString = selProj === undefined ? "Startup Project" : `${selProj.Name ?? selProj.AssemblyName} | ${XamarinProjectManager.SelectedProjectConfiguration}`;
 		this.projectStatusBarItem.text = "$(project) " + projectString;
-		this.projectStatusBarItem.tooltip = XamarinProjectManager.SelectedProject === undefined ? "Select a Startup Project" : XamarinProjectManager.SelectedProject.Path;
+		this.projectStatusBarItem.tooltip = selProj === undefined ? "Select a Startup Project" : selProj.Path;
 		this.projectStatusBarItem.command = "xamarin.selectProject";
 		this.projectStatusBarItem.show();
 	}
@@ -270,7 +279,7 @@ export class XamarinProjectManager {
 	public async updateDeviceStatus() {
 		var deviceStr = XamarinProjectManager.SelectedDevice === undefined ? "Select a Device" : `${XamarinProjectManager.SelectedDevice.name}`;
 		this.deviceStatusBarItem.text = "$(device-mobile) " + deviceStr;
-		this.deviceStatusBarItem.tooltip = XamarinProjectManager.SelectedProject === undefined ? "Select a Device" : XamarinProjectManager.SelectedDevice.name;
+		this.deviceStatusBarItem.tooltip = XamarinProjectManager.SelectedProject === undefined ? "Select a Device" : deviceStr;
 		this.deviceStatusBarItem.command = "xamarin.selectDevice";
 		this.deviceStatusBarItem.show();
 	}
@@ -286,10 +295,11 @@ export class XamarinProjectManager {
 	{
 		if (project.TargetFrameworks && project.TargetFrameworks.length > 0) {
 
-			project.TargetFrameworks.forEach(tf => {
+			for (var tf of project.TargetFrameworks)
+			{
 				if (this.getIsSupportedTargetFramework(tf.ShortName))
 					return true;
-			});
+			}
 		} else {
 			if (this.getIsSupportedTargetFramework(project.TargetFramework))
 				return true;
@@ -316,6 +326,13 @@ export class XamarinProjectManager {
 			return ProjectType.Mac;
 		else if (tfm.indexOf('xamarinmaccatalyst') >= 0 || tfm.indexOf('-maccatalyst') >= 0)
 			return ProjectType.MacCatalyst;
+	}
+
+	public static getProjectIsCore(targetFramework: string): boolean
+	{
+		var tfm = targetFramework.toLowerCase().replace(".", "");
+
+		return tfm.startsWith('net') && this.getIsSupportedTargetFramework(tfm);
 	}
 
 	public static getSelectedProjectPlatform():string
