@@ -111,6 +111,15 @@ export class XamarinProjectManager {
 
 	public StartupProjects = new Array<MSBuildProjectInfo>();
 
+	fixTfm(targetFramework: string) : string {
+
+		// /^net[0-9]{2}(\-[a-z0-9\.]+)?$/gis
+		var r = /^net[0-9]{2}(\-[a-z0-9\.]+)?$/gis.test(targetFramework);
+		if (r)
+			return 'net' + targetFramework[3] + '.' + targetFramework[4] + targetFramework.substr(5);
+		return targetFramework;
+	}
+
 	public async showProjectPicker(): Promise<void> {
 		var projects = this.StartupProjects
 			.map(x => ({
@@ -134,13 +143,13 @@ export class XamarinProjectManager {
 
 				const tfm = await vscode.window.showQuickPick(tfms, { placeHolder: "Target Framework" });
 				if (tfm)
-					XamarinProjectManager.SelectedTargetFramework = tfm.tfm.ShortName;
+					XamarinProjectManager.SelectedTargetFramework = this.fixTfm(tfm.tfm.ShortName);
 				else
-					XamarinProjectManager.SelectedTargetFramework = p.project.TargetFramework;
+					XamarinProjectManager.SelectedTargetFramework = this.fixTfm(p.project.TargetFramework);
 			}
 			else {
 				// Not multi targeted, don't need to ask the user
-				XamarinProjectManager.SelectedTargetFramework = p.project.TargetFramework;
+				XamarinProjectManager.SelectedTargetFramework = this.fixTfm(p.project.TargetFramework);
 			}
 
 			var config = "Debug";
@@ -330,7 +339,7 @@ export class XamarinProjectManager {
 
 	public static getProjectIsCore(targetFramework: string): boolean
 	{
-		var tfm = targetFramework.toLowerCase().replace(".", "");
+		var tfm = targetFramework.toLowerCase();
 
 		return tfm.startsWith('net') && this.getIsSupportedTargetFramework(tfm);
 	}
