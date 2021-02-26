@@ -18,7 +18,7 @@ import { OutputChannel } from 'vscode';
 import { MSBuildProject } from './omnisharp/protocol';
 import { XamarinBuildTaskProvider } from './xamarin-build-task';
 
-const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
+const localize = nls.config({ locale: process.env.VSCODE_NLS_CONFIG })();
 
 const configuration = vscode.workspace.getConfiguration('xamarin-debug');
 

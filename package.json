@@ -30,15 +30,15 @@
 	},
 	"dependencies": {
 		"@types/execa": "^2.0.0",
-		"@types/lodash": "^4.14.158",
-		"@types/vscode": "^1.47.0",
-		"@types/xml2js": "^0.4.5",
-		"execa": "^4.0.3",
-		"lodash": "^4.17.19",
-		"rxjs": "^6.6.0",
-		"vscode-debugprotocol": "^1.20.0",
-		"vscode-nls": "^2.0.2",
-		"vscode-test": "^1.4.0",
+		"@types/lodash": "^4.14.168",
+		"@types/vscode": "^1.53.0",
+		"@types/xml2js": "^0.4.8",
+		"execa": "^5.0.0",
+		"lodash": "^4.17.21",
+		"rxjs": "^6.6.6",
+		"vscode-debugprotocol": "^1.45.0",
+		"vscode-nls": "^5.0.0",
+		"vscode-test": "^1.5.1",
 		"xml2js": "^0.4.23"
 	},
 	"repository": {
@@ -49,15 +49,15 @@
 		"url": "https://github.com/xamarin/vscode-xamarin/issues"
 	},
 	"devDependencies": {
-		"@types/mocha": "^2.2.32",
-		"@types/node": "^6.0.39",
+		"@types/mocha": "^8.2.1",
+		"@types/node": "^14.14.31",
 		"mocha": "^8.3.0",
-		"typescript": "^3.7.5",
-		"vsce": "^1.20.0",
-		"vscode-debugadapter-testsupport": "^1.20.0",
-		"vscode-nls-dev": "^2.0.1",
-		"webpack": "^4.44.0",
-		"webpack-cli": "^3.3.12"
+		"typescript": "^4.2.2",
+		"vsce": "^1.85.0",
+		"vscode-debugadapter-testsupport": "^1.45.0",
+		"vscode-nls-dev": "^3.3.2",
+		"webpack": "^5.24.2",
+		"webpack-cli": "^4.5.0"
 	},
 	"main": "./out/extension",
 	"activationEvents": [

@@ -62,11 +62,10 @@ export class EmulatorItem extends vscode.TreeItem {
         this.isRunning = isRunning;
 
         this.platform = platform;
-    }
 
-    get tooltip(): string {
         var devem = this.isEmulator ? (this.platform === "ios" ? "Simulator" : "Emulator") : "Device";
-		return `${this.label} (${this.platform} ${devem})`;
+	
+        this.tooltip = `${this.label} (${this.platform} ${devem})`;
     }
 
     serial: string;
