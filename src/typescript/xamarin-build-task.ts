@@ -132,7 +132,11 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 
 		var flags = [];
 		var target = "Build";
-		var command = "dotnet"; // await XamarinBuildTaskProvider.locateMSBuild();
+		var command = "dotnet";
+		
+		// Use MSBuild for old projects
+		if (!XamarinProjectManager.getProjectIsCore(XamarinProjectManager.SelectedTargetFramework))
+			command = await XamarinBuildTaskProvider.locateMSBuild();
 
 		return [ this.getTask(command,target,flags) ]
 	}
@@ -141,7 +145,10 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		var configuration = XamarinProjectManager.SelectedProjectConfiguration;
 		var csproj = XamarinProjectManager.SelectedProject.Path;
 		var platform = XamarinProjectManager.getSelectedProjectPlatform();
+		var isCore = XamarinProjectManager.getProjectIsCore(XamarinProjectManager.SelectedTargetFramework);
 		var projectType = XamarinProjectManager.getProjectType(XamarinProjectManager.SelectedTargetFramework);
+		var tfm = XamarinProjectManager.SelectedTargetFramework;
+
 		if (definition === undefined) {
 			definition = {
 				task: "MSBuild",
@@ -160,7 +167,14 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		if (this.platform)
 			platformArg = `;Platform=${platform}`;
 
-		var args = ['build', csproj, `-t:${target}`, `-p:Configuration=${configuration}${platformArg}`];
+		var args = [csproj, `-t:${target}`, `-p:Configuration=${configuration}${platformArg}`];
+
+		// dotnet needs the build verb
+		if (isCore) {
+			args.unshift("build");
+			args.push(`-f ${tfm}`);
+		}
+
 		args.concat(flags);
 		var task = new vscode.Task(definition, definition.target, 'xamarin', new vscode.ProcessExecution(command, args));
 		return task;
