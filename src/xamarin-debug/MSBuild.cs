@@ -5,11 +5,18 @@ using VsCodeXamarinUtil;
 
 namespace VSCodeDebug {
 	public class MSBuild {
-		static string exePath = "/bin/bash";
+		static string exePath = "/bin/zsh";
 		static MSBuild ()
 		{
 			if (Util.IsWindows)
-				exePath = GetWindowsMSBuildPath ();
+			{
+				exePath = GetWindowsMSBuildPath();
+			}
+			else
+			{
+				if (!File.Exists(exePath))
+					exePath = "/bin/bash";
+			}
 		}
 		static string GetWindowsMSBuildPath ()
 		{
