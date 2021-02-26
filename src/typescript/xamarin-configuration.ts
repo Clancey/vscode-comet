@@ -51,9 +51,11 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 					config['projectConfiguration'] = XamarinProjectManager.SelectedProjectConfiguration;
 
 				var projectType = XamarinProjectManager.getProjectType(XamarinProjectManager.SelectedTargetFramework);
+				var projectIsCore = XamarinProjectManager.getProjectIsCore(XamarinProjectManager.SelectedTargetFramework);
 
 				config['projectType'] = projectType;
-
+				config['projectIsCore'] = projectIsCore;
+				config['projectTargetFramework'] = XamarinProjectManager.SelectedTargetFramework;
 				config['projectPlatform'] = XamarinProjectManager.getSelectedProjectPlatform();
 
 				var device = XamarinProjectManager.SelectedDevice;
