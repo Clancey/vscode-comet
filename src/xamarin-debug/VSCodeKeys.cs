@@ -7,6 +7,8 @@ namespace VsCodeXamarinUtil {
 			public const string Platform = "projectPlatform";
 			public const string ProjectPath = "projectPath";
 			public const string ProjectType = "projectType";
+			public const string ProjectTargetFramework = "projectTargetFramework";
+			public const string ProjectIsCore = "projectIsCore";
 
 			public const string iosDeviceId = "iosDeviceId";
 			public const string iOSSimulatorVersion = "iosSimulatorVersion";

@@ -41,10 +41,23 @@ namespace VsCodeXamarinUtil
 		readonly Process process;
 
 		public ProcessRunner(FileInfo executable, ProcessArgumentBuilder builder)
-			: this(executable, builder, System.Threading.CancellationToken.None)
+			: this(executable, builder, null, System.Threading.CancellationToken.None)
 		{ }
 
-		public ProcessRunner(FileInfo executable, ProcessArgumentBuilder builder, System.Threading.CancellationToken cancelToken, bool redirectStandardInput = false)
+		public ProcessRunner(FileInfo executable, DirectoryInfo workingDirectory, ProcessArgumentBuilder builder)
+			: this(executable, builder, workingDirectory, System.Threading.CancellationToken.None)
+		{ }
+
+		public ProcessRunner(FileInfo executable, DirectoryInfo workingDirectory, ProcessArgumentBuilder builder, Action<ProcessStartInfo> startInfo)
+			: this(executable, builder, workingDirectory, System.Threading.CancellationToken.None, false, startInfo)
+		{ }
+
+		public ProcessRunner(FileInfo executable, ProcessArgumentBuilder builder, System.Threading.CancellationToken cancelToken)
+			: this(executable, builder, null, cancelToken)
+		{ }
+
+
+		public ProcessRunner(FileInfo executable, ProcessArgumentBuilder builder, DirectoryInfo workingDirectory, System.Threading.CancellationToken cancelToken, bool redirectStandardInput = false, Action<ProcessStartInfo> startInfo = null)
 		{
 			standardOutput = new List<string>();
 			standardError = new List<string>();
@@ -56,9 +69,14 @@ namespace VsCodeXamarinUtil
 			process.StartInfo.UseShellExecute = false;
 			process.StartInfo.RedirectStandardOutput = true;
 			process.StartInfo.RedirectStandardError = true;
+			if (workingDirectory != null)
+				process.StartInfo.WorkingDirectory = workingDirectory.FullName;
 
 			if (redirectStandardInput)
 				process.StartInfo.RedirectStandardInput = true;
+
+			startInfo?.Invoke(process.StartInfo);
+
 
 			process.OutputDataReceived += (s, e) =>
 			{

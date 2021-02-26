@@ -132,7 +132,7 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 
 		var flags = [];
 		var target = "Build";
-		var command = await XamarinBuildTaskProvider.locateMSBuild();
+		var command = "dotnet"; // await XamarinBuildTaskProvider.locateMSBuild();
 
 		return [ this.getTask(command,target,flags) ]
 	}
@@ -160,7 +160,7 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		if (this.platform)
 			platformArg = `;Platform=${platform}`;
 
-		var args = [csproj, `/t:${target}`, `/p:Configuration=${configuration}${platformArg}`];
+		var args = ['build', csproj, `-t:${target}`, `-p:Configuration=${configuration}${platformArg}`];
 		args.concat(flags);
 		var task = new vscode.Task(definition, definition.target, 'xamarin', new vscode.ProcessExecution(command, args));
 		return task;

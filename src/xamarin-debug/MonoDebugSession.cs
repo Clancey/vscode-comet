@@ -336,14 +336,29 @@ namespace VSCodeDebug
 			if (string.IsNullOrWhiteSpace (adbSerial))
 				return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");
 
-			var result = await Task.Run(()=> MSBuild.Run (workingDir, options.Project
+
+			if (options.ProjectIsCore)
+			{
+				Util.LogToFile("Launching Core Android Project");
+
+				return await Task.Run(() => DotNet.Run("build",
+					options.Project,
+					"-t:Run",
+					"-p:AndroidAttachDebugger=true",
+					$"-p:AdbTarget=-s%20{adbSerial}",
+					$"-p:AndroidSdbTargetPort={port}",
+					$"-p:AndroidSdbHostPort={port}"));
+			}
+			else
+			{
+				return await Task.Run(() => MSBuild.Run(workingDir, options.Project
 				, "-t:Install,_Run"
 				, "-p:AndroidAttachDebugger=true"
 				, $"-p:AdbTarget=-s%20{adbSerial}"
 				, $"-p:AndroidSdbTargetPort={port}"
 				, $"-p:AndroidSdbHostPort={port}"
 				));
-			return result;
+			}
 		}
 
 		private void Connect (LaunchData options, IPAddress address, int port)

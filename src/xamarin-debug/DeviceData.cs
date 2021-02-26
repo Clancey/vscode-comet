@@ -49,6 +49,8 @@ namespace VsCodeXamarinUtil
 		public string Configuration { get; set; }
 		public string Platform { get; set; }
 		public ProjectType ProjectType { get; set; }
+		public string ProjectTargetFramework { get; set; }
+		public bool ProjectIsCore { get; set; }
 		public string OutputDirectory { get; set; }
 		public bool EnableHotReload { get; set; }
 		public string iOSDeviceId { get; set; }
@@ -78,6 +80,8 @@ namespace VsCodeXamarinUtil
 			AdbDeviceId = getString (args, VSCodeKeys.LaunchConfig.AdbDeviceId);
 			var projectTypeString = getInt (args, VSCodeKeys.LaunchConfig.ProjectType,0);
 			ProjectType = (ProjectType)projectTypeString;
+			ProjectTargetFramework = getString(args, VSCodeKeys.LaunchConfig.ProjectTargetFramework);
+			ProjectIsCore = getBool(args, VSCodeKeys.LaunchConfig.ProjectIsCore, false);
 			//if(string.IsNullOrWhiteSpace(projectTypeString))
 			//	ProjectType = Enum.Parse (typeof(ProjectType), projectTypeString,true);
 		}
