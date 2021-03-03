@@ -248,8 +248,6 @@ namespace VSCodeDebug
 
 			Connect (launchOptions, address, port);
 
-
-
 			SendResponse (response);
 		}
 

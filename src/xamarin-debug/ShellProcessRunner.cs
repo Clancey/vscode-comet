@@ -36,8 +36,6 @@ namespace VSCodeDebug
 			process.StartInfo.RedirectStandardOutput = true;
 			process.StartInfo.RedirectStandardError = true;
 
-			Util.LogToFile("ShellProcessRunner\r\n" + process.StartInfo.FileName + " " + process.StartInfo.Arguments);
-
 			process.OutputDataReceived += (s, e) =>
 			{
 				if (e.Data != null)
