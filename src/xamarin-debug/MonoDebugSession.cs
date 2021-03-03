@@ -337,15 +337,16 @@ namespace VSCodeDebug
 
 			if (options.ProjectIsCore)
 			{
-				Util.LogToFile("Launching Core Android Project");
-
-				return await Task.Run(() => DotNet.Run("build",
+				var r = await Task.Run(() => DotNet.Run("build",
 					options.Project,
 					"-t:Run",
 					"-p:AndroidAttachDebugger=true",
 					$"-p:AdbTarget=-s%20{adbSerial}",
 					$"-p:AndroidSdbTargetPort={port}",
 					$"-p:AndroidSdbHostPort={port}"));
+
+				await Task.Delay(2000);
+				return r;
 			}
 			else
 			{
