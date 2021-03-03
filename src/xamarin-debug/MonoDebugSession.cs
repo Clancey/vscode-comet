@@ -237,6 +237,9 @@ namespace VSCodeDebug
 					SendErrorResponse (response, 3002, r.message);
 					return;
 				}
+
+				//Android takes a few seconds to get the debugger ready....
+				await Task.Delay(3000);
 			}
 			//on IOS we need to do the connect before we launch the sim.
 			if (launchOptions.ProjectType == ProjectType.iOS) {
@@ -335,16 +338,13 @@ namespace VSCodeDebug
 
 			if (options.ProjectIsCore)
 			{
-				var r = await Task.Run(() => DotNet.Run("build",
+				return await Task.Run(() => DotNet.Run("build",
 					options.Project,
 					"-t:Run",
 					"-p:AndroidAttachDebugger=true",
 					$"-p:AdbTarget=-s%20{adbSerial}",
 					$"-p:AndroidSdbTargetPort={port}",
 					$"-p:AndroidSdbHostPort={port}"));
-
-				await Task.Delay(2000);
-				return r;
 			}
 			else
 			{
