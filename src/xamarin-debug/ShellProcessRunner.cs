@@ -27,9 +27,11 @@ namespace VSCodeDebug
 			standardOutput = new List<string>();
 			standardError = new List<string>();
 
-			process.StartInfo.FileName = Util.IsWindows ? "cmd.exe" : (File.Exists("/bin/zsh") ? "/bin/zsh" : "/bin/bash");
-			process.StartInfo.Arguments = Util.IsWindows ? $"/c \"{executable} {args}\"" : $"-c \"{executable} {args}\"";
 			process = new Process();
+			// process.StartInfo.FileName = Util.IsWindows ? "cmd.exe" : (File.Exists("/bin/zsh") ? "/bin/zsh" : "/bin/bash");
+			// process.StartInfo.Arguments = Util.IsWindows ? $"/c \"{executable} {args}\"" : $"-c \"{executable} {args}\"";
+			process.StartInfo.FileName = Util.IsWindows ? executable : (File.Exists("/bin/zsh") ? "/bin/zsh" : "/bin/bash");
+			process.StartInfo.Arguments = Util.IsWindows ? args : $"-c \"{executable} {args}\"";
 			process.StartInfo.UseShellExecute = false;
 			process.StartInfo.RedirectStandardOutput = true;
 			process.StartInfo.RedirectStandardError = true;
