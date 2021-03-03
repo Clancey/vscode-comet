@@ -41,12 +41,18 @@ namespace VSCodeDebug
 			process.OutputDataReceived += (s, e) =>
 			{
 				if (e.Data != null)
+				{
 					standardOutput.Add(e.Data);
+					Console.WriteLine(e.Data);
+				}
 			};
 			process.ErrorDataReceived += (s, e) =>
 			{
 				if (e.Data != null)
+				{
 					standardError.Add(e.Data);
+					Console.WriteLine(e.Data);
+				}
 			};
 			process.Start();
 			process.BeginOutputReadLine();
