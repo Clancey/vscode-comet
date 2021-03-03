@@ -237,8 +237,6 @@ namespace VSCodeDebug
 					SendErrorResponse (response, 3002, r.message);
 					return;
 				}
-				//Android takes a few seconds to get the debugger ready....
-				await Task.Delay (3000);
 			}
 			//on IOS we need to do the connect before we launch the sim.
 			if (launchOptions.ProjectType == ProjectType.iOS) {
