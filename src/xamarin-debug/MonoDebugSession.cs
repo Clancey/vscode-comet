@@ -27,7 +27,7 @@ namespace VSCodeDebug
 			".hx"
 		};
 		private const int MAX_CHILDREN = 100;
-		private const int MAX_CONNECTION_ATTEMPTS = 10;
+		private const int MAX_CONNECTION_ATTEMPTS = 20;
 		private const int CONNECTION_ATTEMPT_INTERVAL = 500;
 
 		private AutoResetEvent _resumeEvent = new AutoResetEvent(false);
