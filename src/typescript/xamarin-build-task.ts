@@ -172,7 +172,7 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		// dotnet needs the build verb
 		if (isCore) {
 			args.unshift("build");
-			args.push(`-f ${tfm}`);
+			//args.push(`-f ${tfm}`);
 		}
 
 		args.concat(flags);
