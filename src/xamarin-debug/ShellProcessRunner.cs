@@ -22,8 +22,12 @@ namespace VSCodeDebug
 		readonly List<string> standardError;
 		readonly Process process;
 
-		public ShellProcessRunner(string executable, string args, System.Threading.CancellationToken cancellationToken)
+		public Action<string> OutputHandler { get; private set; }
+
+		public ShellProcessRunner(string executable, string args, System.Threading.CancellationToken cancellationToken, Action<string> outputHandler = null)
 		{
+			OutputHandler = outputHandler;
+
 			standardOutput = new List<string>();
 			standardError = new List<string>();
 
@@ -42,6 +46,7 @@ namespace VSCodeDebug
 				{
 					standardOutput.Add(e.Data);
 					Console.WriteLine(e.Data);
+					OutputHandler?.Invoke(e.Data);
 				}
 			};
 			process.ErrorDataReceived += (s, e) =>
@@ -50,6 +55,7 @@ namespace VSCodeDebug
 				{
 					standardError.Add(e.Data);
 					Console.WriteLine(e.Data);
+					OutputHandler?.Invoke(e.Data);
 				}
 			};
 			process.Start();
