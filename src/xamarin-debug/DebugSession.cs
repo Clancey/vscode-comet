@@ -159,6 +159,17 @@ namespace VSCodeDebug
 			}) { }
 	}
 
+	public class ConsoleOutputEvent : Event
+	{
+		public ConsoleOutputEvent(string outpt)
+			: base("output", new
+			{
+				category = "console",
+				output = outpt
+			})
+		{ }
+	}
+
 	public class OutputEvent : Event
 	{
 		public OutputEvent(string cat, string outpt)
