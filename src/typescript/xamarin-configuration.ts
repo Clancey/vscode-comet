@@ -27,7 +27,9 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 
 		// if launch.json is missing or empty
 		if (config.type == 'xamarin') {
-			// config.request = 'attach';
+			
+			if (!config.request)
+				config.request = 'launch';
 
 			var project = XamarinProjectManager.SelectedProject;
 
@@ -57,6 +59,8 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 				config['projectIsCore'] = projectIsCore;
 				config['projectTargetFramework'] = XamarinProjectManager.SelectedTargetFramework;
 				config['projectPlatform'] = XamarinProjectManager.getSelectedProjectPlatform();
+
+				config['debugPort'] = XamarinProjectManager.DebugPort;
 
 				var device = XamarinProjectManager.SelectedDevice;
 

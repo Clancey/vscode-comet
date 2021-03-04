@@ -221,7 +221,7 @@ namespace VSCodeDebug
 				return;
 			}
 
-			int port = Utilities.FindFreePort(55555);
+			int port = launchOptions.DebugPort; // Utilities.FindFreePort(55555);
 
 			var host = getString (args, "address");
 			IPAddress address = string.IsNullOrWhiteSpace (host) ? IPAddress.Loopback : Utilities.ResolveIPAddress (host);
@@ -232,8 +232,8 @@ namespace VSCodeDebug
 
 
 			if (launchOptions.ProjectType == ProjectType.Android) {
-				var r = await LaunchAndroid (launchOptions, port);
-				if (!r.Success) {
+				var r = LaunchAndroid (launchOptions, port);
+				if (!r.success) {
 					SendErrorResponse (response, 3002, r.message);
 					return;
 				}
@@ -245,6 +245,11 @@ namespace VSCodeDebug
 			if (launchOptions.ProjectType == ProjectType.iOS) {
 				Connect (launchOptions, address, port);
 				var r = await LaunchiOS (launchOptions, port);
+				if (!r.success)
+				{
+					SendErrorResponse(response, 3002, r.message);
+					return;
+				}
 				SendResponse (response);
 				return;
 			}
@@ -255,7 +260,7 @@ namespace VSCodeDebug
 		}
 
 		const string MlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch";
-		async Task<(bool Success, string message)> LaunchiOS (LaunchData options, int port)
+		async Task<(bool success, string message)> LaunchiOS (LaunchData options, int port)
 		{
 			var workingDir = Path.GetDirectoryName (options.Project);
 			const string sdkRoot = "-sdkroot /Applications/Xcode.app/Contents/Developer";
@@ -273,10 +278,9 @@ namespace VSCodeDebug
 			return success;
 		}
 		System.Diagnostics.Process iOSDebuggerProcess;
-		public async Task<(bool Success, string Output)> RunMlaumchComand (string command, string workingDirectory, params string [] args)
+		public async Task<(bool success, string output)> RunMlaumchComand (string command, string workingDirectory, params string [] args)
 		{
-
-			TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool> ();
+			var tcs = new TaskCompletionSource<bool> ();
 			var p = new System.Diagnostics.Process ();
 
 			const string iOSRunningText = "Press enter to terminate the application";
@@ -320,7 +324,7 @@ namespace VSCodeDebug
 
 
 
-		async Task<(bool Success, string message)> LaunchAndroid (LaunchData options, int port)
+		(bool success, string message) LaunchAndroid (LaunchData options, int port)
 		{
 			var home = AndroidSdk.FindHome ();
 
@@ -329,33 +333,36 @@ namespace VSCodeDebug
 			if (!string.IsNullOrWhiteSpace (options.AdbDeviceName)) {
 				adbSerial = AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
 			}
-			var workingDir = Path.GetDirectoryName (options.Project);
+			//var workingDir = Path.GetDirectoryName (options.Project);
 
 
 			if (string.IsNullOrWhiteSpace (adbSerial))
 				return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");
 
+			return (true, string.Empty);
+			//if (options.ProjectIsCore)
+			//{
+			//	return await Task.Run(() => DotNet.Run(
+			//		d => SendEvent(new ConsoleOutputEvent(d + Environment.NewLine)),
+			//		"build",
+			//		options.Project,
+			//		"-t:Run",
+			//		"-p:AndroidAttachDebugger=true",
+			//		$"-p:AdbTarget=-s%20{adbSerial}",
+			//		$"-p:AndroidSdbTargetPort={port}",
+			//		$"-p:AndroidSdbHostPort={port}"));
+			//}
+			//else
+			//{
+			//	return await Task.Run(() => MSBuild.Run(workingDir, options.Project
+			//	, "-t:Install,_Run"
+			//	, "-p:AndroidAttachDebugger=true"
+			//	, $"-p:AdbTarget=-s%20{adbSerial}"
+			//	, $"-p:AndroidSdbTargetPort={port}"
+			//	, $"-p:AndroidSdbHostPort={port}"
+			//	));
+			//}
 
-			if (options.ProjectIsCore)
-			{
-				return await Task.Run(() => DotNet.Run("build",
-					options.Project,
-					"-t:Run",
-					"-p:AndroidAttachDebugger=true",
-					$"-p:AdbTarget=-s%20{adbSerial}",
-					$"-p:AndroidSdbTargetPort={port}",
-					$"-p:AndroidSdbHostPort={port}"));
-			}
-			else
-			{
-				return await Task.Run(() => MSBuild.Run(workingDir, options.Project
-				, "-t:Install,_Run"
-				, "-p:AndroidAttachDebugger=true"
-				, $"-p:AdbTarget=-s%20{adbSerial}"
-				, $"-p:AndroidSdbTargetPort={port}"
-				, $"-p:AndroidSdbHostPort={port}"
-				));
-			}
 		}
 
 		private void Connect (LaunchData options, IPAddress address, int port)

@@ -67,6 +67,7 @@ export class XamarinProjectManager {
 	static SelectedTargetFramework: string;
 	static SelectedDevice: DeviceData;
 	static Devices: DeviceData[];
+	static DebugPort: number = 55555;
 
 	static Shared: XamarinProjectManager;
 

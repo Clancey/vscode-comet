@@ -60,6 +60,7 @@ namespace VsCodeXamarinUtil
 		public string AdbDeviceName { get; set; }
 		public string AdbDeviceId { get; set; }
 
+		public int DebugPort { get; set; }
 
 		public LaunchData ()
 		{
@@ -82,6 +83,7 @@ namespace VsCodeXamarinUtil
 			ProjectType = (ProjectType)projectTypeString;
 			ProjectTargetFramework = getString(args, VSCodeKeys.LaunchConfig.ProjectTargetFramework);
 			ProjectIsCore = getBool(args, VSCodeKeys.LaunchConfig.ProjectIsCore, false);
+			DebugPort = getInt(args, VSCodeKeys.LaunchConfig.DebugPort, 55555);
 			//if(string.IsNullOrWhiteSpace(projectTypeString))
 			//	ProjectType = Enum.Parse (typeof(ProjectType), projectTypeString,true);
 		}

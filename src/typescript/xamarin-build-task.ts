@@ -131,14 +131,16 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		this.platform = XamarinProjectManager.getSelectedProjectPlatform();
 
 		var flags = [];
-		var target = "Build";
 		var command = "dotnet";
 		
 		// Use MSBuild for old projects
 		if (!XamarinProjectManager.getProjectIsCore(XamarinProjectManager.SelectedTargetFramework))
 			command = await XamarinBuildTaskProvider.locateMSBuild();
 
-		return [ this.getTask(command,target,flags) ]
+		return [
+			this.getTask(command, "Build", flags),
+			this.getTask(command, "Run", flags),
+		]
 	}
 
 	private getTask(command:string ,target: string, flags: string[], definition?: XamarinBuildTaskDefinition): vscode.Task{
@@ -148,6 +150,7 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		var isCore = XamarinProjectManager.getProjectIsCore(XamarinProjectManager.SelectedTargetFramework);
 		var projectType = XamarinProjectManager.getProjectType(XamarinProjectManager.SelectedTargetFramework);
 		var tfm = XamarinProjectManager.SelectedTargetFramework;
+		var device = XamarinProjectManager.SelectedDevice;
 
 		if (definition === undefined) {
 			definition = {
@@ -172,11 +175,26 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		// dotnet needs the build verb
 		if (isCore) {
 			args.unshift("build");
-			//args.push(`-f ${tfm}`);
+			if (tfm)
+				args.push(`-p:TargetFramework=${tfm}`);
+		}
+
+		if (configuration.toLowerCase() === "debug")
+		{
+			if (projectType == ProjectType.Android)
+			{
+				var port = XamarinProjectManager.DebugPort;
+
+				args.push('-p:AndroidAttachDebugger=true');
+				args.push(`-p:AdbTarget=-s%20${device.serial}`);
+				args.push(`-p:AndroidSdbTargetPort=${port}`);
+				args.push(`-p:AndroidSdbHostPort=${port}`);
+			}
 		}
 
 		args.concat(flags);
-		var task = new vscode.Task(definition, definition.target, 'xamarin', new vscode.ProcessExecution(command, args));
+		var task = new vscode.Task(definition, definition.target, 'xamarin', new vscode.ProcessExecution(command, args),
+			"$msCompile");
 		return task;
 	}
 }
