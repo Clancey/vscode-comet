@@ -34,7 +34,10 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 			var project = XamarinProjectManager.SelectedProject;
 
 			if (!project)
+			{
 				await XamarinProjectManager.Shared.showProjectPicker();
+				project = XamarinProjectManager.SelectedProject;
+			}
 
 			if (!project) {
 				vscode.window.showErrorMessage("Startup Project not selected!");
