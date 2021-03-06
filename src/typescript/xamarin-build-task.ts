@@ -170,7 +170,12 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		if (this.platform)
 			platformArg = `;Platform=${platform}`;
 
-		var args = [csproj, `-t:${target}`, `-p:Configuration=${configuration}${platformArg}`];
+		var msbuildTarget = 'Run';
+		
+		if (projectType == ProjectType.Android && !isCore)
+			msbuildTarget = 'Install;_Run';
+
+		var args = [csproj, `-t:${msbuildTarget}`, `-p:Configuration=${configuration}${platformArg}`];
 
 		// dotnet needs the build verb
 		if (isCore) {
