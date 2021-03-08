@@ -197,6 +197,14 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 			}
 		}
 
+		if (projectType == ProjectType.iOS)
+		{
+			//:v2:udid=6415F4E9-CE0F-455B-ACD0-F81305FB9920
+			// --device=:v2:runtime={options.iOSSimulatorDevice},devicetype={options.iOSSimulatorDeviceType}
+			if (device.iosSimulatorDevice)
+				args.push(`-p:_DeviceName=:v2:udid=${device.iosSimulatorDevice.udid}`);
+		}
+
 		args.concat(flags);
 		var task = new vscode.Task(definition, definition.target, 'xamarin', new vscode.ProcessExecution(command, args),
 			"$msCompile");
