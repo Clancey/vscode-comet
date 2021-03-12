@@ -171,6 +171,9 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 			platformArg = `;Platform=${platform}`;
 
 		var msbuildTarget = 'Run';
+
+		if (projectType == ProjectType.iOS || projectType == ProjectType.MacCatalyst)
+			msbuildTarget = 'Build';
 		
 		if (projectType == ProjectType.Android && !isCore)
 			msbuildTarget = 'Install;_Run';
@@ -201,8 +204,8 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		{
 			//:v2:udid=6415F4E9-CE0F-455B-ACD0-F81305FB9920
 			// --device=:v2:runtime={options.iOSSimulatorDevice},devicetype={options.iOSSimulatorDeviceType}
-			if (device.iosSimulatorDevice)
-				args.push(`-p:_DeviceName=:v2:udid=${device.iosSimulatorDevice.udid}`);
+			//if (device.iosSimulatorDevice)
+			//	args.push(`-p:_DeviceName=:v2:udid=${device.iosSimulatorDevice.udid}`);
 		}
 
 		args.concat(flags);

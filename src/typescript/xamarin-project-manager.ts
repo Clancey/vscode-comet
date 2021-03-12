@@ -12,8 +12,8 @@ export enum ProjectType
 	Mono,
 	Android,
 	iOS,
-	Mac,
 	MacCatalyst,
+	Mac,
 	UWP,
 	Unknown,
 	WPF,
@@ -226,6 +226,15 @@ export class XamarinProjectManager {
 					XamarinProjectManager.SelectedDevice = p.device;
 				}
 			}
+			else if (platform === ProjectType.MacCatalyst)
+			{
+				var deviceData = new DeviceData();
+				deviceData.name = "Local Machine";
+				deviceData.platform = 'maccatalyst';
+				deviceData.serial = "local";
+
+				XamarinProjectManager.SelectedDevice = deviceData;
+			}
 			else if (platform === ProjectType.iOS) {
 				
 				var iosDevices : AppleDevicesAndSimulators;
@@ -298,7 +307,7 @@ export class XamarinProjectManager {
 	{
 		var projType = this.getProjectType(targetFramework);
 
-		return projType == ProjectType.Android || projType == ProjectType.iOS;
+		return projType == ProjectType.Android || projType == ProjectType.iOS || projType == ProjectType.MacCatalyst;
 	}
 
 	public static getIsSupportedProject(project: MSBuildProject): boolean

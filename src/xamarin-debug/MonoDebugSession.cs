@@ -241,88 +241,81 @@ namespace VSCodeDebug
 				//Android takes a few seconds to get the debugger ready....
 				await Task.Delay(3000);
 			}
+
+			if (launchOptions.ProjectType == ProjectType.iOS || launchOptions.ProjectType == ProjectType.MacCatalyst)
+				port = Utilities.FindFreePort(55555);
+
+			Connect (launchOptions, address, port);
+
 			//on IOS we need to do the connect before we launch the sim.
-			if (launchOptions.ProjectType == ProjectType.iOS) {
-				Connect (launchOptions, address, port);
-				var r = await LaunchiOS (launchOptions, port);
+			if (launchOptions.ProjectType == ProjectType.iOS || launchOptions.ProjectType == ProjectType.MacCatalyst)
+			{
+				var r = launchOptions.ProjectType == ProjectType.iOS 
+					? await LaunchiOS(launchOptions, port)
+					: await LaunchCatalyst(launchOptions, port);
+
 				if (!r.success)
 				{
 					SendErrorResponse(response, 3002, r.message);
 					return;
 				}
-				SendResponse (response);
+				SendResponse(response);
 				return;
 			}
-
-			Connect (launchOptions, address, port);
 
 			SendResponse (response);
 		}
 
-		const string MlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch";
-		async Task<(bool success, string message)> LaunchiOS (LaunchData options, int port)
+		string[] GetLocalIps()
 		{
-			var workingDir = Path.GetDirectoryName (options.Project);
-			const string sdkRoot = "-sdkroot /Applications/Xcode.app/Contents/Developer";
-			var output = Path.Combine (workingDir, options.OutputDirectory);
+			var hostName = Dns.GetHostName();
 
-			var appPath = Directory.EnumerateDirectories (output, "*.app").FirstOrDefault ();
+			// Find host by name
+			var addresses = Dns.GetHostAddresses(hostName);
 
-
-			var success = await RunMlaumchComand (MlaunchPath, workingDir,
-				sdkRoot,
-				$"--launchsim \"{appPath}\"",
-				$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
-				$"--sdk {options.iOSSimulatorVersion} --device=:v2:runtime={options.iOSSimulatorDevice},devicetype={options.iOSSimulatorDeviceType}"
-				);
-			return success;
-		}
-		System.Diagnostics.Process iOSDebuggerProcess;
-		public async Task<(bool success, string output)> RunMlaumchComand (string command, string workingDirectory, params string [] args)
-		{
-			var tcs = new TaskCompletionSource<bool> ();
-			var p = new System.Diagnostics.Process ();
-
-			const string iOSRunningText = "Press enter to terminate the application";
-			//await Task.Run (() => {
-			try {
-				p.StartInfo.CreateNoWindow = false;
-				p.StartInfo.FileName = command;
-				p.StartInfo.WorkingDirectory = workingDirectory;
-				p.StartInfo.Arguments = Utilities.ConcatArgs (args, false);
-				p.StartInfo.UseShellExecute = false;
-				p.StartInfo.RedirectStandardOutput = true;
-				p.StartInfo.RedirectStandardInput = true;
-				p.OutputDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
-					if (e.Data == iOSRunningText)
-						tcs.TrySetResult (true);
-					tcs.TrySetResult (true);
-				};
-				p.Exited += (object sender, EventArgs e) => {
-					tcs.TrySetResult (false);
-				};
-				p.Start ();
-				p.BeginOutputReadLine ();
-				//p.BeginErrorReadLine ();
-
-			} catch (Exception ex) {
-
-				Console.WriteLine (ex);
-				tcs.TrySetException (ex);
-			}
-
-			_ = Task.Run (() => {
-				p.WaitForExit ();
-				tcs.TrySetResult (false);
-			});
-
-			iOSDebuggerProcess = p;
-			//});
-			var s = await tcs.Task;
-			return (s, "");
+			return addresses
+				.Where(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+				.Select(ip => ip.ToString())
+				.Concat(new string[] { "127.0.0.1" })
+				.ToArray();
 		}
 
+		async Task<(bool success, string message)> LaunchCatalyst(LaunchData launchOptions, int port)
+		{
+			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_HOSTS__", "127.0.0.1");
+			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_PORT__", port.ToString());
 
+			return await Task.Run(() => DotNet.Run(
+					d => SendEvent(new ConsoleOutputEvent(d + Environment.NewLine)),
+					"build",
+					"--no-restore",
+					"-f",
+					launchOptions.ProjectTargetFramework,
+					$"\"{launchOptions.Project}\"",
+					"-t:Run"));
+		
+		}
+
+		async Task<(bool success, string message)> LaunchiOS(LaunchData launchOptions, int port)
+		{
+			var ipstr = string.Join(";", GetLocalIps());
+
+			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_HOSTS__", ipstr);
+			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_PORT__", port.ToString());
+
+			var debugArgs = $"-p:MtouchExtraArgs=\"--setenv:__XAMARIN_DEBUG_PORT__={port} --setenv:__XAMARIN_DEBUG_HOSTS__={ipstr}\"";
+
+			return await Task.Run(() => DotNet.Run(
+					d => SendEvent(new ConsoleOutputEvent(d + Environment.NewLine)),
+					"build",
+					"--no-restore",
+					"-f",
+					launchOptions.ProjectTargetFramework,
+					$"\"{launchOptions.Project}\"",
+					"-t:Run",
+					$"-p:_DeviceName=\":v2:udid={launchOptions.iOSSimulatorDeviceUdid}\"",
+					debugArgs));
+		}
 
 		(bool success, string message) LaunchAndroid (LaunchData options, int port)
 		{
@@ -333,36 +326,11 @@ namespace VSCodeDebug
 			if (!string.IsNullOrWhiteSpace (options.AdbDeviceName)) {
 				adbSerial = AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
 			}
-			//var workingDir = Path.GetDirectoryName (options.Project);
-
-
+			
 			if (string.IsNullOrWhiteSpace (adbSerial))
 				return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");
 
 			return (true, string.Empty);
-			//if (options.ProjectIsCore)
-			//{
-			//	return await Task.Run(() => DotNet.Run(
-			//		d => SendEvent(new ConsoleOutputEvent(d + Environment.NewLine)),
-			//		"build",
-			//		options.Project,
-			//		"-t:Run",
-			//		"-p:AndroidAttachDebugger=true",
-			//		$"-p:AdbTarget=-s%20{adbSerial}",
-			//		$"-p:AndroidSdbTargetPort={port}",
-			//		$"-p:AndroidSdbHostPort={port}"));
-			//}
-			//else
-			//{
-			//	return await Task.Run(() => MSBuild.Run(workingDir, options.Project
-			//	, "-t:Install,_Run"
-			//	, "-p:AndroidAttachDebugger=true"
-			//	, $"-p:AdbTarget=-s%20{adbSerial}"
-			//	, $"-p:AndroidSdbTargetPort={port}"
-			//	, $"-p:AndroidSdbHostPort={port}"
-			//	));
-			//}
-
 		}
 
 		private void Connect (LaunchData options, IPAddress address, int port)
@@ -380,7 +348,7 @@ namespace VSCodeDebug
 						MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
 						TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL
 					};
-				} else if (options.ProjectType == ProjectType.iOS) {
+				} else if (options.ProjectType == ProjectType.iOS || options.ProjectType == ProjectType.MacCatalyst) {
 					args = new StreamCommandConnectionDebuggerArgs (options.AppName, new IPhoneTcpCommandConnection (IPAddress.Loopback, port)) { MaxConnectionAttempts = 10 };
 				}
 
@@ -424,16 +392,6 @@ namespace VSCodeDebug
 
 		public override void Disconnect(Response response, dynamic args)
 		{
-			try {
-				if (!(iOSDebuggerProcess?.HasExited ?? true)) {
-					iOSDebuggerProcess?.StandardInput?.WriteLine ("\r\n");
-					iOSDebuggerProcess?.Kill ();
-					iOSDebuggerProcess = null;
-				}
-			} catch (Exception ex) {
-				Console.WriteLine (ex);
-			}
-
 			if (_attachMode) {
 
 				lock (_lock) {

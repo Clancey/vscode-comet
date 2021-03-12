@@ -36,6 +36,7 @@ namespace VsCodeXamarinUtil
 		Mono,
 		Android,
 		iOS,
+		MacCatalyst,
 		Mac,
 		UWP,
 		Unknown,
@@ -57,6 +58,7 @@ namespace VsCodeXamarinUtil
 		public string iOSSimulatorVersion { get; set; }
 		public string iOSSimulatorDevice { get; set; }
 		public string iOSSimulatorDeviceType { get; set; }
+		public string iOSSimulatorDeviceUdid { get;set; }
 		public string AdbDeviceName { get; set; }
 		public string AdbDeviceId { get; set; }
 
@@ -77,6 +79,7 @@ namespace VsCodeXamarinUtil
 			iOSSimulatorDevice = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorDeviceRuntime);
 			iOSSimulatorVersion = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorVersion);
 			iOSSimulatorDeviceType = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorDeviceType);
+			iOSSimulatorDeviceUdid = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorDeviceUdid);
 			AdbDeviceName = getString (args, VSCodeKeys.LaunchConfig.AdbEmulatorName);
 			AdbDeviceId = getString (args, VSCodeKeys.LaunchConfig.AdbDeviceId);
 			var projectTypeString = getInt (args, VSCodeKeys.LaunchConfig.ProjectType,0);

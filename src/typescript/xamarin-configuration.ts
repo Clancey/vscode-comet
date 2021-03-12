@@ -93,6 +93,7 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 							config['iosSimulatorDeviceType'] = device.iosSimulatorDevice.deviceTypeIdentifier;
 							config['iosSimulatorRuntime'] = device.iosSimulatorDevice.runtime.identifier;
 							config['iosSimulatorVersion'] = device.iosSimulatorDevice.runtime.version;
+							config['iosSimulatorUdid'] = device.iosSimulatorDevice.udid;
 						}
 						else
 						{

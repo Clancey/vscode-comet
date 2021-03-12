@@ -9,7 +9,7 @@ namespace VSCodeDebug
 	{
 		public static (bool Success, string Output) Run(Action<string> consoleOutputHandler, params string[] args)
 		{
-			var arglist = string.Join(" ", args.Select(a => a.Contains(' ') ? $"\"{a}\"" : a));
+			var arglist = string.Join(" ", args);
 
 			var pr = new ShellProcessRunner("dotnet", arglist, System.Threading.CancellationToken.None, consoleOutputHandler);
 
