@@ -71,7 +71,7 @@ export class XamarinUtil
 
 	constructor()
 	{
-		var thisExtension = vscode.extensions.getExtension('ms-vscode.xamarin');
+		var thisExtension = vscode.extensions.getExtension('Clancey.comet-debug');
 
 		var os = require('os');
 
