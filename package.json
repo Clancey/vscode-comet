@@ -1,15 +1,15 @@
 {
-	"name": "xamarin",
-	"displayName": "Xamarin",
+	"name": "comet-debug",
+	"displayName": "Comet Debug",
 	"version": "0.2.0",
-	"publisher": "ms-vscode",
-	"description": "A lightweight Xamarin extension",
+	"publisher": "Clancey",
+	"description": "Visual Studio Code debugger extension for Comet and Maui",
 	"icon": "images/xam-vscode.png",
 	"categories": [
 		"Debuggers"
 	],
 	"author": {
-		"name": "Microsoft Corporation"
+		"name": "James Clancey"
 	},
 	"license": "MIT",
 	"private": true,
@@ -43,10 +43,10 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/xamarin/vscode-xamarin.git"
+		"url": "https://github.com/Clancey/vscode-comet.git"
 	},
 	"bugs": {
-		"url": "https://github.com/xamarin/vscode-xamarin/issues"
+		"url": "https://github.com/Clancey/vscode-comet/issues"
 	},
 	"devDependencies": {
 		"@types/mocha": "^8.2.1",
