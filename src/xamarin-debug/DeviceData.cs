@@ -49,6 +49,7 @@ namespace VsCodeXamarinUtil
 		public string Project { get; set; }
 		public string Configuration { get; set; }
 		public string Platform { get; set; }
+		public string RuntimeIdentifier { get; set; }
 		public ProjectType ProjectType { get; set; }
 		public string ProjectTargetFramework { get; set; }
 		public bool ProjectIsCore { get; set; }
@@ -73,6 +74,7 @@ namespace VsCodeXamarinUtil
 			Project = getString (args, VSCodeKeys.LaunchConfig.ProjectPath);
 			Configuration = getString (args, VSCodeKeys.LaunchConfig.Configuration);
 			Platform = getString (args, VSCodeKeys.LaunchConfig.Platform, "AnyCPU");
+			RuntimeIdentifier = getString(args, VSCodeKeys.LaunchConfig.RuntimeIdentifier);
 			OutputDirectory = cleanseStringPaths(getString (args, VSCodeKeys.LaunchConfig.Output));
 			EnableHotReload = getBool (args, nameof (EnableHotReload));
 			iOSDeviceId = getString (args, VSCodeKeys.LaunchConfig.iosDeviceId);

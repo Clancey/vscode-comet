@@ -9,6 +9,7 @@ namespace VsCodeXamarinUtil {
 			public const string ProjectType = "projectType";
 			public const string ProjectTargetFramework = "projectTargetFramework";
 			public const string ProjectIsCore = "projectIsCore";
+			public const string RuntimeIdentifier = "runtimeIdentifier";
 			public const string DebugPort = "debugPort";
 
 			public const string iosDeviceId = "iosDeviceId";

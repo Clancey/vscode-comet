@@ -165,7 +165,7 @@ namespace VSCodeDebug
 			: base("output", new
 			{
 				category = "console",
-				output = outpt
+				output = outpt.Trim() + Environment.NewLine
 			})
 		{ }
 	}

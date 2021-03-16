@@ -251,7 +251,7 @@ namespace VSCodeDebug
 			if (launchOptions.ProjectType == ProjectType.iOS || launchOptions.ProjectType == ProjectType.MacCatalyst)
 			{
 				var r = launchOptions.ProjectType == ProjectType.iOS 
-					? await LaunchiOS(launchOptions, port)
+					? await LaunchiOS(response, launchOptions, port)
 					: await LaunchCatalyst(launchOptions, port);
 
 				if (!r.success)
@@ -285,36 +285,143 @@ namespace VSCodeDebug
 			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_HOSTS__", "127.0.0.1");
 			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_PORT__", port.ToString());
 
+			var args = new string[]
+			{
+				"build",
+				"--no-restore",
+				"-f",
+				launchOptions.ProjectTargetFramework,
+				$"\"{launchOptions.Project}\"",
+				"-t:Run",
+				"-verbosity:diag"
+			};
+
+			SendEvent(new ConsoleOutputEvent("Executing: dotnet " + string.Join(" ", args)));
+
 			return await Task.Run(() => DotNet.Run(
 					d => SendEvent(new ConsoleOutputEvent(d + Environment.NewLine)),
-					"build",
-					"--no-restore",
-					"-f",
-					launchOptions.ProjectTargetFramework,
-					$"\"{launchOptions.Project}\"",
-					"-t:Run"));
-		
+					args));
 		}
 
-		async Task<(bool success, string message)> LaunchiOS(LaunchData launchOptions, int port)
+		async Task<(bool success, string message)> LaunchiOS(Response response, LaunchData launchOptions, int port)
 		{
-			var ipstr = string.Join(";", GetLocalIps());
+			//var ipstr = string.Join(";", GetLocalIps());
 
-			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_HOSTS__", ipstr);
-			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_PORT__", port.ToString());
+			//Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_HOSTS__", ipstr);
+			//Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_PORT__", port.ToString());
 
-			var debugArgs = $"-p:MtouchExtraArgs=\"--setenv:__XAMARIN_DEBUG_PORT__={port} --setenv:__XAMARIN_DEBUG_HOSTS__={ipstr}\"";
+			//var args = new string[]
+			//{
+			//	"build",
+			//	"--no-restore",
+			//	"-f",
+			//	launchOptions.ProjectTargetFramework,
+			//	$"\"{launchOptions.Project}\"",
+			//	"-t:Run",
+			//	$"-p:_DeviceName=\":v2:udid={launchOptions.iOSSimulatorDeviceUdid}\"",
+			//	$"-p:MtouchExtraArgs=\"-v -v -v -v --setenv:__XAMARIN_DEBUG_PORT__={port} --setenv:__XAMARIN_DEBUG_HOSTS__={ipstr}\"",
+			//	"-verbosity:diag",
+			//	"-bl:/Users/redth/Desktop/iosdbg.binlog"
+			//};
 
-			return await Task.Run(() => DotNet.Run(
-					d => SendEvent(new ConsoleOutputEvent(d + Environment.NewLine)),
-					"build",
-					"--no-restore",
-					"-f",
-					launchOptions.ProjectTargetFramework,
-					$"\"{launchOptions.Project}\"",
-					"-t:Run",
-					$"-p:_DeviceName=\":v2:udid={launchOptions.iOSSimulatorDeviceUdid}\"",
-					debugArgs));
+			//SendEvent(new ConsoleOutputEvent("Executing: dotnet " + string.Join(" ", args)));
+
+			//return await Task.Run(() => DotNet.Run(
+			//		d => SendEvent(new ConsoleOutputEvent(d + Environment.NewLine)),
+			//		args));
+
+			var workingDir = Path.GetDirectoryName(launchOptions.Project);
+			const string sdkRoot = "-sdkroot /Applications/Xcode.app/Contents/Developer";
+			var output = Path.Combine(workingDir, "bin", launchOptions.Configuration, launchOptions.ProjectTargetFramework, launchOptions.RuntimeIdentifier);
+
+			var appPath = Directory.EnumerateDirectories(output, "*.app").FirstOrDefault();
+
+			var mlaunchPath = string.Empty;
+
+			var dotnetSkdPath = "/usr/local/share/dotnet/packs/Microsoft.iOS.Sdk/"; // 14.4.100-ci.main.1192/tools/bin/mlaunch
+
+			if (!Directory.Exists(dotnetSkdPath))
+			{
+				var msg = dotnetSkdPath + " is missing, please install the iOS SDK Workload";
+				SendEvent(new ConsoleOutputEvent(msg));
+				SendErrorResponse(response, 3002, msg);
+				return (false, "");
+			}
+
+			foreach (var dir in Directory.GetDirectories(dotnetSkdPath).Reverse())
+			{
+				var mlt = Path.Combine(dir, "tools", "bin", "mlaunch");
+
+				if (File.Exists(mlt))
+				{
+					mlaunchPath = mlt;
+					break;
+				}
+			}
+
+			if (string.IsNullOrEmpty(mlaunchPath) || !File.Exists(mlaunchPath))
+			{
+				var msg = "Could not locate mlaunch tool in Microsoft.iOS.Sdk workload.";
+				SendEvent(new ConsoleOutputEvent(msg));
+				SendErrorResponse(response, 3002, msg);
+				return (false, msg);
+			}
+
+			var success = await RunMlaumchComand(mlaunchPath, workingDir,
+				sdkRoot,
+				$"--launchsim \"{appPath}\"",
+				$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
+				$"--sdk {launchOptions.iOSSimulatorVersion} --device=:v2:udid={launchOptions.iOSSimulatorDeviceUdid}"
+				//$"--sdk {launchOptions.iOSSimulatorVersion} --device=:v2:runtime={launchOptions.iOSSimulatorDevice},devicetype={launchOptions.iOSSimulatorDeviceType}"
+				);
+			return success;
+
+		}
+
+		System.Diagnostics.Process iOSDebuggerProcess;
+		public async Task<(bool Success, string Output)> RunMlaumchComand(string command, string workingDirectory, params string[] args)
+		{
+			TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+			var p = new System.Diagnostics.Process();
+
+			const string iOSRunningText = "Press enter to terminate the application";
+			//await Task.Run (() => {
+			try
+			{
+				p.StartInfo.CreateNoWindow = false;
+				p.StartInfo.FileName = command;
+				p.StartInfo.WorkingDirectory = workingDirectory;
+				p.StartInfo.Arguments = Utilities.ConcatArgs(args, false);
+				p.StartInfo.UseShellExecute = false;
+				p.StartInfo.RedirectStandardOutput = true;
+				p.StartInfo.RedirectStandardInput = true;
+				p.OutputDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
+					if (e.Data == iOSRunningText)
+						tcs.TrySetResult(true);
+					tcs.TrySetResult(true);
+				};
+				p.Exited += (object sender, EventArgs e) => {
+					tcs.TrySetResult(false);
+				};
+				p.Start();
+				p.BeginOutputReadLine();
+				//p.BeginErrorReadLine ();
+
+			}
+			catch (Exception ex)
+			{
+
+				Console.WriteLine(ex);
+				tcs.TrySetException(ex);
+			}
+			_ = Task.Run(() => {
+				p.WaitForExit();
+				tcs.TrySetResult(false);
+			});
+			iOSDebuggerProcess = p;
+			//});
+			var s = await tcs.Task;
+			return (s, "");
 		}
 
 		(bool success, string message) LaunchAndroid (LaunchData options, int port)
@@ -392,6 +499,21 @@ namespace VSCodeDebug
 
 		public override void Disconnect(Response response, dynamic args)
 		{
+			try
+			{
+				if (!(iOSDebuggerProcess?.HasExited ?? true))
+				{
+					iOSDebuggerProcess?.StandardInput?.WriteLine("\r\n");
+					iOSDebuggerProcess?.Kill();
+					iOSDebuggerProcess = null;
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+			}
+
+
 			if (_attachMode) {
 
 				lock (_lock) {
