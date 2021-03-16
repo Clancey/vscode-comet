@@ -52,9 +52,7 @@ namespace VSCodeDebug
 		private bool _stderrEOF = true;
 		private bool _stdoutEOF = true;
 
-#if !EXCLUDE_HOT_RELOAD
 		private HotReloadManager _hotReloadManager;
-#endif
 
 		public MonoDebugSession() : base()
 		{
@@ -120,7 +118,7 @@ namespace VSCodeDebug
 			_session.TargetReady += (sender, e) => {
 				_activeProcess = _session.GetProcesses().SingleOrDefault();
 
-				_hotReloadManager = new HotReloadManager();
+				_hotReloadManager ??= new HotReloadManager();
 				_hotReloadManager.Start(_session);
 			};
 
@@ -162,7 +160,6 @@ namespace VSCodeDebug
 				SendOutput(isStdErr ? "stderr" : "stdout", text);
 			};
 
-#if !EXCLUDE_HOT_RELOAD
 			this.HandleUnknownRequest = (s) => {
 				if (s.command == "DocumentChanged")
 				{
@@ -176,7 +173,6 @@ namespace VSCodeDebug
 				}
 				return false;
 			};
-#endif
 		}
 
 		public override void Initialize(Response response, dynamic args)
@@ -442,9 +438,7 @@ namespace VSCodeDebug
 
 		private void Connect (LaunchData options, IPAddress address, int port)
 		{
-#if BUILD_HOT_RELOAD
-			IDEManager.Shared.StartMonitoring();
-#endif
+			_hotReloadManager?.SetLaunchData(options);
 			lock (_lock) {
 
 				_debuggeeKilled = false;

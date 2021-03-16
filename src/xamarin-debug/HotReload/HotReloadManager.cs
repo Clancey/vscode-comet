@@ -6,6 +6,7 @@ using Mono.Debugging.Soft;
 using System;
 using System.Linq;
 using System.Reflection;
+using VsCodeXamarinUtil;
 
 namespace VSCodeDebug.HotReload
 {
@@ -16,7 +17,10 @@ namespace VSCodeDebug.HotReload
 		public HotReloadManager()
 		{
 		}
+		public void SetLaunchData(LaunchData launchData)
+		{
 
+		}
 		public void Start(SoftDebuggerSession debugger)
 		{
 			var untypedStartInfo = debugger.GetStartInfo();
