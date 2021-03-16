@@ -81,8 +81,8 @@ export class XamarinProjectManager {
 		this.omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
 
 		this.loadingStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-		this.loadingStatusBarItem.text = "Loading Mobile Projects...";
-		this.loadingStatusBarItem.tooltip = "Loading Mobile Projects...";
+		this.loadingStatusBarItem.text = "$(sync~spin) Loading Mobile Projects...";
+		this.loadingStatusBarItem.tooltip = "Looking for Mobile Projects...";
 		this.loadingStatusBarItem.show();
 
 		this.omnisharp.eventStream.subscribe(async (e: BaseEvent) => {
