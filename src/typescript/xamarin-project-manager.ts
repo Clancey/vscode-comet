@@ -72,11 +72,18 @@ export class XamarinProjectManager {
 	static Shared: XamarinProjectManager;
 
 	omnisharp: any;
+	context: vscode.ExtensionContext;
 
 	constructor(context: vscode.ExtensionContext) {
 		XamarinProjectManager.Shared = this;
-		
+
+		this.context = context;
 		this.omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
+
+		this.loadingStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+		this.loadingStatusBarItem.text = "Loading Mobile Projects...";
+		this.loadingStatusBarItem.tooltip = "Loading Mobile Projects...";
+		this.loadingStatusBarItem.show();
 
 		this.omnisharp.eventStream.subscribe(async (e: BaseEvent) => {
 			if (e.type === EventType.WorkspaceInformationUpdated) {
@@ -89,24 +96,84 @@ export class XamarinProjectManager {
 						this.StartupProjects.push(await MSBuildProjectInfo.fromProject(p));
 					}
 				}
+
+				XamarinProjectManager.SelectedProject = undefined;
+				XamarinProjectManager.SelectedProjectConfiguration = undefined;
+				XamarinProjectManager.SelectedTargetFramework = undefined;
+				XamarinProjectManager.SelectedDevice = undefined;
+
+				// Try and auto select some defaults
+				if (this.StartupProjects.length == 1)
+				{
+					var sp = this.StartupProjects[0];
+
+					XamarinProjectManager.SelectedProject = sp;
+
+					var defaultConfig = "Debug";
+
+					if (!sp.Configurations || sp.Configurations.length <= 0)
+					{
+						XamarinProjectManager.SelectedProjectConfiguration = defaultConfig;
+					}
+					else
+					{
+						if (sp.Configurations.includes(defaultConfig))
+							XamarinProjectManager.SelectedProjectConfiguration = defaultConfig;
+						
+						XamarinProjectManager.SelectedProjectConfiguration = sp.Configurations[0];
+					}
+						
+					if (sp.TargetFrameworks)
+					{
+						XamarinProjectManager.SelectedTargetFramework = this.fixTfm(sp.TargetFrameworks[0].ShortName);
+					}
+					else
+					{
+						XamarinProjectManager.SelectedTargetFramework = this.fixTfm(sp.TargetFramework);
+					}
+
+					if (XamarinProjectManager.SelectedTargetFramework && XamarinProjectManager.getProjectType(XamarinProjectManager.SelectedTargetFramework) == ProjectType.MacCatalyst)
+					{
+						var deviceData = new DeviceData();
+						deviceData.name = "Local Machine";
+						deviceData.platform = 'maccatalyst';
+						deviceData.serial = "local";
+
+						XamarinProjectManager.SelectedDevice = deviceData;
+					}
+				}
+
+				this.setupMenus();
+
+				this.updateProjectStatus();
+				this.updateDeviceStatus();
 			}
 		});
-
-		context.subscriptions.push(vscode.commands.registerCommand("xamarin.selectProject", this.showProjectPicker, this));
-		context.subscriptions.push(vscode.commands.registerCommand("xamarin.selectDevice", this.showDevicePicker, this));
-
-		this.projectStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-		this.projectStatusBarItem.tooltip = "Select a Startup Project";
-		this.projectStatusBarItem.text = "$(project) Startup Project";
-
-		this.deviceStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-		this.deviceStatusBarItem.tooltip = "Select a Device";
-		this.deviceStatusBarItem.text = "$(device-mobile) Device";
-
-		this.updateProjectStatus();
-		this.updateDeviceStatus();
 	}
 
+	isMenuSetup: boolean = false;
+
+	setupMenus()
+	{
+		if (this.isMenuSetup)
+			return;
+
+		this.loadingStatusBarItem.hide();
+		this.loadingStatusBarItem.dispose();
+
+		this.context.subscriptions.push(vscode.commands.registerCommand("xamarin.selectProject", this.showProjectPicker, this));
+		this.context.subscriptions.push(vscode.commands.registerCommand("xamarin.selectDevice", this.showDevicePicker, this));
+
+		this.projectStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+		this.deviceStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+		
+		this.updateProjectStatus();
+		this.updateDeviceStatus();
+		
+		this.isMenuSetup = true;
+	}
+
+	loadingStatusBarItem: vscode.StatusBarItem;
 	projectStatusBarItem: vscode.StatusBarItem;
 	deviceStatusBarItem: vscode.StatusBarItem;
 
@@ -141,12 +208,18 @@ export class XamarinProjectManager {
 						tfm: x
 					}));
 
-
-				const tfm = await vscode.window.showQuickPick(tfms, { placeHolder: "Target Framework" });
-				if (tfm)
-					XamarinProjectManager.SelectedTargetFramework = this.fixTfm(tfm.tfm.ShortName);
+				if (tfms && tfms.length == 1)
+				{
+					XamarinProjectManager.SelectedTargetFramework = this.fixTfm(tfms[0].tfm.ShortName);
+				}
 				else
-					XamarinProjectManager.SelectedTargetFramework = this.fixTfm(p.project.TargetFramework);
+				{
+					const tfm = await vscode.window.showQuickPick(tfms, { placeHolder: "Target Framework" });
+					if (tfm)
+						XamarinProjectManager.SelectedTargetFramework = this.fixTfm(tfm.tfm.ShortName);
+					else
+						XamarinProjectManager.SelectedTargetFramework = this.fixTfm(p.project.TargetFramework);
+				}
 			}
 			else {
 				// Not multi targeted, don't need to ask the user
@@ -155,11 +228,12 @@ export class XamarinProjectManager {
 
 			var config = "Debug";
 
+			// If we have configurations ...
 			if (p.project.Configurations && p.project.Configurations.length > 0)
 			{
-				const c = await vscode.window.showQuickPick(p.project.Configurations, { placeHolder: "Build Configuration" });
-				if (c)
-					config = c;
+				// If we have only one config, use that, otherwise if > 1 and don't also have Debug, use the first
+				if (p.project.Configurations.length == 1 || !p.project.Configurations.includes(config))
+					config = p.project.Configurations[0];
 			}
 
 			XamarinProjectManager.SelectedProject = p.project;
@@ -174,7 +248,7 @@ export class XamarinProjectManager {
 	public async updateProjectStatus() {
 		var selProj = XamarinProjectManager.SelectedProject;
 
-		var projectString = selProj === undefined ? "Startup Project" : `${selProj.Name ?? selProj.AssemblyName} | ${XamarinProjectManager.SelectedProjectConfiguration}`;
+		var projectString = selProj === undefined ? "Startup Project" : `${selProj.Name ?? selProj.AssemblyName} | ${XamarinProjectManager.SelectedTargetFramework} | ${XamarinProjectManager.SelectedProjectConfiguration}`;
 		this.projectStatusBarItem.text = "$(project) " + projectString;
 		this.projectStatusBarItem.tooltip = selProj === undefined ? "Select a Startup Project" : selProj.Path;
 		this.projectStatusBarItem.command = "xamarin.selectProject";
@@ -221,9 +295,20 @@ export class XamarinProjectManager {
 						device: x,
 					}));
 
-				const p = await vscode.window.showQuickPick(androidPickerDevices, { placeHolder: "Select a Device" });
-				if (p) {
-					XamarinProjectManager.SelectedDevice = p.device;
+				if (androidPickerDevices && androidPickerDevices.length > 0)
+				{
+					// If only one, don't prompt to pick
+					if (androidPickerDevices.length == 1)
+					{
+						XamarinProjectManager.SelectedDevice = androidPickerDevices[0].device;
+					}
+					else
+					{
+						const p = await vscode.window.showQuickPick(androidPickerDevices, { placeHolder: "Select a Device" });
+						if (p) {
+							XamarinProjectManager.SelectedDevice = p.device;
+						}
+					}
 				}
 			}
 			else if (platform === ProjectType.MacCatalyst)
@@ -274,7 +359,21 @@ export class XamarinProjectManager {
 								label: z.runtime.name,
 								device: z
 							}));
-						const d = await vscode.window.showQuickPick(devicePickerItems, { placeHolder: "Select a Runtime Version" });
+
+						var d;
+
+						if (devicePickerItems && devicePickerItems.length > 0)
+						{
+							if (devicePickerItems.length == 1)
+							{
+								d = devicePickerItems[0];
+							}
+							else
+							{
+								d = await vscode.window.showQuickPick(devicePickerItems, { placeHolder: "Select a Runtime Version" });
+							}
+						}
+						
 						if (d) {
 							var deviceData = new DeviceData();
 							deviceData.name = d.device.name + ' | ' + d.device.runtime.name;
