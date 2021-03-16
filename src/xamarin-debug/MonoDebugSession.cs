@@ -331,6 +331,14 @@ namespace VSCodeDebug
 			var output = Path.Combine(workingDir, "bin", launchOptions.Configuration, launchOptions.ProjectTargetFramework, launchOptions.RuntimeIdentifier);
 
 			var appPath = Directory.EnumerateDirectories(output, "*.app").FirstOrDefault();
+			if (string.IsNullOrEmpty(appPath))
+			{
+				var msg = $"No .app found in folder: `{output}`";
+				SendEvent(new ConsoleOutputEvent(msg));
+				SendErrorResponse(response, 3002, msg);
+				return (false, "");
+			}
+
 
 			var mlaunchPath = string.Empty;
 
