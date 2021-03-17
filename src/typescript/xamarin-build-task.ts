@@ -120,21 +120,29 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 
 	private async getTasks(): Promise<vscode.Task[]> {
 		
-		if (!XamarinProjectManager.SelectedProject)
+		var startupInfo = XamarinProjectManager.Shared.StartupInfo;
+
+		if (!startupInfo || !startupInfo.Project || !startupInfo.TargetFramework || !startupInfo.Configuration)
 		{
-			vscode.window.showInformationMessage("Startup Project not selected!");
+			vscode.window.showErrorMessage("Startup Project not selected!");
 			return undefined;
 		}
 
-		this.csproj = XamarinProjectManager.SelectedProject.Path;
-		this.configuration = XamarinProjectManager.SelectedProjectConfiguration;
+		if (!startupInfo || !startupInfo.Device)
+		{
+			vscode.window.showErrorMessage("Startup Device not selected!");
+			return undefined;
+		}
+
+		this.csproj = startupInfo.Project.Path;
+		this.configuration = startupInfo.Configuration;
 		this.platform = XamarinProjectManager.getSelectedProjectPlatform();
 
 		var flags = [];
 		var command = "dotnet";
 		
 		// Use MSBuild for old projects
-		if (!XamarinProjectManager.getProjectIsCore(XamarinProjectManager.SelectedTargetFramework))
+		if (!XamarinProjectManager.getProjectIsCore(startupInfo.TargetFramework))
 			command = await XamarinBuildTaskProvider.locateMSBuild();
 
 		return [
@@ -144,13 +152,17 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 	}
 
 	private getTask(command:string ,target: string, flags: string[], definition?: XamarinBuildTaskDefinition): vscode.Task{
-		var configuration = XamarinProjectManager.SelectedProjectConfiguration;
-		var csproj = XamarinProjectManager.SelectedProject.Path;
+
+		var startupInfo = XamarinProjectManager.Shared.StartupInfo;
+
+		var configuration = startupInfo.Configuration;
+		var csproj = startupInfo.Project.Path;
+		var tfm = startupInfo.TargetFramework;
 		var platform = XamarinProjectManager.getSelectedProjectPlatform();
-		var isCore = XamarinProjectManager.getProjectIsCore(XamarinProjectManager.SelectedTargetFramework);
-		var projectType = XamarinProjectManager.getProjectType(XamarinProjectManager.SelectedTargetFramework);
-		var tfm = XamarinProjectManager.SelectedTargetFramework;
-		var device = XamarinProjectManager.SelectedDevice;
+		var isCore = XamarinProjectManager.getProjectIsCore(tfm);
+		var projectType = XamarinProjectManager.getProjectType(tfm);
+		
+		var device = startupInfo.Device;
 
 		if (definition === undefined) {
 			definition = {
@@ -182,7 +194,11 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 
 		// dotnet needs the build verb
 		if (isCore) {
+			// TODO: THIS IS A HACK THAT CAN BE REMOVED IN .NET 6 P3
+			args.unshift("--no-restore");
+
 			args.unshift("build");
+			
 			if (tfm)
 				args.push(`-p:TargetFramework=${tfm}`);
 		}
@@ -191,7 +207,7 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		{
 			if (projectType == ProjectType.Android)
 			{
-				var port = XamarinProjectManager.DebugPort;
+				var port = startupInfo.DebugPort;
 
 				args.push('-p:AndroidAttachDebugger=true');
 				args.push(`-p:AdbTarget=-s%20${device.serial}`);

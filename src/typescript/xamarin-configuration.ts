@@ -31,18 +31,21 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 			if (!config.request)
 				config.request = 'launch';
 
-			var project = XamarinProjectManager.SelectedProject;
+			var startupInfo = XamarinProjectManager.Shared.StartupInfo;
+			var project = startupInfo.Project;
 
 			if (!project)
 			{
-				await XamarinProjectManager.Shared.showProjectPicker();
-				project = XamarinProjectManager.SelectedProject;
+				await XamarinProjectManager.Shared.selectStartupProject(true);
+				project = XamarinProjectManager.Shared.StartupInfo.Project;
 			}
 
 			if (!project) {
 				vscode.window.showErrorMessage("Startup Project not selected!");
 				return undefined;
 			}
+
+			startupInfo = XamarinProjectManager.Shared.StartupInfo;
 
 			if (project) {
 
@@ -53,24 +56,24 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 					config['projectOutputPath'] = project.OutputPath;
 
 				if (!config['projectConfiguration'])
-					config['projectConfiguration'] = XamarinProjectManager.SelectedProjectConfiguration;
+					config['projectConfiguration'] = startupInfo.Configuration;
 
-				var projectType = XamarinProjectManager.getProjectType(XamarinProjectManager.SelectedTargetFramework);
-				var projectIsCore = XamarinProjectManager.getProjectIsCore(XamarinProjectManager.SelectedTargetFramework);
+				var projectType = XamarinProjectManager.getProjectType(startupInfo.TargetFramework);
+				var projectIsCore = XamarinProjectManager.getProjectIsCore(startupInfo.TargetFramework);
 
 				config['projectType'] = projectType;
 				config['projectIsCore'] = projectIsCore;
-				config['projectTargetFramework'] = XamarinProjectManager.SelectedTargetFramework;
+				config['projectTargetFramework'] = startupInfo.TargetFramework;
 				config['projectPlatform'] = XamarinProjectManager.getSelectedProjectPlatform();
 
-				config['debugPort'] = XamarinProjectManager.DebugPort;
+				config['debugPort'] = startupInfo.DebugPort;
 
-				var device = XamarinProjectManager.SelectedDevice;
+				var device = startupInfo.Device;
 
 				if (!device)
 				{ 
 					await XamarinProjectManager.Shared.showDevicePicker();
-					device = XamarinProjectManager.SelectedDevice;
+					device = XamarinProjectManager.Shared?.StartupInfo?.Device;
 				}
 
 				if (!device) {
