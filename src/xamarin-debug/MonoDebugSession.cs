@@ -292,10 +292,10 @@ namespace VSCodeDebug
 				"-verbosity:diag"
 			};
 
-			SendEvent(new ConsoleOutputEvent("Executing: dotnet " + string.Join(" ", args)));
+			SendConsoleEvent("Executing: dotnet " + string.Join(" ", args));
 
 			return await Task.Run(() => DotNet.Run(
-					d => SendEvent(new ConsoleOutputEvent(d + Environment.NewLine)),
+					d => SendConsoleEvent(d),
 					args));
 		}
 
@@ -320,24 +320,40 @@ namespace VSCodeDebug
 			//	"-bl:/Users/redth/Desktop/iosdbg.binlog"
 			//};
 
-			//SendEvent(new ConsoleOutputEvent("Executing: dotnet " + string.Join(" ", args)));
+			//SendConsoleEvent("Executing: dotnet " + string.Join(" ", args));
 
 			//return await Task.Run(() => DotNet.Run(
-			//		d => SendEvent(new ConsoleOutputEvent(d + Environment.NewLine)),
+			//		d => SendConsoleEvent(d),
 			//		args));
 
 			var workingDir = Path.GetDirectoryName(launchOptions.Project);
 			const string sdkRoot = "-sdkroot /Applications/Xcode.app/Contents/Developer";
-			var output = Path.Combine(workingDir, "bin", launchOptions.Configuration, launchOptions.ProjectTargetFramework, launchOptions.RuntimeIdentifier);
+			SendConsoleEvent($"Using `{sdkRoot}`");
 
-			var appPath = Directory.EnumerateDirectories(output, "*.app").FirstOrDefault();
+			string appPath = default;
+			var output = Path.Combine(
+				workingDir,
+				"bin",
+				launchOptions.Configuration,
+				launchOptions.ProjectTargetFramework,
+				launchOptions.RuntimeIdentifier);
+
+			if (Directory.Exists(output))
+			{
+				var p = Directory.EnumerateDirectories(output, "*.app")?.FirstOrDefault();
+				if (!string.IsNullOrEmpty(p))
+					appPath = p;
+			}
+			
 			if (string.IsNullOrEmpty(appPath))
 			{
-				var msg = $"No .app found in folder: `{output}`";
-				SendEvent(new ConsoleOutputEvent(msg));
+				var msg = $"No .app found in folder: {output}";
+				SendConsoleEvent(msg);
 				SendErrorResponse(response, 3002, msg);
 				return (false, "");
 			}
+
+			SendConsoleEvent($"Found .app: {appPath}");
 
 
 			var mlaunchPath = string.Empty;
@@ -347,10 +363,12 @@ namespace VSCodeDebug
 			if (!Directory.Exists(dotnetSkdPath))
 			{
 				var msg = dotnetSkdPath + " is missing, please install the iOS SDK Workload";
-				SendEvent(new ConsoleOutputEvent(msg));
+				SendConsoleEvent(msg);
 				SendErrorResponse(response, 3002, msg);
 				return (false, "");
 			}
+
+			SendConsoleEvent($"Looking for Microsoft.iOS.Sdk tools in: {dotnetSkdPath}");
 
 			foreach (var dir in Directory.GetDirectories(dotnetSkdPath).Reverse())
 			{
@@ -363,13 +381,17 @@ namespace VSCodeDebug
 				}
 			}
 
+			//mlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch";
+
 			if (string.IsNullOrEmpty(mlaunchPath) || !File.Exists(mlaunchPath))
 			{
 				var msg = "Could not locate mlaunch tool in Microsoft.iOS.Sdk workload.";
-				SendEvent(new ConsoleOutputEvent(msg));
+				SendConsoleEvent(msg);
 				SendErrorResponse(response, 3002, msg);
 				return (false, msg);
 			}
+
+			SendConsoleEvent($"Found mlaunch: {mlaunchPath}");
 
 			var success = await RunMlaumchComand(mlaunchPath, workingDir,
 				sdkRoot,
@@ -425,6 +447,8 @@ namespace VSCodeDebug
 			iOSDebuggerProcess = p;
 			//});
 			var s = await tcs.Task;
+
+			SendConsoleEvent($"mlaunch is running...");
 			return (s, "");
 		}
 
@@ -433,13 +457,22 @@ namespace VSCodeDebug
 			var home = AndroidSdk.FindHome ();
 
 			var adbSerial = options.AdbDeviceId;
-			Console.WriteLine($"Launching Android: {options.AdbDeviceName}");
+
+			SendConsoleEvent($"Launching Android: {options.AdbDeviceName}");
+
 			if (!string.IsNullOrWhiteSpace (options.AdbDeviceName)) {
+
+				SendConsoleEvent($"Waiting for Emulator... {options.AdbDeviceName}");
 				adbSerial = AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
 			}
-			
-			if (string.IsNullOrWhiteSpace (adbSerial))
+
+			if (string.IsNullOrWhiteSpace(adbSerial))
+			{
+				SendConsoleEvent($"Failed to launch or wait for emulator... {options.AdbDeviceName}");
 				return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");
+			}
+
+			SendConsoleEvent($"Emulator ready! ({options.AdbDeviceName})");
 
 			return (true, string.Empty);
 		}
@@ -461,7 +494,8 @@ namespace VSCodeDebug
 					args = new StreamCommandConnectionDebuggerArgs (options.AppName, new IPhoneTcpCommandConnection (IPAddress.Loopback, port)) { MaxConnectionAttempts = 10 };
 				}
 
-				Console.WriteLine ("Listening for debugger!");
+				SendConsoleEvent($"Debugger is ready and listening...");
+
 				_debuggeeExecuting = true;
 				_session.Run (new Mono.Debugging.Soft.SoftDebuggerStartInfo (args), _debuggerSessionOptions);
 
@@ -505,9 +539,13 @@ namespace VSCodeDebug
 			{
 				if (!(iOSDebuggerProcess?.HasExited ?? true))
 				{
+					SendConsoleEvent($"Stopping iOS process...");
+
 					iOSDebuggerProcess?.StandardInput?.WriteLine("\r\n");
 					iOSDebuggerProcess?.Kill();
 					iOSDebuggerProcess = null;
+
+					SendConsoleEvent($"iOS Process was stopped.");
 				}
 			}
 			catch (Exception ex)
@@ -544,6 +582,12 @@ namespace VSCodeDebug
 			}
 
 			SendResponse(response);
+		}
+
+		public void SendConsoleEvent(string message)
+		{
+			Console.WriteLine(message);
+			SendEvent(new ConsoleOutputEvent(message.TrimEnd() + Environment.NewLine));
 		}
 
 		public override void Continue(Response response, dynamic args)

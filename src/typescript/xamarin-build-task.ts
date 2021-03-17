@@ -167,7 +167,7 @@ export class XamarinBuildTaskProvider implements vscode.TaskProvider {
 		}
 
 		var platformArg = '';
-		if (this.platform)
+		if (this.platform && !isCore)
 			platformArg = `;Platform=${platform}`;
 
 		var msbuildTarget = 'Run';
