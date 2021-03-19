@@ -27,7 +27,7 @@ function BuildTypeScript
 {
 	Write-Host "Building TypeScript..."
 
-	& tsc -p ./src/typescript
+	& npm run webpack
 
 	Write-Host "Done TypeScript."
 }

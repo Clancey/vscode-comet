@@ -2,7 +2,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"preLaunchTask": "NPM",
+            "preLaunchTask": "npm: webpack",
 			"type": "extensionHost",
 			"request": "launch",
 			"name": "Extension",
@@ -12,7 +12,7 @@
 			],
 			"stopOnEntry": false,
 			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
+				"${workspaceRoot}/dist/**/*.js"
 			]
 		},
 		{
