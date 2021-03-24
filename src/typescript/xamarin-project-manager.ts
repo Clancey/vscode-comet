@@ -196,6 +196,8 @@ export class XamarinProjectManager {
 
 	public async selectStartupProject(interactive: boolean = false): Promise<any> {
 
+		var doUpdateDeviceStatus = false;
+
 		var availableProjects = this.StartupProjects;
 
 		if (!availableProjects || availableProjects.length <= 0)
@@ -245,7 +247,7 @@ export class XamarinProjectManager {
 					var tfms = selectedProject.TargetFrameworks
 						// Only return supported tfms
 						.filter(x => XamarinProjectManager.getIsSupportedTargetFramework(x.ShortName))
-						.map(x => x.ShortName);
+						.map(x => this.fixTfm(x.ShortName));
 
 					var t = await vscode.window.showQuickPick(tfms, { placeHolder: "Startup Project's Target Framework" });
 
@@ -254,7 +256,7 @@ export class XamarinProjectManager {
 				}
 				else {
 					// Pick the first one if not interactive
-					selectedTargetFramework = selectedProject.TargetFrameworks[0].ShortName;
+					selectedTargetFramework = this.fixTfm(selectedProject.TargetFrameworks[0].ShortName);
 				}
 			}
 		}
@@ -277,6 +279,8 @@ export class XamarinProjectManager {
 			deviceData.serial = "local";
 
 			XamarinProjectManager.Shared.StartupInfo.Device = deviceData;
+
+			doUpdateDeviceStatus = true;
 		}
 		
 		var defaultConfig = "Debug";
@@ -318,6 +322,11 @@ export class XamarinProjectManager {
 
 		if (selectedConfiguration)
 			XamarinProjectManager.Shared.StartupInfo.Configuration = selectedConfiguration;
+
+		this.updateProjectStatus();
+
+		if (doUpdateDeviceStatus)
+			this.updateDeviceStatus();
 	}
 
 	public async updateProjectStatus() {
