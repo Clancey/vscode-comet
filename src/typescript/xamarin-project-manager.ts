@@ -266,17 +266,18 @@ export class XamarinProjectManager {
 		if (!selectedTargetFramework)
 			return;
 
-		XamarinProjectManager.Shared.StartupInfo.Project = selectedProject;
-		XamarinProjectManager.Shared.StartupInfo.TargetFramework = selectedTargetFramework;
+		var projectSelectionWasChanged = false;
 
-		if (selectedTargetFramework && XamarinProjectManager.getProjectType(selectedTargetFramework) == ProjectType.MacCatalyst)
+		if (XamarinProjectManager.Shared.StartupInfo.Project !== selectedProject)
 		{
-			var deviceData = new DeviceData();
-			deviceData.name = "Local Machine";
-			deviceData.platform = 'maccatalyst';
-			deviceData.serial = "local";
+			XamarinProjectManager.Shared.StartupInfo.Project = selectedProject;
+			projectSelectionWasChanged = true;
+		}
 
-			XamarinProjectManager.Shared.StartupInfo.Device = deviceData;
+		if (XamarinProjectManager.Shared.StartupInfo.TargetFramework !== selectedTargetFramework)
+		{
+			XamarinProjectManager.Shared.StartupInfo.TargetFramework = selectedTargetFramework;
+			projectSelectionWasChanged = true;
 		}
 		
 		var defaultConfig = "Debug";
@@ -317,7 +318,28 @@ export class XamarinProjectManager {
 		}
 
 		if (selectedConfiguration)
-			XamarinProjectManager.Shared.StartupInfo.Configuration = selectedConfiguration;
+		{
+			if (XamarinProjectManager.Shared.StartupInfo.Configuration !== selectedConfiguration)
+			{
+				XamarinProjectManager.Shared.StartupInfo.Configuration = selectedConfiguration;
+				projectSelectionWasChanged = true;
+			}
+		}
+
+		if (projectSelectionWasChanged)
+		{
+			XamarinProjectManager.Shared.StartupInfo.Device = undefined;
+		}
+
+		if (selectedTargetFramework && XamarinProjectManager.getProjectType(selectedTargetFramework) == ProjectType.MacCatalyst)
+		{
+			var deviceData = new DeviceData();
+			deviceData.name = "Local Machine";
+			deviceData.platform = 'maccatalyst';
+			deviceData.serial = "local";
+
+			XamarinProjectManager.Shared.StartupInfo.Device = deviceData;
+		}
 
 		this.updateProjectStatus();
 		this.updateDeviceStatus();
