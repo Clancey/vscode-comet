@@ -196,8 +196,6 @@ export class XamarinProjectManager {
 
 	public async selectStartupProject(interactive: boolean = false): Promise<any> {
 
-		var doUpdateDeviceStatus = false;
-
 		var availableProjects = this.StartupProjects;
 
 		if (!availableProjects || availableProjects.length <= 0)
@@ -279,8 +277,6 @@ export class XamarinProjectManager {
 			deviceData.serial = "local";
 
 			XamarinProjectManager.Shared.StartupInfo.Device = deviceData;
-
-			doUpdateDeviceStatus = true;
 		}
 		
 		var defaultConfig = "Debug";
@@ -324,9 +320,7 @@ export class XamarinProjectManager {
 			XamarinProjectManager.Shared.StartupInfo.Configuration = selectedConfiguration;
 
 		this.updateProjectStatus();
-
-		if (doUpdateDeviceStatus)
-			this.updateDeviceStatus();
+		this.updateDeviceStatus();
 	}
 
 	public async updateProjectStatus() {
