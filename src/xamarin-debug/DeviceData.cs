@@ -62,6 +62,7 @@ namespace VsCodeXamarinUtil
 		public string iOSSimulatorDeviceUdid { get;set; }
 		public string AdbDeviceName { get; set; }
 		public string AdbDeviceId { get; set; }
+		public string WorkspaceDirectory { get; set; }
 
 		public int DebugPort { get; set; }
 
@@ -89,6 +90,7 @@ namespace VsCodeXamarinUtil
 			ProjectTargetFramework = getString(args, VSCodeKeys.LaunchConfig.ProjectTargetFramework);
 			ProjectIsCore = getBool(args, VSCodeKeys.LaunchConfig.ProjectIsCore, false);
 			DebugPort = getInt(args, VSCodeKeys.LaunchConfig.DebugPort, 55555);
+			WorkspaceDirectory = getString(args, VSCodeKeys.LaunchConfig.WorkspaceDirectory);
 			//if(string.IsNullOrWhiteSpace(projectTypeString))
 			//	ProjectType = Enum.Parse (typeof(ProjectType), projectTypeString,true);
 		}

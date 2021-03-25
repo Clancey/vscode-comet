@@ -11,6 +11,7 @@ namespace VsCodeXamarinUtil {
 			public const string ProjectIsCore = "projectIsCore";
 			public const string RuntimeIdentifier = "runtimeIdentifier";
 			public const string DebugPort = "debugPort";
+			public const string WorkspaceDirectory = "workspaceUri";
 
 			public const string iosDeviceId = "iosDeviceId";
 			public const string iOSSimulatorVersion = "iosSimulatorVersion";

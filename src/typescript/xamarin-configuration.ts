@@ -45,6 +45,7 @@ export class XamarinConfigurationProvider implements vscode.DebugConfigurationPr
 				return undefined;
 			}
 
+			config['workspaceUri'] = folder.uri.fsPath;
 			startupInfo = XamarinProjectManager.Shared.StartupInfo;
 
 			if (project) {
