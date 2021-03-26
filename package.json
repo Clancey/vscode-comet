@@ -1,9 +1,9 @@
 {
 	"name": "comet-debug",
 	"displayName": "Comet Debug",
-	"version": "0.2.0-alpha04",
+	"version": "0.2.0",
 	"publisher": "Clancey",
-	"description": "Visual Studio Code debugger extension for Comet and Maui",
+	"description": "Visual Studio Code debugger extension for Comet and Maui net6",
 	"icon": "images/xam-vscode.png",
 	"categories": [
 		"Debuggers"
