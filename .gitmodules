@@ -4,3 +4,6 @@
 [submodule "external/nrefactory"]
 	path = external/nrefactory
 	url = https://github.com/xamarin/NRefactory.git
+[submodule "external/Reloadify3000"]
+	path = external/Reloadify3000
+	url = https://github.com/Clancey/Reloadify3000.git
