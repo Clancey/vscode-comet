@@ -21,6 +21,13 @@ function BuildNet
 	& msbuild /r /p:Configuration=Debug /p:nugetInteractive=true /p:ExcludeHotReload=$ExcludeHotReload ./src/xamarin-debug/xamarin-debug.csproj
 
 	Write-Host "Done .NET Project (ExcludeHotReload: $ExcludeHotReload)."
+
+	Write-Host "Building Reloadify 3000 "
+
+	& dotnet build /p:Configuration=Debug /p:nugetInteractive=true ./external/Reloadify3000/Reloadify.CommandLine/Reloadify.CommandLine.csproj
+
+	Write-Host "Copying Reloadify 3000 output"
+	& Copy-Item  ./external/Reloadify3000/Reloadify.CommandLine/bin/debug/net6.0/*  ./src/xamarin-debug/bin/debug/net472/Reloadify -Recurse -force
 }
 
 function BuildTypeScript
