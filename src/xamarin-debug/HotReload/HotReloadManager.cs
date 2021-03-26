@@ -4,9 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 using Mono.Debugging.Soft;
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using VsCodeXamarinUtil;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace VSCodeDebug.HotReload
 {
@@ -17,10 +20,26 @@ namespace VSCodeDebug.HotReload
 		public HotReloadManager()
 		{
 		}
+		DotnetRunner runner;
 		public void SetLaunchData(LaunchData launchData)
 		{
+			var root =  Path.GetDirectoryName(typeof(HotReloadManager).Assembly.Location);
+			var reloadifyPath = Path.Combine(root, "Reloadify", "Reloadify.dll");
+			if (!File.Exists(reloadifyPath))
+				return;
 
+
+			var args = new ProcessArgumentBuilder();
+			args.AppendQuoted(reloadifyPath);
+
+			args.AppendQuoted(launchData.Project);
+			args.Append($"-p={launchData.Platform}");
+			args.Append($"-c={launchData.Configuration}");
+			args.Append($"-f=\"{launchData.WorkspaceDirectory}\"");
+			var runCommand = args.ToString();
+ 			runner = new DotnetRunner(runCommand, CancellationToken.None);
 		}
+
 		public void Start(SoftDebuggerSession debugger)
 		{
 			var untypedStartInfo = debugger.GetStartInfo();
@@ -30,7 +49,21 @@ namespace VSCodeDebug.HotReload
 
 		public void DocumentChanged(string fullPath, string relativePath)
 		{
-			// TODO: Notify hot reload of changed file
+
+		}
+		public async void Stop()
+		{
+			try
+			{
+				runner?.StandardInput?.WriteLine("exit");
+				await Task.Delay(500);
+				runner?.Kill();
+			}
+			catch(Exception ex)
+			{
+
+			}
+			runner = null;
 		}
 	}
 }

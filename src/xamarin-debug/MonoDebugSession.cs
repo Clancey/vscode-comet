@@ -59,7 +59,7 @@ namespace VSCodeDebug
 			_variableHandles = new Handles<ObjectValue[]>();
 			_frameHandles = new Handles<Mono.Debugging.Client.StackFrame>();
 			_seenThreads = new Dictionary<int, Thread>();
-
+			_hotReloadManager ??= new HotReloadManager();
 			_debuggerSessionOptions = new DebuggerSessionOptions {
 				EvaluationOptions = EvaluationOptions.DefaultOptions
 			};
@@ -118,12 +118,12 @@ namespace VSCodeDebug
 			_session.TargetReady += (sender, e) => {
 				_activeProcess = _session.GetProcesses().SingleOrDefault();
 
-				_hotReloadManager ??= new HotReloadManager();
 				_hotReloadManager.Start(_session);
 			};
 
 			_session.TargetExited += (sender, e) => {
 
+				_hotReloadManager?.Stop();
 				DebuggerKill();
 
 				_debuggeeKilled = true;
@@ -212,7 +212,9 @@ namespace VSCodeDebug
 
 			var launchOptions = new LaunchData (args);
 			var valid = launchOptions.Validate ();
-			if(!valid.success) {
+			_hotReloadManager?.SetLaunchData(launchOptions);
+
+			if (!valid.success) {
 				SendErrorResponse (response, 3002, valid.message);
 				return;
 			}
@@ -479,7 +481,6 @@ namespace VSCodeDebug
 
 		private void Connect (LaunchData options, IPAddress address, int port)
 		{
-			_hotReloadManager?.SetLaunchData(options);
 			lock (_lock) {
 
 				_debuggeeKilled = false;

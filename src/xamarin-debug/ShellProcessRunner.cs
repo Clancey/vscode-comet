@@ -38,6 +38,7 @@ namespace VSCodeDebug
 			process.StartInfo.Arguments = Util.IsWindows ? args : $"-c \"{executable} {args}\"";
 			process.StartInfo.UseShellExecute = false;
 			process.StartInfo.RedirectStandardOutput = true;
+			process.StartInfo.RedirectStandardInput = true;
 			process.StartInfo.RedirectStandardError = true;
 
 			process.OutputDataReceived += (s, e) =>
@@ -72,6 +73,7 @@ namespace VSCodeDebug
 			}
 		}
 
+		public StreamWriter StandardInput => process.StandardInput;
 		public int ExitCode
 			=> process.HasExited ? process.ExitCode : -1;
 
