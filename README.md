@@ -23,18 +23,18 @@ Build .NET 6 Mobile Apps with MVU style UI with Comet
 3. `npm i`
 4. Debug the extension, and open up a .NET 6 project in the new VS Code instance being debugged.
 
-## Debugging a Xamarin app with the Extension
+## Debugging a .NET Mobile app with the Extension
 
-1. Create a `.vscode/launch.json` file (The Debug tab has a "Create launch .json file" button which can help - choose 'Xamarin' from the list):
+1. Create a `.vscode/launch.json` file (The Debug tab has a "Create launch .json file" button which can help - choose 'Comet for .NET Mobile' from the list):
 ```json
 {
 	"version": "0.2.0",
 	"configurations": [
 		{
 			"name": "Debug",
-			"type": "xamarin",
+			"type": "comet",
 			"request": "launch",
-			"preLaunchTask": "xamarin: Build"
+			"preLaunchTask": "comet: Build"
 		}
 	]
 }

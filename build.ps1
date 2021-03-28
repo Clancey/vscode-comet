@@ -16,7 +16,7 @@ function BuildNet
 {
 	Write-Host "Building .NET Project..."
 
-	& msbuild /r /p:Configuration=Debug ./src/xamarin-debug/xamarin-debug.csproj
+	& msbuild /r /p:Configuration=Debug ./src/mobile-debug/mobile-debug.csproj
 
 	Write-Host "Done .NET Project."
 
@@ -25,7 +25,7 @@ function BuildNet
 	& dotnet build /p:Configuration=Debug ./external/Reloadify3000/Reloadify.CommandLine/Reloadify.CommandLine.csproj
 
 	Write-Host "Copying Reloadify 3000 output"
-	& Copy-Item  ./external/Reloadify3000/Reloadify.CommandLine/bin/debug/net6.0/*  ./src/xamarin-debug/bin/debug/net472/Reloadify -Recurse -force
+	& Copy-Item  ./external/Reloadify3000/Reloadify.CommandLine/bin/Debug/net6.0/*  ./src/mobile-debug/bin/Debug/net472/Reloadify -Recurse -force
 }
 
 function BuildTypeScript

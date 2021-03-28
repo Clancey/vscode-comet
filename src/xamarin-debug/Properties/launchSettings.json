@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "xamarin-debug": {
-      "commandName": "Project",
-      "commandLineArgs": "--server"
-    }
-  }
-}

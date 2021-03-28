@@ -7,47 +7,47 @@
 import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { EmulatorItem, XamarinEmulatorProvider } from "./sidebar"
-import * as XamarinCommands from './xamarin-commands';
+import { EmulatorItem, MobileEmulatorProvider } from "./sidebar"
 import { execArgv } from 'process';
-import { SimpleResult } from "./xamarin-util";
-import { XamarinUtil } from "./xamarin-util";
-import { XamarinProjectManager } from "./xamarin-project-manager";
-import { XamarinConfigurationProvider } from "./xamarin-configuration";
+import { SimpleResult } from "./util";
+import { MobileUtil } from "./util";
+import { MobileProjectManager } from "./project-manager";
+import { MobileConfigurationProvider } from "./configuration";
 import { OutputChannel } from 'vscode';
 import { MSBuildProject } from './omnisharp/protocol';
-import { XamarinBuildTaskProvider } from './xamarin-build-task';
+import { MobileBuildTaskProvider } from './build-task';
 
 const localize = nls.config({ locale: process.env.VSCODE_NLS_CONFIG })();
 
-const configuration = vscode.workspace.getConfiguration('xamarin-debug');
+const configuration = vscode.workspace.getConfiguration('comet-debug');
 
-xamarinProjectManager: XamarinProjectManager;
+
+projectManager: MobileProjectManager;
 let omnisharp: any = null;
 let output: OutputChannel = null;
 
-var treeViewProvider: XamarinEmulatorProvider; 
+var treeViewProvider: MobileEmulatorProvider; 
 var currentDebugSession: vscode.DebugSession;
 
-var xamarinBuildTaskProvider: XamarinBuildTaskProvider;
+var buildTaskProvider: MobileBuildTaskProvider;
 
 export function activate(context: vscode.ExtensionContext) {
 
-	output = vscode.window.createOutputChannel("Xamarin");
+	output = vscode.window.createOutputChannel("Comet for .NET Mobile");
 
-	this.xamarinProjectManager = new XamarinProjectManager(context);
+	this.projectManager = new MobileProjectManager(context);
 
-	this.xamarinBuildTaskProvider = vscode.tasks.registerTaskProvider(XamarinBuildTaskProvider.XamarinBuildScriptType, new XamarinBuildTaskProvider(vscode.workspace.rootPath));
+	this.buildTaskProvider = vscode.tasks.registerTaskProvider(MobileBuildTaskProvider.MobileBuildScriptType, new MobileBuildTaskProvider(vscode.workspace.rootPath));
 	
 	omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
 
 	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
 
-	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.configureExceptions', () => configureExceptions()));
-	context.subscriptions.push(vscode.commands.registerCommand('extension.xamarin-debug.startSession', config => startSession(config)));
+	context.subscriptions.push(vscode.commands.registerCommand('extension.comet.configureExceptions', () => configureExceptions()));
+	context.subscriptions.push(vscode.commands.registerCommand('extension.comet.startSession', config => startSession(config)));
 
-	const provider = new XamarinConfigurationProvider();
-	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xamarin', provider));
+	const provider = new MobileConfigurationProvider();
+	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(MobileBuildTaskProvider.MobileBuildScriptType, provider));
 
 	context.subscriptions.push(vscode.debug.onDidStartDebugSession(async (s) => {
 		let type = s.type;
@@ -57,7 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
 			type = debugSessionInfo.configurationProperties.type;
 		}
 
-		if (type === "xamarin") {
+		if (type === MobileBuildTaskProvider.MobileBuildScriptType) {
 			currentDebugSession = s;
 		}
 	}));

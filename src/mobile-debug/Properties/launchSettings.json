@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "comet-debug": {
+      "commandName": "Project",
+      "commandLineArgs": "--server"
+    }
+  }
+}

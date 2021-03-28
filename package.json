@@ -1,9 +1,9 @@
 {
 	"name": "comet-debug",
-	"displayName": "Comet Debug",
+	"displayName": "Comet for .NET Mobile",
 	"version": "0.2.0-alpha03",
 	"publisher": "Clancey",
-	"description": "Visual Studio Code debugger extension for Comet and Maui",
+	"description": "Visual Studio Code extension for Comet and .NET Mobile",
 	"icon": "images/comet-logo.png",
 	"categories": [
 		"Debuggers"
@@ -62,15 +62,15 @@
 	"main": "./dist/extension",
 	"activationEvents": [
 		"onStartupFinished",
-		"onCommand:extension.xamarin-debug.configureExceptions",
-		"onCommand:extension.xamarin-debug.startSession"
+		"onCommand:extension.comet.configureExceptions",
+		"onCommand:extension.comet.startSession"
 	],
 	"contributes": {
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "xamarin",
-					"title": "Xamarin",
+					"id": "comet",
+					"title": ".NET Comet (Mobile)",
 					"icon": "images/comet-logo.png"
 				}
 			]
@@ -79,7 +79,7 @@
 			"type": "object",
 			"title": "%configuration.title%",
 			"properties": {
-				"xamarin-debug.exceptionOptions": {
+				"comet.exceptionOptions": {
 					"type": "object",
 					"additionalProperties": {
 						"type": "string",
@@ -135,14 +135,14 @@
 		],
 		"taskDefinitions": [
 			{
-				"type": "xamarin",
+				"type": "comet",
 				"required": [],
 				"properties": {}
 			}
 		],
 		"commands": [
 			{
-				"command": "extension.xamarin-debug.configureExceptions",
+				"command": "extension.comet.configureExceptions",
 				"title": "%configure.exceptions.command%",
 				"category": "Debug"
 			}
@@ -157,9 +157,9 @@
 		],
 		"debuggers": [
 			{
-				"type": "xamarin",
-				"label": "Xamarin",
-				"program": "./src/xamarin-debug/bin/Debug/net472/xamarin-debug.exe",
+				"type": "comet",
+				"label": ".NET Comet (Mobile)",
+				"program": "./src/mobile-debug/bin/Debug/net472/mobile-debug.exe",
 				"osx": {
 					"runtime": "mono"
 				},
@@ -168,10 +168,10 @@
 				},
 				"initialConfigurations": [
 					{
-						"name": "%xamarin.launch.config.name%",
-						"type": "xamarin",
+						"name": "%comet.launch.config.name%",
+						"type": "comet",
 						"request": "launch",
-						"preLaunchTask": "xamarin: Run"
+						"preLaunchTask": "comet: Run"
 					}
 				],
 				"configurationAttributes": {
@@ -180,12 +180,12 @@
 						"properties": {
 							"projectPath": {
 								"type": "string",
-								"description": "%xamarin.launch.projectPath.description%",
+								"description": "%comet.launch.projectPath.description%",
 								"default": "undefined"
 							},
 							"projectConfiguration": {
 								"type": "string",
-								"description": "%xamarin.launch.projectConfiguration.description%",
+								"description": "%comet.launch.projectConfiguration.description%",
 								"default": "undefined"
 							}
 						}

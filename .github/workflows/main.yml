@@ -25,8 +25,8 @@ jobs:
       run: npm install
     - name: Compile TypeScript
       run: ./node_modules/.bin/tsc -p ./src/typescript
-    - name: Build xamarin-debug
-      run: msbuild /r /p:Configuration=Debug /p:nugetInteractive=true ./src/xamarin-debug/xamarin-debug.csproj
+    - name: Build mobile-debug
+      run: msbuild /r /p:Configuration=Debug ./src/mobile-debug/mobile-debug.csproj
     - name: Create VSIX
       run: ./node_modules/.bin/vsce package
     - name: Artifacts

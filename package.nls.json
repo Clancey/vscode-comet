@@ -1,9 +1,9 @@
 {
-	"xamarin.label": "Xamarin",
+	"comet.label": "Comet for .NET Mobile",
 
 	"configure.exceptions.command": "Configure Exceptions",
 
-	"configuration.title": "Xamarin",
+	"configuration.title": "Comet for .NET Mobile",
 	"configuration.exceptionOptions.description": "Configure when exceptions should break (never, always, unhandled). Add more as needed.",
 	"configuration.exceptionOptions.description2": "When should this thrown exception break?",
 
@@ -12,7 +12,7 @@
 	"breakMode.always": "breaks when exception handled or unhandled",
 	"breakMode.unhandled": "breaks when exception unhandled",
 
-	"xamarin.launch.config.name": "Debug",
-	"xamarin.launch.projectConfiguration.description": "Project Configuration to Debug",
-	"xamarin.launch.projectPath.description": "Path to startup project"
+	"comet.launch.config.name": "Debug",
+	"comet.launch.projectConfiguration.description": "Project Configuration to Debug",
+	"comet.launch.projectPath.description": "Path to startup project"
 }

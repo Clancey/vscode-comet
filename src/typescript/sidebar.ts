@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { XamarinUtil } from "./xamarin-util"
+import { MobileUtil } from "./util"
 
-export class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
+export class MobileEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
 
     constructor(private workspaceRoot: string) {}
 
@@ -31,7 +31,7 @@ export class XamarinEmulatorProvider implements vscode.TreeDataProvider<Emulator
     }
 
     async getEmulatorsAndDevices() : Promise<EmulatorItem[]> {
-        var util = new XamarinUtil();
+        var util = new MobileUtil();
 
         var results = new Array<EmulatorItem>();
         var devices = await util.GetDevices();
