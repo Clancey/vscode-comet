@@ -21,11 +21,11 @@ Build .NET 6 Mobile Apps with MVU style UI with Comet
 1. Clone repo recursively `git clone --recursive git@github.com:clancey/vscode-comet.git`
 2. `pwsh build.ps1 build`
 3. `npm i`
-4. Press F5 to debug 
+4. Debug the extension, and open up a .NET 6 project in the new VS Code instance being debugged.
 
 ## Debugging a Xamarin app with the Extension
 
-1. Create a `launch.json` file (vscode can help you do this or you can create it with the text below:)
+1. Create a `.vscode/launch.json` file (The Debug tab has a "Create launch .json file" button which can help - choose 'Xamarin' from the list):
 ```json
 {
 	"version": "0.2.0",
