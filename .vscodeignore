@@ -1,6 +1,7 @@
 *
 */**
 **/.DS_Store
+!syntaxes/*.json
 !src/xamarin-debug/bin/Debug/net472/**/*
 !dist/extension.js
 !node_modules/vscode-nls/**/*
