@@ -4,7 +4,7 @@
 	"version": "0.2.0-alpha03",
 	"publisher": "Clancey",
 	"description": "Visual Studio Code debugger extension for Comet and Maui",
-	"icon": "images/comet-vscode.png",
+	"icon": "images/comet-logo.png",
 	"categories": [
 		"Debuggers"
 	],
