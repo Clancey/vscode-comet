@@ -4,7 +4,7 @@
 	"version": "0.2.0-alpha03",
 	"publisher": "Clancey",
 	"description": "Visual Studio Code debugger extension for Comet and Maui",
-	"icon": "images/xam-vscode.png",
+	"icon": "images/comet-vscode.png",
 	"categories": [
 		"Debuggers"
 	],
@@ -72,7 +72,7 @@
 				{
 					"id": "xamarin",
 					"title": "Xamarin",
-					"icon": "images/xam-logo.svg"
+					"icon": "images/comet-logo.png"
 				}
 			]
 		},
