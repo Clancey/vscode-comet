@@ -290,8 +290,8 @@ namespace VSCodeDebug
 				"-f",
 				launchOptions.ProjectTargetFramework,
 				$"\"{launchOptions.Project}\"",
-				"-t:Run",
-				"-verbosity:diag"
+				"-t:Run" //,
+				//"-verbosity:diag"
 			};
 
 			SendConsoleEvent("Executing: dotnet " + string.Join(" ", args));
