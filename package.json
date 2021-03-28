@@ -14,8 +14,7 @@
 	"license": "MIT",
 	"private": true,
 	"extensionDependencies": [
-		"ms-dotnettools.csharp",
-		"maxbrister.vscode-nuget-package-manager-improved"
+		"ms-dotnettools.csharp"
 	],
 	"scripts": {
 		"prepublish": "",
