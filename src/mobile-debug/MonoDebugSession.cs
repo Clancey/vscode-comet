@@ -286,7 +286,7 @@ namespace VSCodeDebug
 			var args = new string[]
 			{
 				"build",
-				"--no-restore",
+				//"--no-restore",
 				"-f",
 				launchOptions.ProjectTargetFramework,
 				$"\"{launchOptions.Project}\"",

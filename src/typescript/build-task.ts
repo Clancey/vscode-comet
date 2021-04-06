@@ -195,7 +195,7 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 		// dotnet needs the build verb
 		if (isCore) {
 			// TODO: THIS IS A HACK THAT CAN BE REMOVED IN .NET 6 P3
-			args.unshift("--no-restore");
+			//args.unshift("--no-restore");
 
 			args.unshift("build");
 			
