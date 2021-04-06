@@ -99,7 +99,7 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 							config['iosSimulatorRuntime'] = device.iosSimulatorDevice.runtime.identifier;
 							config['iosSimulatorVersion'] = device.iosSimulatorDevice.runtime.version;
 							config['iosSimulatorUdid'] = device.iosSimulatorDevice.udid;
-							config['runtimeIdentifier'] = 'ios-x64';
+							config['runtimeIdentifier'] = 'iossimulator-x64';
 						}
 						else
 						{
