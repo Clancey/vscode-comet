@@ -23,12 +23,8 @@ jobs:
         node-version: 10.x
     - name: NPM
       run: npm install
-    - name: Compile TypeScript
-      run: ./node_modules/.bin/tsc -p ./src/typescript
-    - name: Build mobile-debug
-      run: msbuild /r /p:Configuration=Debug ./src/mobile-debug/mobile-debug.csproj
     - name: Create VSIX
-      run: ./node_modules/.bin/vsce package
+      run: pwsh ./build.ps1 all
     - name: Artifacts
       uses: actions/upload-artifact@v2
       with:
