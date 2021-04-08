@@ -1,8 +1,12 @@
 name: VSIX
 
 on:
-  pull_request:
+  workflow_dispatch:
   push:
+  release:
+    types: [published]
+  pull_request:
+
 jobs:
   build:
     name: CI
