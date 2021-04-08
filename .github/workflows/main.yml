@@ -7,7 +7,7 @@ jobs:
   build:
     name: CI
     env:
-      VSIX_MAJOR: 0.2
+      VSIX_MAJOR: 0.3
     runs-on: macos-latest
     steps:
     - name: Checkout
@@ -30,3 +30,18 @@ jobs:
       with:
         name: VSIX
         path: '*.vsix'
+
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: NuGet
+      - name: Publish to Visual Studio Marketplace
+        uses: HaaLeo/publish-vscode-extension@v0
+        with:
+          pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
+          registryUrl: https://marketplace.visualstudio.com
