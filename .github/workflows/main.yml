@@ -37,7 +37,7 @@ jobs:
     - name: NPM
       run: |
         npm install
-        npm version $VERSION
+        npm version $VERSION --git-tag-version false
     - name: Create VSIX
       run: pwsh ./build.ps1 all
     - name: Artifacts
