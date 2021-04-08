@@ -41,8 +41,8 @@ namespace VSCodeDebug
 			process.StartInfo.RedirectStandardInput = true;
 			process.StartInfo.RedirectStandardError = true;
 
-			if (!string.IsNullOrEmpty(workingDir))
-				process.StartInfo.WorkingDirectory = workingDir;
+			//if (!string.IsNullOrEmpty(workingDir))
+			//	process.StartInfo.WorkingDirectory = workingDir;
 
 			process.OutputDataReceived += (s, e) =>
 			{
