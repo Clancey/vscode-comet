@@ -280,6 +280,11 @@ namespace VSCodeDebug
 
 		async Task<(bool success, string message)> LaunchCatalyst(LaunchData launchOptions, int port)
 		{
+			var projectDir = Path.GetDirectoryName(launchOptions.Project);
+
+			if (!Directory.Exists(projectDir))
+				projectDir = launchOptions.WorkspaceDirectory;
+
 			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_HOSTS__", "127.0.0.1");
 			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_PORT__", port.ToString());
 
@@ -298,6 +303,7 @@ namespace VSCodeDebug
 
 			return await Task.Run(() => DotNet.Run(
 					d => SendConsoleEvent(d),
+					projectDir,
 					args));
 		}
 

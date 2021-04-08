@@ -24,7 +24,7 @@ namespace VSCodeDebug
 
 		public Action<string> OutputHandler { get; private set; }
 
-		public ShellProcessRunner(string executable, string args, System.Threading.CancellationToken cancellationToken, Action<string> outputHandler = null)
+		public ShellProcessRunner(string executable, string args, System.Threading.CancellationToken cancellationToken, string workingDir = null, Action<string> outputHandler = null)
 		{
 			OutputHandler = outputHandler;
 
@@ -40,6 +40,9 @@ namespace VSCodeDebug
 			process.StartInfo.RedirectStandardOutput = true;
 			process.StartInfo.RedirectStandardInput = true;
 			process.StartInfo.RedirectStandardError = true;
+
+			if (!string.IsNullOrEmpty(workingDir))
+				process.StartInfo.WorkingDirectory = workingDir;
 
 			process.OutputDataReceived += (s, e) =>
 			{

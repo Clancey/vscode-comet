@@ -7,11 +7,11 @@ namespace VSCodeDebug
 {
 	public class DotNet
 	{
-		public static (bool Success, string Output) Run(Action<string> consoleOutputHandler, params string[] args)
+		public static (bool Success, string Output) Run(Action<string> consoleOutputHandler, string workingDir, params string[] args)
 		{
 			var arglist = string.Join(" ", args);
 
-			var pr = new ShellProcessRunner("dotnet", arglist, System.Threading.CancellationToken.None, consoleOutputHandler);
+			var pr = new DotnetRunner(arglist, workingDir, System.Threading.CancellationToken.None, consoleOutputHandler);
 
 			var r = pr.WaitForExit();
 			var t = string.Join(Environment.NewLine, r.StandardOutput.Concat(r.StandardError));

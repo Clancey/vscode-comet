@@ -28,6 +28,9 @@ namespace VSCodeDebug.HotReload
 			if (!File.Exists(reloadifyPath))
 				return;
 
+			var projectDir = Path.GetDirectoryName(launchData.Project);
+			if (!Directory.Exists(projectDir))
+				projectDir = launchData.WorkspaceDirectory;
 
 			var args = new ProcessArgumentBuilder();
 			args.AppendQuoted(reloadifyPath);
@@ -37,7 +40,7 @@ namespace VSCodeDebug.HotReload
 			args.Append($"-c={launchData.Configuration}");
 			args.Append($"-f=\"{launchData.WorkspaceDirectory}\"");
 			var runCommand = args.ToString();
- 			runner = new DotnetRunner(runCommand, CancellationToken.None);
+ 			runner = new DotnetRunner(runCommand, projectDir, CancellationToken.None, s => Console.WriteLine(s));
 		}
 
 		public void Start(SoftDebuggerSession debugger)
