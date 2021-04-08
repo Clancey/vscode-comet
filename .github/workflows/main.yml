@@ -21,8 +21,23 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 10.x
+    - name: Version (Release)
+      if: github.event_name == 'release'
+      run: |
+        arrTag=(${GITHUB_REF//\// })
+        VERSION="${arrTag[2]}"
+        echo "::set-output name=pkgverrelease::$VERSION"
+        echo "VSIX VERSION: $VERSION"
+    - name: Version (CI)
+      if: github.event_name != 'release'
+      run: |
+        VERSION=$VSIX_MAJOR-ci$GITHUB_RUN_ID
+        echo "::set-output name=pkgverci::$VERSION"
+        echo "VSIX VERSION: $VERSION"
     - name: NPM
-      run: npm install
+      run: |
+        npm install
+        npm version $VERSION
     - name: Create VSIX
       run: pwsh ./build.ps1 all
     - name: Artifacts
