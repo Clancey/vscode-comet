@@ -27,9 +27,8 @@ namespace VSCodeDebug
 		static string sdkRoot;
 		static string DotNetExeName
 			=> Util.IsWindows ? "dotnet.exe" : "dotnet";
-
-		public DotnetRunner(string args, CancellationToken cancellationToken, string workingDir = null, Action<string> outputHandler = null)
-			: base(DotNetExecutablePath, args, cancellationToken, workingDir, outputHandler)
+		
+		public DotnetRunner(string args, string workingDir, CancellationToken cancellationToken, Action<string> outputHandler) : base(DotNetExecutablePath, args, cancellationToken, workingDir, outputHandler)
 		{
 
 		}
