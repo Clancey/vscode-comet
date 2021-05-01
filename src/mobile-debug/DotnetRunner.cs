@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using VsCodeMobileUtil;
 
@@ -13,12 +14,22 @@ namespace VSCodeDebug
 			sdkRoot = r.GetDotnetExeDirectory();
 			DotNetExecutablePath = Path.Combine(sdkRoot, DotNetExeName);
 		}
+		public static (bool Success, string Output) Run(Action<string> consoleOutputHandler, string workingDir, params string[] args)
+		{
+			var dr = new DotnetRunner(string.Join(" ", args), CancellationToken.None, workingDir, consoleOutputHandler);
+			var r = dr.WaitForExit();
+			var t = string.Join(Environment.NewLine, r.StandardError.Concat(r.StandardOutput));
+
+			return (!r.StandardError.Any(), t);
+		}
+
 		public static string DotNetExecutablePath { get; private set; }
 		static string sdkRoot;
 		static string DotNetExeName
 			=> Util.IsWindows ? "dotnet.exe" : "dotnet";
-		
-		public DotnetRunner(string args,CancellationToken cancellationToken) : base(DotNetExecutablePath,args, cancellationToken)
+
+		public DotnetRunner(string args, CancellationToken cancellationToken, string workingDir = null, Action<string> outputHandler = null)
+			: base(DotNetExecutablePath, args, cancellationToken, workingDir, outputHandler)
 		{
 
 		}

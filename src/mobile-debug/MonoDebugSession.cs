@@ -296,8 +296,11 @@ namespace VSCodeDebug
 
 			SendConsoleEvent("Executing: dotnet " + string.Join(" ", args));
 
-			return await Task.Run(() => DotNet.Run(
+			
+			
+			return await Task.Run(() => DotnetRunner.Run(
 					d => SendConsoleEvent(d),
+					Path.GetDirectoryName(launchOptions.Project),
 					args));
 		}
 
