@@ -16,7 +16,7 @@ namespace VSCodeDebug
 		}
 		public static (bool Success, string Output) Run(Action<string> consoleOutputHandler, string workingDir, params string[] args)
 		{
-			var dr = new DotnetRunner(string.Join(" ", args), CancellationToken.None, workingDir, consoleOutputHandler);
+			var dr = new DotnetRunner(string.Join(" ", args), workingDir, CancellationToken.None, consoleOutputHandler);
 			var r = dr.WaitForExit();
 			var t = string.Join(Environment.NewLine, r.StandardError.Concat(r.StandardOutput));
 
