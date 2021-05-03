@@ -80,3 +80,4 @@ jobs:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
           extensionFile: ./VSIX/vscode-comet.vsix
+          packagePath: ""
