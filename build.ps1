@@ -9,7 +9,7 @@ if (-Not $cmd)
 function Vsix
 {
 	Write-Host "Creating VSIX..."
-	& ./node_modules/.bin/vsce package
+	& ./node_modules/.bin/vsce package -o ./vscode-comet.vsix
 	Write-Host "Done."
 }
 function BuildNet
