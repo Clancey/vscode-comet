@@ -40,7 +40,6 @@ function BuildTypeScript
 
 switch ($cmd) {
 	"all" {
-		Debug
 		BuildNet
 		BuildTypeScript
 		Vsix
