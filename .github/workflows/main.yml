@@ -68,9 +68,15 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: VSIX
+      - name: Version (Release)
+        run: |
+          arrTag=(${GITHUB_REF//\// })
+          VERSION="${arrTag[2]}"
+          echo "::set-output name=pkgverrelease::$VERSION"
+          echo "VSIX VERSION: $VERSION"
       - name: Publish to Visual Studio Marketplace
         uses: HaaLeo/publish-vscode-extension@v0
         with:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
-          packagePath: ./VSIX/
+          extensionFile: ./VSIX/comet-debug-$VERSION.vsix
