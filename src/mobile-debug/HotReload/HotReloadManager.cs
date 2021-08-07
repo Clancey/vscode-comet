@@ -36,7 +36,7 @@ namespace VSCodeDebug.HotReload
 			args.AppendQuoted(reloadifyPath);
 
 			args.AppendQuoted(launchData.Project);
-			args.Append($"-t={launchOptions.ProjectTargetFramework}");
+			args.Append($"-t={launchData.ProjectTargetFramework}");
 			args.Append($"-p={launchData.Platform}");
 			args.Append($"-c={launchData.Configuration}");
 			args.Append($"-f=\"{launchData.WorkspaceDirectory}\"");
