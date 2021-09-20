@@ -10,8 +10,7 @@ namespace VSCodeDebug
 	{
 		static DotnetRunner()
 		{
-			var r = new Microsoft.DotNet.DotNetSdkResolver.NETCoreSdkResolver();
-			sdkRoot = r.GetDotnetExeDirectory();
+			sdkRoot = Microsoft.DotNet.NativeWrapper.EnvironmentProvider.GetDotnetExeDirectory();
 			DotNetExecutablePath = Path.Combine(sdkRoot, DotNetExeName);
 		}
 		public static (bool Success, string Output) Run(Action<string> consoleOutputHandler, string workingDir, params string[] args)
