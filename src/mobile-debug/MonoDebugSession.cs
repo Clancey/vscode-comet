@@ -462,19 +462,20 @@ namespace VSCodeDebug
 
 		(bool success, string message) LaunchAndroid (LaunchData options, int port)
 		{
-			var home = AndroidSdk.FindHome ();
-
-			var adbSerial = options.AdbDeviceId;
-
 			SendConsoleEvent($"Launching Android: {options.AdbDeviceName}");
+
+			var booted = false;
 
 			if (!string.IsNullOrWhiteSpace (options.AdbDeviceName)) {
 
 				SendConsoleEvent($"Waiting for Emulator... {options.AdbDeviceName}");
-				adbSerial = AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
+				var emu = new AndroidSdk.Emulator();
+				var emuProc = emu.Start(options.AdbDeviceName);
+
+				booted = emuProc.WaitForBootComplete();
 			}
 
-			if (string.IsNullOrWhiteSpace(adbSerial))
+			if (!booted)
 			{
 				SendConsoleEvent($"Failed to launch or wait for emulator... {options.AdbDeviceName}");
 				return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");

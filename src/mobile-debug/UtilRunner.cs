@@ -1,11 +1,7 @@
 ﻿using Mono.Options;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
 
 namespace VsCodeMobileUtil
 {
@@ -47,7 +43,7 @@ namespace VsCodeMobileUtil
 					"version" => Version(),
 					"devices" => AllDevices(),
 					"android-devices" => AndroidDevices(),
-					"ios-devices" => iOSDevices(),
+					"ios-devices" => XCode.GetDevices(),
 					"android-start-emulator" => AndroidStartEmulator(extras),
 					"debug" => Debug(),
 					_ => Version()
@@ -79,33 +75,64 @@ namespace VsCodeMobileUtil
 		}
 
 		static object Version()
-			=> new { Version = "0.1.1" };
-
-		static DirectoryInfo GetAndroidSdkHome()
-		{
-			var sdkHome = AndroidSdk.FindHome();
-
-			if (sdkHome == null)
-				throw new Exception("Android SDK Not Found");
-
-			return sdkHome;
-		}
+			=> new { Version = "0.2.0" };
 
 		static IEnumerable<DeviceData> AndroidDevices()
-			=> AndroidSdk.GetEmulatorsAndDevices(GetAndroidSdkHome()).Result;
-
-		static AppleDevicesAndSimulators iOSDevices()
 		{
-			var result = new AppleDevicesAndSimulators();
+			const int HighPriority = 0;
+			const int MedPriority = 1;
+			const int LowPriority = 2;
 
-			Task.WhenAll(
-				Task.Run(() => result.Devices = XCode.GetInstrumentsDevices(true)),
-				Task.Run(async () => result.Simulators = await XCode.GetDevicePairs()))
-				.Wait();
+			var results = new List<(DeviceData Device, int Priority)>();
 
-			return result;
+			// Get ADB Devices (includes emulators)
+			var adb = new AndroidSdk.Adb();
+			var adbDevices = adb.GetDevices() ?? Enumerable.Empty<AndroidSdk.Adb.AdbDevice>();
+
+			// Split out emulators and physical devices
+			var emulators = adbDevices?.Where(d => d.IsEmulator)?.Select(e => new { EmulatorName = adb.GetEmulatorName(e.Serial), Emulator = e});
+			var devices = adbDevices?.Where(d => !d.IsEmulator);
+
+			// Physical devices are easy
+			foreach (var d in devices)
+			{
+				results.Add((new DeviceData
+				{
+					IsEmulator = false,
+					IsRunning = true,
+					Name = d.Device,
+					Platform = "android",
+					Serial = d.Serial,
+					Version = d.Model
+				}, HighPriority));
+			}
+
+			// Get all Avds
+			var avdManager = new AndroidSdk.AvdManager();
+			var avds = avdManager.ListAvds() ?? Enumerable.Empty<AndroidSdk.AvdManager.Avd>();
+
+			// Look through all avd's to list, but let's be smart and see if any of them
+			// are already running (so were listed in the adb devices output)
+			foreach (var a in avds)
+			{
+				// See if ADB returned a running instance
+				var emulator = emulators.FirstOrDefault(e => e.EmulatorName == a.Name);
+
+				results.Add((new DeviceData
+				{
+					IsEmulator = true,
+					IsRunning = emulator != null,
+					Name = a.Device,
+					Platform = "android",
+					Serial = emulator?.Emulator?.Serial ?? a.Name,
+					Version = a.BasedOn
+				}, emulator == null ? LowPriority : MedPriority));
+			}
+
+			return results.OrderBy(t => t.Priority).Select(t => t.Device);
 		}
 
+		
 		static IEnumerable<DeviceData> AllDevices()
 		{
 			var result = AndroidDevices();
@@ -113,7 +140,7 @@ namespace VsCodeMobileUtil
 			if (Util.IsWindows)
 				return result;
 
-			var iosDevices = XCode.GetSimulatorsAndDevices();
+			var iosDevices = XCode.GetDevices();
 
 			return result.Concat(iosDevices);
 		}
@@ -125,9 +152,11 @@ namespace VsCodeMobileUtil
 			if (string.IsNullOrWhiteSpace(avdName))
 				throw new ArgumentNullException("AvdName");
 
-			var serial = AndroidSdk.StartEmulatorAndWaitForBoot(GetAndroidSdkHome(), avdName);
+			var emu = new AndroidSdk.Emulator();
+			var p = emu.Start(avdName);
+			var success = p.WaitForBootComplete(TimeSpan.FromSeconds(200));
 
-			return new SimpleResult { Success = !string.IsNullOrWhiteSpace(serial) };
+			return new SimpleResult { Success = success };
 		}
 
 		static SimpleResult Debug()
