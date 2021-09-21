@@ -11,11 +11,14 @@ namespace VsCodeMobileUtil
 		[JsonProperty("name")]
 		public string Name { get; set; }
 
+		[JsonProperty("details")]
+		public string Details { get; set; }
+
 		[JsonProperty("serial")]
 		public string Serial { get; set; }
 
-		[JsonProperty("platform")]
-		public string Platform { get; set; }
+		[JsonProperty("platforms")]
+		public string[] Platforms { get; set; }
 
 		[JsonProperty("version")]
 		public string Version { get; set; }
@@ -46,6 +49,7 @@ namespace VsCodeMobileUtil
 	}
 	public class LaunchData {
 		public string AppName { get; set; } = "";
+		public string DeviceId { get; set; }
 		public string Project { get; set; }
 		public string Configuration { get; set; }
 		public string Platform { get; set; }
@@ -55,36 +59,28 @@ namespace VsCodeMobileUtil
 		public bool ProjectIsCore { get; set; }
 		public string OutputDirectory { get; set; }
 		public bool EnableHotReload { get; set; }
-		public string iOSDeviceId { get; set; }
-		public string iOSSimulatorVersion { get; set; }
-		public string iOSSimulatorDevice { get; set; }
-		public string iOSSimulatorDeviceType { get; set; }
-		public string iOSSimulatorDeviceUdid { get;set; }
 		public string AdbDeviceName { get; set; }
-		public string AdbDeviceId { get; set; }
 		public string WorkspaceDirectory { get; set; }
 
 		public int DebugPort { get; set; }
 
+		public string TargetPlatformIdentifier
+			=> NuGet.Frameworks.NuGetFramework.Parse(ProjectTargetFramework)?.Platform;
+
 		public LaunchData ()
 		{
-
 		}
+
 		public LaunchData(dynamic args)
 		{
 			Project = getString (args, VSCodeKeys.LaunchConfig.ProjectPath);
 			Configuration = getString (args, VSCodeKeys.LaunchConfig.Configuration);
 			Platform = getString (args, VSCodeKeys.LaunchConfig.Platform, "AnyCPU");
+			DeviceId = getString(args, VSCodeKeys.LaunchConfig.DeviceId);
 			RuntimeIdentifier = getString(args, VSCodeKeys.LaunchConfig.RuntimeIdentifier);
 			OutputDirectory = cleanseStringPaths(getString (args, VSCodeKeys.LaunchConfig.Output));
 			EnableHotReload = getBool (args, nameof (EnableHotReload));
-			iOSDeviceId = getString (args, VSCodeKeys.LaunchConfig.iosDeviceId);
-			iOSSimulatorDevice = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorDeviceRuntime);
-			iOSSimulatorVersion = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorVersion);
-			iOSSimulatorDeviceType = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorDeviceType);
-			iOSSimulatorDeviceUdid = getString (args, VSCodeKeys.LaunchConfig.iOSSimulatorDeviceUdid);
 			AdbDeviceName = getString (args, VSCodeKeys.LaunchConfig.AdbEmulatorName);
-			AdbDeviceId = getString (args, VSCodeKeys.LaunchConfig.AdbDeviceId);
 			var projectTypeString = getInt (args, VSCodeKeys.LaunchConfig.ProjectType,0);
 			ProjectType = (ProjectType)projectTypeString;
 			ProjectTargetFramework = getString(args, VSCodeKeys.LaunchConfig.ProjectTargetFramework);
@@ -97,6 +93,8 @@ namespace VsCodeMobileUtil
 
 		public (bool success, string message) Validate ()
 		{
+			var tpi = TargetPlatformIdentifier;
+
 			(bool success, string message) validateString (string value, string name)
 				=> string.IsNullOrWhiteSpace(value) ? (false, $"{name} is not valid") : (true, "");
 			var checks = new[] {
@@ -110,14 +108,11 @@ namespace VsCodeMobileUtil
 			}
 			
 			if(ProjectType == ProjectType.iOS) {
-				if ((string.IsNullOrWhiteSpace (iOSSimulatorVersion) || string.IsNullOrWhiteSpace (iOSSimulatorDeviceType))
-					&& !string.IsNullOrWhiteSpace(iOSDeviceId))
+				if (string.IsNullOrWhiteSpace (DeviceId))
 					return (false, "iOS simulator is not valid");
-				if (string.IsNullOrWhiteSpace (iOSDeviceId) && string.IsNullOrWhiteSpace(iOSSimulatorVersion))
-					return (false, $"{nameof (iOSDeviceId)} is not valid");
 			}
 			else if(ProjectType == ProjectType.Android) {
-				if (string.IsNullOrWhiteSpace (AdbDeviceId) && string.IsNullOrWhiteSpace (AdbDeviceName))
+				if (string.IsNullOrWhiteSpace (DeviceId) && string.IsNullOrWhiteSpace (AdbDeviceName))
 					return (false, "Android device is not valid");
 			}
 		

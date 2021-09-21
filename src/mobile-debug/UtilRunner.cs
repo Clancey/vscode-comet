@@ -13,12 +13,14 @@ namespace VsCodeMobileUtil
 		{
 			var options = new OptionSet();
 
+			var targetPlatformIdentifier = string.Empty;
 			var command = helpCommand;
 			var id = Guid.NewGuid().ToString();
 
 			options.Add("c|command=", "get the tool version", s => command = s?.ToLowerInvariant()?.Trim() ?? helpCommand);
 			options.Add("h|help", "prints the help", s => command = helpCommand);
 			options.Add("i|id=", "unique identifier of the command", s => id = s);
+			options.Add("t|tpi=", "target platform identifier", s => targetPlatformIdentifier = s);
 
 			var extras = options.Parse(args);
 
@@ -41,7 +43,7 @@ namespace VsCodeMobileUtil
 				responseObject = command switch
 				{
 					"version" => Version(),
-					"devices" => AllDevices(),
+					"devices" => AllDevices(targetPlatformIdentifier),
 					"android-devices" => AndroidDevices(),
 					"ios-devices" => XCode.GetDevices(),
 					"android-start-emulator" => AndroidStartEmulator(extras),
@@ -101,7 +103,7 @@ namespace VsCodeMobileUtil
 					IsEmulator = false,
 					IsRunning = true,
 					Name = d.Device,
-					Platform = "android",
+					Platforms = new[] { "android" },
 					Serial = d.Serial,
 					Version = d.Model
 				}, HighPriority));
@@ -123,7 +125,8 @@ namespace VsCodeMobileUtil
 					IsEmulator = true,
 					IsRunning = emulator != null,
 					Name = a.Device,
-					Platform = "android",
+					Details = emulator.Emulator.Product + " " + emulator.Emulator.Model,
+					Platforms = new[] { "android" },
 					Serial = emulator?.Emulator?.Serial ?? a.Name,
 					Version = a.BasedOn
 				}, emulator == null ? LowPriority : MedPriority));
@@ -133,16 +136,25 @@ namespace VsCodeMobileUtil
 		}
 
 		
-		static IEnumerable<DeviceData> AllDevices()
+		static IEnumerable<DeviceData> AllDevices(string targetPlatformId)
 		{
-			var result = AndroidDevices();
+			var results = new List<DeviceData>();
+
+			if (targetPlatformId.Equals("android", StringComparison.OrdinalIgnoreCase))
+			{
+				var androidDevices = AndroidDevices();
+				if (androidDevices?.Any() ?? false)
+					results.AddRange(androidDevices);
+			}
 
 			if (Util.IsWindows)
-				return result;
+				return results;
 
-			var iosDevices = XCode.GetDevices();
+			var iosDevices = XCode.GetDevices(targetPlatformId);
+			if (iosDevices?.Any() ?? false)
+				results.AddRange(iosDevices);
 
-			return result.Concat(iosDevices);
+			return results;
 		}
 
 		static SimpleResult AndroidStartEmulator(IEnumerable<string> args)

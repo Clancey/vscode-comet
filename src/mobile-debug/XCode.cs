@@ -12,7 +12,7 @@ namespace VsCodeMobileUtil
 {
 	public class XCode
 	{
-		public static List<DeviceData> GetDevices()
+		public static List<DeviceData> GetDevices(params string[] targetPlatformIdentifiers)
 		{
 			var xcode = GetBestXcode();
 
@@ -30,15 +30,23 @@ namespace VsCodeMobileUtil
 			
 			var xcdevices = JsonConvert.DeserializeObject<List<XcDevice>>(json);
 
-			return xcdevices.Select(d => new DeviceData
-			{
-				IsEmulator = d.Simulator,
-				IsRunning = false,
-				Name = d.Name,
-				Platform = d.Platform,
-				Serial = d.Identifier,
-				Version = d.OperatingSystemVersion
-			}).ToList();
+			var tpidevices = xcdevices
+				.Where(d => (targetPlatformIdentifiers == null || targetPlatformIdentifiers.Length <= 0)
+					|| (targetPlatformIdentifiers.Intersect(d.DotNetPlatforms)?.Any() ?? false));
+
+			var filteredDevices = tpidevices
+				.Select(d => new DeviceData
+				{
+					IsEmulator = d.Simulator,
+					IsRunning = false,
+					Name = d.Name,
+					Details = d.ModelName + " (" + d.Architecture + ")",
+					Platforms = d.DotNetPlatforms,
+					Serial = d.Identifier,
+					Version = d.OperatingSystemVersion
+				});
+
+			return filteredDevices.ToList();
 		}
 
 		static string GetBestXcode()
@@ -113,6 +121,15 @@ namespace VsCodeMobileUtil
 
 	public class XcDevice
 	{
+
+		public const string PlatformMacOsx = "com.apple.platform.macosx";
+		public const string PlatformiPhoneSimulator = "com.apple.platform.iphonesimulator";
+		public const string PlatformAppleTvSimulator = "com.apple.platform.appletvsimulator";
+		public const string PlatformAppleTv = "com.apple.platform.appletvos";
+		public const string PlatformWatchSimulator = "com.apple.platform.watchsimulator";
+		public const string PlatformiPhone = "com.apple.platform.iphoneos";
+		public const string PlatformWatch = "com.apple.platform.watchos";
+
 		[JsonProperty("simulator")]
 		public bool Simulator { get; set; }
 
@@ -124,6 +141,27 @@ namespace VsCodeMobileUtil
 
 		[JsonProperty("platform")]
 		public string Platform { get; set; }
+
+		public bool IsiOS
+			=> !string.IsNullOrEmpty(Platform) && (Platform.Equals(PlatformiPhone) || Platform.Equals(PlatformiPhoneSimulator));
+		public bool IsTvOS
+			=> !string.IsNullOrEmpty(Platform) && (Platform.Equals(PlatformAppleTv) || Platform.Equals(PlatformAppleTvSimulator));
+		public bool IsWatchOS
+			=> !string.IsNullOrEmpty(Platform) && (Platform.Equals(PlatformWatch) || Platform.Equals(PlatformWatchSimulator));
+		public bool IsOsx
+			=> !string.IsNullOrEmpty(Platform) && Platform.Equals(PlatformMacOsx);
+
+		public string[] DotNetPlatforms
+			=> Platform switch {
+				PlatformiPhone => new[] { "ios" },
+				PlatformiPhoneSimulator => new[] { "ios" },
+				PlatformAppleTv => new[] { "tvos" },
+				PlatformAppleTvSimulator => new[] { "tvos" },
+				PlatformWatch => new [] { "watchos" },
+				PlatformWatchSimulator => new[] { "watchos" },
+				PlatformMacOsx => new[] {"macos", "maccatalyst"},
+				_ => new string[0]
+			};
 
 		[JsonProperty("modelCode")]
 		public string ModelCode { get; set; }
@@ -142,5 +180,8 @@ namespace VsCodeMobileUtil
 
 		[JsonProperty("name")]
 		public string Name { get; set; }
+
+		[JsonProperty("interface")]
+		public string Interface { get; set; }
 	}
 }

@@ -335,7 +335,7 @@ export class MobileProjectManager {
 		{
 			var deviceData = new DeviceData();
 			deviceData.name = "Local Machine";
-			deviceData.platform = 'maccatalyst';
+			deviceData.platforms = [ 'maccatalyst' ];
 			deviceData.serial = "local";
 
 			MobileProjectManager.Shared.StartupInfo.Device = deviceData;
@@ -388,19 +388,20 @@ export class MobileProjectManager {
 			await vscode.window.withProgress({
 				location: vscode.ProgressLocation.Notification,
 				cancellable: false,
-				title: 'Loading Android Devices'
+				title: 'Loading Devices'
 			}, async (progress) => {
 				
 				progress.report({  increment: 0 });
-				androidDevices = await util.GetAndroidDevices();
+				androidDevices = await util.GetDevices("android");
 				progress.report({ increment: 100 });
 			});
 
 			var androidPickerDevices = androidDevices
 				.map(x => ({
-					//description: x.type.toString(),
+					description:  x.isEmulator ? "Emulator" : "Device",
 					label: x.name,
 					device: x,
+					detail: x.details + " - " + x.version
 				}));
 
 			if (androidPickerDevices && androidPickerDevices.length > 0)
@@ -423,50 +424,40 @@ export class MobileProjectManager {
 		{
 			var deviceData = new DeviceData();
 			deviceData.name = "Local Machine";
-			deviceData.platform = 'maccatalyst';
+			deviceData.platforms = [ 'maccatalyst' ];
 			deviceData.serial = "local";
 
 			selectedDevice = deviceData;
 		}
 		else if (projectType === ProjectType.iOS) {
 			
-			var iosDevices : AppleDevicesAndSimulators;
+			var iosDevices : DeviceData[];
 
 			await vscode.window.withProgress({
 				location: vscode.ProgressLocation.Notification,
 				cancellable: false,
-				title: 'Loading iOS Devices'
+				title: 'Loading Devices'
 			}, async (progress) => {
 				
 				progress.report({  increment: 0 });
-				iosDevices = await util.GetiOSDevices();
+				iosDevices = await util.GetDevices('ios');
 				progress.report({ increment: 100 });
 			});
 
-			var iosPickerDevices = iosDevices.devices
+			var iosPickerDevices = iosDevices
 				.map(x => ({
-					//description: x.type.toString(),
+					description: x.isEmulator ? "Emulator" : "Device",
+					detail: x.version + " - " + x.details,
 					label: x.name,
-					device: x,
-					devices: null as SimCtlDevice[]
-				}))
-				.concat(iosDevices.simulators
-					.map(y => ({
-						label: y.name,
-						device: null,
-						devices: y.devices
-					})));
+					device: x
+				}));
 
 			const p = await vscode.window.showQuickPick(iosPickerDevices, { placeHolder: "Select a Device" });
 			if (p) {
 				if (p.device)
 					selectedDevice = p.device;
 				else {
-					var devicePickerItems = p.devices
-						.map(z => ({
-							label: z.runtime.name,
-							device: z
-						}));
+					var devicePickerItems = iosPickerDevices;
 
 					var d;
 
@@ -483,14 +474,7 @@ export class MobileProjectManager {
 					}
 					
 					if (d) {
-						var deviceData = new DeviceData();
-						deviceData.name = d.device.name + ' | ' + d.device.runtime.name;
-						deviceData.iosSimulatorDevice = d.device;
-						deviceData.isEmulator = true;
-						deviceData.isRunning = false;
-						deviceData.platform = 'ios';
-						deviceData.serial = d.device.udid;
-						deviceData.version = d.device.runtime.version;
+						var deviceData = d.device as DeviceData;
 
 						selectedDevice = deviceData;
 					}
@@ -589,7 +573,7 @@ export class MobileProjectManager {
 				var selectedDevice = MobileProjectManager.Shared?.StartupInfo?.Device;
 				if (selectedDevice)
 				{
-					if (selectedDevice.iosSimulatorDevice)
+					if (selectedDevice.isEmulator)
 						return 'iPhoneSimulator';
 				}
 
