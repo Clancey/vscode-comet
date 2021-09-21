@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using VsCodeMobileUtil;
 using Mono.Debugging.Client;
+using Microsoft.NET.Sdk.WorkloadManifestReader;
 #if !EXCLUDE_HOT_RELOAD
 using VSCodeDebug.HotReload;
 #endif
@@ -335,7 +336,11 @@ namespace VSCodeDebug
 			//		args));
 
 			var workingDir = Path.GetDirectoryName(launchOptions.Project);
-			const string sdkRoot = "-sdkroot /Applications/Xcode.app/Contents/Developer";
+			var xcodePath = Path.Combine(XCode.GetBestXcode(), "Contents", "Developer");
+			string sdkRoot = $"-sdkroot {xcodePath}";
+
+			
+
 			SendConsoleEvent($"Using `{sdkRoot}`");
 
 			string appPath = default;
@@ -377,10 +382,9 @@ namespace VSCodeDebug
 
 			SendConsoleEvent($"Found .app: {appPath}");
 
-
+			var dotnetSdkDir = Microsoft.DotNet.NativeWrapper.EnvironmentProvider.GetDotnetExeDirectory();
 			var mlaunchPath = string.Empty;
-
-			var dotnetSkdPath = "/usr/local/share/dotnet/packs/Microsoft.iOS.Sdk/"; // 14.4.100-ci.main.1192/tools/bin/mlaunch
+			var dotnetSkdPath = Path.Combine(dotnetSdkDir, "packs", "Microsoft.iOS.Sdk"); // 14.4.100-ci.main.1192/tools/bin/mlaunch
 
 			if (!Directory.Exists(dotnetSkdPath))
 			{
@@ -390,6 +394,8 @@ namespace VSCodeDebug
 				return (false, "");
 			}
 
+			// TODO: Use WorkloadResolver to get pack info for `Microsoft.iOS.Sdk` to choose
+			// the actual one that's being used - just not sure how to get dotnet sdk version in use
 			SendConsoleEvent($"Looking for Microsoft.iOS.Sdk tools in: {dotnetSkdPath}");
 
 			foreach (var dir in Directory.GetDirectories(dotnetSkdPath).Reverse())
