@@ -179,7 +179,7 @@ namespace VSCodeDebug
 		{
 			OperatingSystem os = Environment.OSVersion;
 			if (os.Platform != PlatformID.MacOSX && os.Platform != PlatformID.Unix && os.Platform != PlatformID.Win32NT) {
-				SendErrorResponse(response, 3000, "Mono Debug is not supported on this platform ({_platform}).", new { _platform = os.Platform.ToString() }, true, true);
+				SendErrorResponse(response, 3000, "Debugging is not supported on this platform ({_platform}).", new { _platform = os.Platform.ToString() }, true, true);
 				return;
 			}
 
@@ -339,18 +339,32 @@ namespace VSCodeDebug
 			SendConsoleEvent($"Using `{sdkRoot}`");
 
 			string appPath = default;
+			DateTime appPathLastWrite = DateTime.MinValue;
 			var output = Path.Combine(
 				workingDir,
 				"bin",
 				launchOptions.Configuration,
-				launchOptions.ProjectTargetFramework,
-				launchOptions.RuntimeIdentifier);
+				launchOptions.ProjectTargetFramework);
 
 			if (Directory.Exists(output))
 			{
-				var p = Directory.EnumerateDirectories(output, "*.app")?.FirstOrDefault();
-				if (!string.IsNullOrEmpty(p))
-					appPath = p;
+				var ridDirs = Directory.GetDirectories(output) ?? new string[0];
+
+				foreach (var ridDir in ridDirs)
+				{
+					// Find the newest .app generated and assume that's the one we want
+					var appDirs = Directory.EnumerateDirectories(ridDir, "*.app", SearchOption.AllDirectories);
+
+					foreach (var appDir in appDirs)
+					{
+						var appDirTime = Directory.GetLastWriteTime(appDir);
+						if (appDirTime > appPathLastWrite)
+						{
+							appPath = appDir;
+							appPathLastWrite = appDirTime;
+						}
+					}
+				}
 			}
 			
 			if (string.IsNullOrEmpty(appPath))
@@ -405,7 +419,8 @@ namespace VSCodeDebug
 				sdkRoot,
 				$"--launchsim \"{appPath}\"",
 				$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
-				$"--sdk {launchOptions.iOSSimulatorVersion} --device=:v2:udid={launchOptions.iOSSimulatorDeviceUdid}"
+				$"--device=:v2:udid={launchOptions.DeviceId}"
+				//$"--sdk {launchOptions.iOSSimulatorVersion} --device=:v2:udid={launchOptions.DeviceId}"
 				//$"--sdk {launchOptions.iOSSimulatorVersion} --device=:v2:runtime={launchOptions.iOSSimulatorDevice},devicetype={launchOptions.iOSSimulatorDeviceType}"
 				);
 			return success;
