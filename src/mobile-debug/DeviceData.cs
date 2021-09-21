@@ -28,6 +28,9 @@ namespace VsCodeMobileUtil
 
 		[JsonProperty("isRunning")]
 		public bool IsRunning { get; set; }
+
+		[JsonProperty("rid")]
+		public string RuntimeIdentifier { get; set; }
 	}
 
 	public class SimpleResult

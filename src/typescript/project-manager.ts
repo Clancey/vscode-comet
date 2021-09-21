@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { BaseEvent, WorkspaceInformationUpdated } from './omnisharp/loggingEvents';
 import { EventType } from './omnisharp/EventType';
 import { MsBuildProjectAnalyzer } from './msbuild-project-analyzer';
-import { DeviceData, MobileUtil, SimCtlDevice, AppleDevicesAndSimulators } from "./util";
+import { DeviceData, MobileUtil } from "./util";
 
 let fs = require('fs');
 

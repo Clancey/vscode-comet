@@ -9,44 +9,6 @@ export interface SimpleResult {
 	sucess: boolean;
 }
 
-export interface AppleDevicesAndSimulators {
-	devices: DeviceData[];
-	simulators: SimCtlDeviceType[];
-}
-export interface SimCtlRuntime {
-	bundlePath: string;
-	buildVersion: string;
-	runtimeRoot: string;
-	identifier: string;
-	version: string;
-	isAvailable: boolean;
-	name: string;
-}
-
-export interface SimCtlDeviceType {
-
-	minRuntimeVersion: number;
-	bundlePath: string;
-	maxRuntimeVersion: number;
-	name: string;
-	identifier: string;
-	productFamily: string;
-	devices: SimCtlDevice[];
-}
-
-export interface SimCtlDevice {
-	dataPath: string;
-	logPath: string;
-	udid: string;
-	isAvailable: boolean;
-	deviceTypeIdentifier: string;
-	state: string;
-	name: string;
-	availabilityError: string;
-	deviceType: SimCtlDeviceType;
-	runtime: SimCtlRuntime;
-}
-
 export class DeviceData {
 	name: string;
 	details: string;
@@ -55,14 +17,13 @@ export class DeviceData {
 	version: string;
 	isEmulator: boolean;
 	isRunning: boolean;
+	rid: string;
 }
 
 const path = require('path');
 const execa = require('execa');
 
 import * as vscode from 'vscode';
-import { LookupOneOptions } from 'dns';
-import { stringify } from 'querystring';
 
 export class MobileUtil
 {

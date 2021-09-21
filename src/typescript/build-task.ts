@@ -52,8 +52,6 @@ interface MobileBuildTaskDefinition extends vscode.TaskDefinition {
 
 export class MobileBuildTaskProvider implements vscode.TaskProvider {
 	static MobileBuildScriptType: string = 'comet';
-	private csproj:string;
-	private configuration:string;
 	private platform:string;
 	
 	// We use a CustomExecution task when state needs to be shared across runs of the task or when 
@@ -134,10 +132,6 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 			return undefined;
 		}
 
-		this.csproj = startupInfo.Project.Path;
-		this.configuration = startupInfo.Configuration;
-		this.platform = MobileProjectManager.getSelectedProjectPlatform();
-
 		var flags = [];
 		var command = "dotnet";
 		
@@ -147,7 +141,7 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 
 		return [
 			this.getTask(command, "Build", flags),
-			this.getTask(command, "Run", flags),
+			//this.getTask(command, "Run", flags),
 		]
 	}
 
@@ -216,6 +210,8 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 
 		if (projectType == ProjectType.iOS)
 		{
+			//	$"-p:MtouchExtraArgs=\"-v -v -v -v --setenv:__XAMARIN_DEBUG_PORT__={port} --setenv:__XAMARIN_DEBUG_HOSTS__={ipstr}\"",
+			//	"-verbosity:diag",
 			//:v2:udid=6415F4E9-CE0F-455B-ACD0-F81305FB9920
 			// --device=:v2:runtime={options.iOSSimulatorDevice},devicetype={options.iOSSimulatorDeviceType}
 			//if (device.iosSimulatorDevice)
