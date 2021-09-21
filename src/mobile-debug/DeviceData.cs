@@ -93,8 +93,6 @@ namespace VsCodeMobileUtil
 
 		public (bool success, string message) Validate ()
 		{
-			var tpi = TargetPlatformIdentifier;
-
 			(bool success, string message) validateString (string value, string name)
 				=> string.IsNullOrWhiteSpace(value) ? (false, $"{name} is not valid") : (true, "");
 			var checks = new[] {
