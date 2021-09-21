@@ -49,7 +49,7 @@ namespace VsCodeMobileUtil
 			return filteredDevices.ToList();
 		}
 
-		static string GetBestXcode()
+		internal static string GetBestXcode()
 		{
 			var selected = GetSelectedXCodePath();
 
@@ -171,6 +171,12 @@ namespace VsCodeMobileUtil
 
 		[JsonProperty("architecture")]
 		public string Architecture { get; set; }
+
+		public string RuntimeIdentifier
+			=> Architecture switch
+			{
+				_ => "iossimulator-x64"
+			};
 
 		[JsonProperty("modelUTI")]
 		public string ModelUTI { get; set; }

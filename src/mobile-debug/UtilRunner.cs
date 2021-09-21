@@ -1,6 +1,7 @@
 ﻿using Mono.Options;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace VsCodeMobileUtil
@@ -117,6 +118,14 @@ namespace VsCodeMobileUtil
 			// are already running (so were listed in the adb devices output)
 			foreach (var a in avds)
 			{
+				var avdConfig = ParseAvdConfigIni(Path.Combine(a.Path, "config.ini"));
+
+				var abi = avdConfig?["abi.type"] ?? string.Empty;
+				var architecture = avdConfig?["hw.cpu.arch"] ?? string.Empty;
+				var manufacturer = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(avdConfig?["hw.device.manufacturer"] ?? string.Empty);
+				var model = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(avdConfig?["hw.device.name"] ?? string.Empty);
+				var tag = avdConfig?["tag.display"] ?? string.Empty;
+
 				// See if ADB returned a running instance
 				var emulator = emulators.FirstOrDefault(e => e.EmulatorName == a.Name);
 
@@ -124,11 +133,24 @@ namespace VsCodeMobileUtil
 				{
 					IsEmulator = true,
 					IsRunning = emulator != null,
-					Name = a.Device,
-					Details = emulator.Emulator.Product + " " + emulator.Emulator.Model,
+					Name = a.Name,
+					Details = emulator != null
+						? emulator.Emulator.Product + " " + emulator.Emulator.Model
+						: manufacturer + " " + model + " (" + architecture + ")",
 					Platforms = new[] { "android" },
 					Serial = emulator?.Emulator?.Serial ?? a.Name,
-					Version = a.BasedOn
+					Version = a.BasedOn,
+					RuntimeIdentifier = architecture switch
+					{
+						"armeabi-v7a" => "android-arm",
+						"armeabi" => "android-arm",
+						"arm" => "android-arm",
+						"arm64" => "android-arm64",
+						"arm64-v8a" => "android-arm64",
+						"x86" => "android-x86",
+						"x86_64" => "android-x64",
+						_ => "android-arm"
+					}
 				}, emulator == null ? LowPriority : MedPriority));
 			}
 
@@ -140,7 +162,7 @@ namespace VsCodeMobileUtil
 		{
 			var results = new List<DeviceData>();
 
-			if (targetPlatformId.Equals("android", StringComparison.OrdinalIgnoreCase))
+			if (string.IsNullOrEmpty(targetPlatformId) || targetPlatformId.Equals("android", StringComparison.OrdinalIgnoreCase))
 			{
 				var androidDevices = AndroidDevices();
 				if (androidDevices?.Any() ?? false)
@@ -150,9 +172,12 @@ namespace VsCodeMobileUtil
 			if (Util.IsWindows)
 				return results;
 
-			var iosDevices = XCode.GetDevices(targetPlatformId);
-			if (iosDevices?.Any() ?? false)
-				results.AddRange(iosDevices);
+			if (string.IsNullOrEmpty(targetPlatformId) || targetPlatformId.Equals("ios", StringComparison.OrdinalIgnoreCase))
+			{
+				var iosDevices = XCode.GetDevices(targetPlatformId);
+				if (iosDevices?.Any() ?? false)
+					results.AddRange(iosDevices);
+			}
 
 			return results;
 		}
@@ -176,6 +201,30 @@ namespace VsCodeMobileUtil
 			var json = Console.ReadLine();
 
 			return new SimpleResult { Success = true };
+		}
+
+		static Dictionary<string, string> ParseAvdConfigIni(string file)
+		{
+			if (!File.Exists(file))
+				return new Dictionary<string, string>();
+
+			var r = new Dictionary<string, string>();
+
+			foreach (var line in File.ReadAllLines(file))
+			{
+
+				if (!line.Contains('='))
+					continue;
+
+				var parts = line.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
+
+				if ((parts?.Length ?? 0) == 2)
+				{
+					r[parts[0]] = parts[1];
+				}
+			}
+
+			return r;
 		}
 	}
 }
