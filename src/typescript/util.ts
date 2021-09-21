@@ -9,59 +9,21 @@ export interface SimpleResult {
 	sucess: boolean;
 }
 
-export interface AppleDevicesAndSimulators {
-	devices: DeviceData[];
-	simulators: SimCtlDeviceType[];
-}
-export interface SimCtlRuntime {
-	bundlePath: string;
-	buildVersion: string;
-	runtimeRoot: string;
-	identifier: string;
-	version: string;
-	isAvailable: boolean;
-	name: string;
-}
-
-export interface SimCtlDeviceType {
-
-	minRuntimeVersion: number;
-	bundlePath: string;
-	maxRuntimeVersion: number;
-	name: string;
-	identifier: string;
-	productFamily: string;
-	devices: SimCtlDevice[];
-}
-
-export interface SimCtlDevice {
-	dataPath: string;
-	logPath: string;
-	udid: string;
-	isAvailable: boolean;
-	deviceTypeIdentifier: string;
-	state: string;
-	name: string;
-	availabilityError: string;
-	deviceType: SimCtlDeviceType;
-	runtime: SimCtlRuntime;
-}
-
 export class DeviceData {
 	name: string;
+	details: string;
 	serial: string;
-	platform: string;
+	platforms: string[];
 	version: string;
 	isEmulator: boolean;
 	isRunning: boolean;
-	iosSimulatorDevice?: SimCtlDevice;
+	rid: string;
 }
 
 const path = require('path');
 const execa = require('execa');
 
 import * as vscode from 'vscode';
-import { LookupOneOptions } from 'dns';
 
 export class MobileUtil
 {
@@ -82,7 +44,7 @@ export class MobileUtil
 
 		var extPath = thisExtension.extensionPath;
 
-		this.UtilPath = path.join(extPath, 'src', 'mobile-debug', 'bin', 'Debug', 'net472', 'mobile-debug.exe');
+		this.UtilPath = path.join(extPath, 'src', 'mobile-debug', 'bin', 'Debug', 'net6.0', 'mobile-debug.dll');
 	}
 
 	async RunCommand<TResult>(cmd: string, args: string[] = null)
@@ -93,13 +55,13 @@ export class MobileUtil
 		if (args && args.length > 0)
 		{
 			for (var a in args)
-				stdargs.push(a);
+				stdargs.push(args[a]);
 		}
 
 		var proc: any;
 
 		if (this.isUnix)
-			proc = await execa('mono', [ this.UtilPath ].concat(stdargs));
+			proc = await execa('dotnet', [ this.UtilPath ].concat(stdargs));
 		else
 			proc = await execa(this.UtilPath, stdargs);
 
@@ -113,7 +75,7 @@ export class MobileUtil
 		var proc: any;
 
 		if (this.isUnix)
-			proc = await execa('mono', [ this.UtilPath, `util`, `-c=debug` ], { input: jsonConfig + '\r\n' });
+			proc = await execa('dotnet', [ this.UtilPath, `util`, `-c=debug` ], { input: jsonConfig + '\r\n' });
 		else
 			proc = await execa(this.UtilPath, [ `util`, `-c=debug` ], { input: jsonConfig + '\r\n' });
 
@@ -124,21 +86,13 @@ export class MobileUtil
 		return result.response;
 	}
 
-	public async GetAndroidDevices()
+	public async GetDevices(targetPlatformIdentifier: string)
 	{
-		var r = await this.RunCommand<Array<DeviceData>>("android-devices");
-		return r.response;
-	}
+		var args = [ ];
+		if (targetPlatformIdentifier)
+			args = [ "-t=" + targetPlatformIdentifier ];
 
-	public async GetiOSDevices()
-	{
-		var r = await this.RunCommand<AppleDevicesAndSimulators>("ios-devices");
-		return r.response;
-	}
-
-	public async GetDevices()
-	{
-		var r = await this.RunCommand<Array<DeviceData>>("devices");
+		var r = await this.RunCommand<Array<DeviceData>>("devices", args);
 		return r.response;
 	}
 

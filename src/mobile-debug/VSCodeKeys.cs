@@ -10,15 +10,9 @@ namespace VsCodeMobileUtil {
 			public const string ProjectTargetFramework = "projectTargetFramework";
 			public const string ProjectIsCore = "projectIsCore";
 			public const string RuntimeIdentifier = "runtimeIdentifier";
+			public const string DeviceId = "device";
 			public const string DebugPort = "debugPort";
 			public const string WorkspaceDirectory = "workspaceUri";
-
-			public const string iosDeviceId = "iosDeviceId";
-			public const string iOSSimulatorVersion = "iosSimulatorVersion";
-			public const string iOSSimulatorDeviceRuntime = "iosSimulatorRuntime";
-			public const string iOSSimulatorDeviceType = "iosSimulatorDeviceType";
-			public const string iOSSimulatorDeviceUdid = "iosSimulatorUdid";
-			public const string AdbDeviceId = "adbDeviceId";
 			public const string AdbEmulatorName = "adbEmulatorName";
 
 		}

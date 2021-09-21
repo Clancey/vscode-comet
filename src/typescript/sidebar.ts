@@ -33,11 +33,11 @@ export class MobileEmulatorProvider implements vscode.TreeDataProvider<EmulatorI
     async getEmulatorsAndDevices() : Promise<EmulatorItem[]> {
         var util = new MobileUtil();
 
-        var results = new Array<EmulatorItem>();
-        var devices = await util.GetDevices();
+        var results = new Array<EmulatorItem>(); 
+        var devices = await util.GetDevices(null);
 
         for (var device of devices) {
-            results.push(new EmulatorItem(device.name, device.serial, device.platform, device.version, device.isEmulator, device.isRunning));
+            results.push(new EmulatorItem(device.name, device.serial, device.platforms, device.version, device.isEmulator, device.isRunning));
         }
 
         return results;
@@ -49,7 +49,7 @@ export class EmulatorItem extends vscode.TreeItem {
     constructor(
         public  name: string,
         serial: string,
-        platform: string,
+        platforms: string[],
         version: string,
         isEmulator: boolean = false,
         isRunning: boolean = false,
@@ -61,17 +61,17 @@ export class EmulatorItem extends vscode.TreeItem {
         this.isEmulator = isEmulator;
         this.isRunning = isRunning;
 
-        this.platform = platform;
+        this.platforms = platforms;
 
-        var devem = this.isEmulator ? (this.platform === "ios" ? "Simulator" : "Emulator") : "Device";
+        var devem = this.isEmulator;
 	
-        this.tooltip = `${this.label} (${this.platform} ${devem})`;
+        this.tooltip = `${this.label} (${this.platforms} ${devem})`;
     }
 
     serial: string;
     isEmulator: boolean;
     isRunning: boolean;
-    platform: string;
+    platforms: string[];
 
     // description()
     // contextValue = 

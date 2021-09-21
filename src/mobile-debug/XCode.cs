@@ -12,331 +12,182 @@ namespace VsCodeMobileUtil
 {
 	public class XCode
 	{
-		const string patternInstrumentsDevices = @"(?<name>.*?)(\((?<version>[0-9.]+)\))?\s+\[(?<serial>[0-9a-zA-Z\-]+)\]\s{0,}(?<sim>\(Simulator\)){0,1}";
-
-		static Regex rxInstrumentDevices = new Regex(patternInstrumentsDevices, RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
-
-		public static List<DeviceData> GetInstrumentsDevices(bool onlyDevices = false)
+		public static List<DeviceData> GetDevices(params string[] targetPlatformIdentifiers)
 		{
-			var results = new List<DeviceData>();
+			var xcode = GetBestXcode();
 
-			var instruments = new FileInfo("/usr/bin/instruments");
+			var xcdevice = new FileInfo(Path.Combine(xcode, "Contents/Developer/usr/bin/xcdevice"));
 
-			if (!instruments.Exists)
-				throw new FileNotFoundException(instruments.FullName);
+			if (!xcdevice.Exists)
+				throw new FileNotFoundException(xcdevice.FullName);
 
-			var ir = ProcessRunner.Run(instruments,
+			var ir = ProcessRunner.Run(xcdevice,
 				new ProcessArgumentBuilder()
-					.Append("-s")
-					.Append("devices"));
+					.Append("list"));
 
-			// Remove the "Known devices:" line of output
-			if (ir.StandardOutput.Any())
-				ir.StandardOutput.RemoveAt(0);
+			var json = string.Join(Environment.NewLine, ir.StandardOutput);
 
-			foreach (var line in ir.StandardOutput)
-			{
-				if (string.IsNullOrWhiteSpace(line))
-					continue;
+			
+			var xcdevices = JsonConvert.DeserializeObject<List<XcDevice>>(json);
 
-				var match = rxInstrumentDevices.Match(line);
+			var tpidevices = xcdevices
+				.Where(d => (targetPlatformIdentifiers == null || targetPlatformIdentifiers.Length <= 0)
+					|| (targetPlatformIdentifiers.Intersect(d.DotNetPlatforms)?.Any() ?? false));
 
-				if (match == null)
-					continue;
-
-				var name = match.Groups?["name"]?.Value;
-				var serial = match.Groups?["serial"]?.Value;
-				var version = match.Groups?["version"]?.Value;
-				var sim = match.Groups?["sim"]?.Value;
-
-				if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrEmpty(serial))
+			var filteredDevices = tpidevices
+				.Select(d => new DeviceData
 				{
-					if (string.IsNullOrWhiteSpace(sim))
-					{
-						var isSim = !string.IsNullOrWhiteSpace(sim);
-
-						if (!onlyDevices || (onlyDevices && !isSim))
-							results.Add(new DeviceData
-							{
-								Serial = serial,
-								IsEmulator = isSim,
-								IsRunning = !isSim,
-								Name = name?.Trim(),
-								Version = version,
-								Platform = "ios"
-							});
-					}
-				}
-			}
-
-			return results;
-		}
-
-		static List<SimCtlDeviceType> GetSimulatorDeviceTypes()
-		{
-			var xcrun = new FileInfo("/usr/bin/xcrun");
-
-			if (!xcrun.Exists)
-				throw new FileNotFoundException(xcrun.FullName);
-
-			var ir = ProcessRunner.Run(xcrun,
-				new ProcessArgumentBuilder()
-					.Append("simctl")
-					.Append("list")
-					.Append("-j")
-					.Append("devicetypes"));
-
-			var json = string.Join(Environment.NewLine, ir.StandardOutput);
-
-			var dict = JsonConvert.DeserializeObject<Dictionary<string, List<SimCtlDeviceType>>>(json);
-
-			return dict?["devicetypes"] ?? new List<SimCtlDeviceType>();
-		}
-
-		static List<SimCtlRuntime> GetSimulatorRuntimes()
-		{
-			var xcrun = new FileInfo("/usr/bin/xcrun");
-
-			if (!xcrun.Exists)
-				throw new FileNotFoundException(xcrun.FullName);
-
-			var ir = ProcessRunner.Run(xcrun,
-				new ProcessArgumentBuilder()
-					.Append("simctl")
-					.Append("list")
-					.Append("-j")
-					.Append("runtimes"));
-
-			var json = string.Join(Environment.NewLine, ir.StandardOutput);
-
-			var dict = JsonConvert.DeserializeObject<Dictionary<string, List<SimCtlRuntime>>>(json);
-
-			return dict?["runtimes"] ?? new List<SimCtlRuntime>();
-		}
-
-		static Dictionary<string, List<SimCtlDevice>> GetSimulatorDevices()
-		{
-			var xcrun = new FileInfo("/usr/bin/xcrun");
-
-			if (!xcrun.Exists)
-				throw new FileNotFoundException(xcrun.FullName);
-
-			var results = new List<SimCtlDevice>();
-
-			var ir = ProcessRunner.Run(xcrun,
-				new ProcessArgumentBuilder()
-					.Append("simctl")
-					.Append("list")
-					.Append("-j")
-					.Append("devices"));
-
-			var json = string.Join(Environment.NewLine, ir.StandardOutput);
-
-			var dict = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<SimCtlDevice>>>>(json);
-
-			return dict?["devices"] ?? new Dictionary<string, List<SimCtlDevice>>();
-		}
-
-		static List<SimCtlDevice> GetSimulators()
-		{
-			var xcrun = new FileInfo("/usr/bin/xcrun");
-
-			if (!xcrun.Exists)
-				throw new FileNotFoundException(xcrun.FullName);
-
-			var results = new List<SimCtlDevice>();
-
-			var ir = ProcessRunner.Run(xcrun,
-				new ProcessArgumentBuilder()
-					.Append("simctl")
-					.Append("list")
-					.Append("-j")
-					.Append("devices"));
-
-			var json = string.Join(Environment.NewLine, ir.StandardOutput);
-
-			var dict = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<SimCtlDevice>>>>(json);
-
-			var deviceSets = dict["devices"];
-
-			//var deviceTypes = GetSimulatorDeviceTypes();
-			var runtimes = GetSimulatorRuntimes();
-
-			foreach (var deviceSet in deviceSets)
-			{
-				var runtime = runtimes.FirstOrDefault(r => r.Identifier.Equals(deviceSet.Key, StringComparison.OrdinalIgnoreCase));
-
-				if (runtime != null)
-				{
-					foreach (var d in deviceSet.Value)
-					{
-						if (d.IsAvailable)
-						{
-							d.Runtime = runtime;
-							results.Add(d);
-						}
-					}
-				}
-			}
-
-			return results;
-		}
-
-		public static List<DeviceData> GetSimulatorsAndDevices()
-		{
-			var devices = GetInstrumentsDevices()
-				// NOTE: Exclude emulators as we get a better version below
-				// Also exclude devices without versions as all iDevices will have a version
-				.Where(i => !i.IsEmulator && !string.IsNullOrWhiteSpace(i.Version));
-
-			var simulators = GetSimulators()
-				.Where(s => s.IsAvailable && (s.Runtime?.IsAvailable ?? false))
-				.Select(s => new DeviceData
-				{
-					IsEmulator = true,
-					Name = $"{s.Name} ({s.Runtime.Name})",
-					IsRunning = s.State != null && s.State.ToLowerInvariant().Contains("booted"),
-					Serial = s.Udid,
-					Version = s.Runtime.Version,
-					Platform = "ios"
+					IsEmulator = d.Simulator,
+					IsRunning = false,
+					Name = d.Name,
+					Details = d.ModelName + " (" + d.Architecture + ")",
+					Platforms = d.DotNetPlatforms,
+					Serial = d.Identifier,
+					Version = d.OperatingSystemVersion
 				});
 
-			return devices.Concat(simulators).ToList();
+			return filteredDevices.ToList();
 		}
 
-
-		public static async Task<List<SimCtlDeviceType>> GetDevicePairs()
+		internal static string GetBestXcode()
 		{
-			var results = new List<SimCtlDeviceType>();
+			var selected = GetSelectedXCodePath();
 
-			List<SimCtlDeviceType> deviceTypes = new List<SimCtlDeviceType>();
-			List<SimCtlRuntime> runtimes = new List<SimCtlRuntime>();
-			Dictionary<string, List<SimCtlDevice>> devices = new Dictionary<string, List<SimCtlDevice>>();
+			if (!string.IsNullOrEmpty(selected))
+				return selected;
 
-			await Task.WhenAll(
-				Task.Run(() => deviceTypes = GetSimulatorDeviceTypes()),
-				Task.Run(() => runtimes = GetSimulatorRuntimes()),
-				Task.Run(() => devices = GetSimulatorDevices()));
+			return FindXCodeInstalls()?.FirstOrDefault();
+		}
 
-			foreach (var deviceType in deviceTypes)
+		static string GetSelectedXCodePath()
+		{
+			var r = ProcessRunner.Run(new FileInfo("/usr/bin/xcode-select"), new ProcessArgumentBuilder().Append("-p"));
+
+			var xcodeSelectedPath = string.Join(Environment.NewLine, r.StandardOutput)?.Trim();
+
+			if (!string.IsNullOrEmpty(xcodeSelectedPath))
 			{
-				foreach (var kvp in devices)
+				var infoPlist = Path.Combine(xcodeSelectedPath, "..", "Info.plist");
+				if (File.Exists(infoPlist))
 				{
-					var deviceRuntimeIdentifier = kvp.Key;
+					var info = GetXcodeInfo(
+						Path.GetFullPath(
+							Path.Combine(xcodeSelectedPath, "..", "..")), true);
 
-					// Find all the devices for all the runtimes
-					foreach (var device in kvp.Value)
-					{
-						if (device.IsAvailable && device.Name.Equals(deviceType.Name))
-						{
-							var runtime = runtimes.FirstOrDefault(r =>
-								r.IsAvailable
-								&& r.Identifier.Equals(deviceRuntimeIdentifier, StringComparison.OrdinalIgnoreCase));
-
-							if (runtime != null)
-							{
-								device.Runtime = runtime;
-								deviceType.Devices.Add(device);
-							}
-						}
-					}
+					if (info != null)
+						return info?.Path;
 				}
-
-				if (deviceType.Devices.Any())
-					results.Add(deviceType);
 			}
 
-			return results;
+			return null;
+		}
+
+		static readonly string[] LikelyPaths = new[]
+		{
+			"/Applications/Xcode.app",
+			"/Applications/Xcode-beta.app",
+		};
+
+		static IEnumerable<string> FindXCodeInstalls()
+		{
+			foreach (var p in LikelyPaths)
+			{
+				var i = GetXcodeInfo(p, false)?.Path;
+				if (i != null)
+					yield return i;
+			}
+		}
+
+		static (string Path, bool Selected)? GetXcodeInfo(string path, bool selected)
+		{
+			var versionPlist = Path.Combine(path, "Contents", "version.plist");
+
+			if (File.Exists(versionPlist))
+			{
+				return (path, selected);
+			}
+			else
+			{
+				var infoPlist = Path.Combine(path, "Contents", "Info.plist");
+
+				if (File.Exists(infoPlist))
+				{
+					return (path, selected);
+				}
+			}
+			return null;
 		}
 	}
 
-	public class AppleDevicesAndSimulators
+	public class XcDevice
 	{
-		[JsonProperty("devices")]
-		public List<DeviceData> Devices { get; set; }
 
-		[JsonProperty("simulators")]
-		public List<SimCtlDeviceType> Simulators { get; set; }
-	}
+		public const string PlatformMacOsx = "com.apple.platform.macosx";
+		public const string PlatformiPhoneSimulator = "com.apple.platform.iphonesimulator";
+		public const string PlatformAppleTvSimulator = "com.apple.platform.appletvsimulator";
+		public const string PlatformAppleTv = "com.apple.platform.appletvos";
+		public const string PlatformWatchSimulator = "com.apple.platform.watchsimulator";
+		public const string PlatformiPhone = "com.apple.platform.iphoneos";
+		public const string PlatformWatch = "com.apple.platform.watchos";
 
-	public class SimCtlRuntime
-	{
-		[JsonProperty("bundlePath")]
-		public string BundlePath { get; set; }
+		[JsonProperty("simulator")]
+		public bool Simulator { get; set; }
 
-		[JsonProperty("buildVersion")]
-		public string BuildVersion { get; set; }
+		[JsonProperty("operatingSystemVersion")]
+		public string OperatingSystemVersion { get; set; }
 
-		[JsonProperty("runtimeRoot")]
-		public string RuntimeRoot { get; set; }
+		[JsonProperty("available")]
+		public bool Available { get; set; }
+
+		[JsonProperty("platform")]
+		public string Platform { get; set; }
+
+		public bool IsiOS
+			=> !string.IsNullOrEmpty(Platform) && (Platform.Equals(PlatformiPhone) || Platform.Equals(PlatformiPhoneSimulator));
+		public bool IsTvOS
+			=> !string.IsNullOrEmpty(Platform) && (Platform.Equals(PlatformAppleTv) || Platform.Equals(PlatformAppleTvSimulator));
+		public bool IsWatchOS
+			=> !string.IsNullOrEmpty(Platform) && (Platform.Equals(PlatformWatch) || Platform.Equals(PlatformWatchSimulator));
+		public bool IsOsx
+			=> !string.IsNullOrEmpty(Platform) && Platform.Equals(PlatformMacOsx);
+
+		public string[] DotNetPlatforms
+			=> Platform switch {
+				PlatformiPhone => new[] { "ios" },
+				PlatformiPhoneSimulator => new[] { "ios" },
+				PlatformAppleTv => new[] { "tvos" },
+				PlatformAppleTvSimulator => new[] { "tvos" },
+				PlatformWatch => new [] { "watchos" },
+				PlatformWatchSimulator => new[] { "watchos" },
+				PlatformMacOsx => new[] {"macos", "maccatalyst"},
+				_ => new string[0]
+			};
+
+		[JsonProperty("modelCode")]
+		public string ModelCode { get; set; }
 
 		[JsonProperty("identifier")]
 		public string Identifier { get; set; }
 
-		[JsonProperty("version")]
-		public string Version { get; set; }
+		[JsonProperty("architecture")]
+		public string Architecture { get; set; }
 
-		[JsonProperty("isAvailable")]
-		public bool IsAvailable { get; set; }
+		public string RuntimeIdentifier
+			=> Architecture switch
+			{
+				_ => "iossimulator-x64"
+			};
 
-		[JsonProperty("name")]
-		public string Name { get; set; }
-	}
+		[JsonProperty("modelUTI")]
+		public string ModelUTI { get; set; }
 
-	public class SimCtlDeviceType
-	{
-		[JsonProperty("minRuntimeVersion")]
-		public long MinRuntimeVersion { get; set; }
-
-		[JsonProperty("bundlePath")]
-		public string BundlePath { get; set; }
-
-		[JsonProperty("maxRuntimeVersion")]
-		public long MaxRuntimeVersion { get; set; }
+		[JsonProperty("modelName")]
+		public string ModelName { get; set; }
 
 		[JsonProperty("name")]
 		public string Name { get; set; }
 
-		[JsonProperty("identifier")]
-		public string Identifier { get; set; }
-
-		[JsonProperty("productFamily")]
-		public string ProductFamily { get; set; }
-
-		[JsonProperty("devices")]
-		public List<SimCtlDevice> Devices { get; set; } = new List<SimCtlDevice>();
-	}
-
-	public class SimCtlDevice
-	{
-		[JsonProperty("dataPath")]
-		public string DataPath { get; set; }
-
-		[JsonProperty("logPath")]
-		public string LogPath { get; set; }
-
-		[JsonProperty("udid")]
-		public string Udid { get; set; }
-
-		[JsonProperty("isAvailable")]
-		public bool IsAvailable { get; set; }
-
-		[JsonProperty("deviceTypeIdentifier")]
-		public string DeviceTypeIdentifier { get; set; }
-
-		[JsonProperty("state")]
-		public string State { get; set; }
-
-		[JsonProperty("name")]
-		public string Name { get; set; }
-
-		[JsonProperty("availabilityError")]
-		public string AvailabilityError { get; set; }
-
-		[JsonProperty("deviceType")]
-		public SimCtlDeviceType DeviceType { get; set; }
-
-		[JsonProperty("runtime")]
-		public SimCtlRuntime Runtime { get; set; }
+		[JsonProperty("interface")]
+		public string Interface { get; set; }
 	}
 }

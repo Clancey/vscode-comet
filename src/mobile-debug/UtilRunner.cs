@@ -1,11 +1,8 @@
 ﻿using Mono.Options;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
 
 namespace VsCodeMobileUtil
 {
@@ -17,12 +14,14 @@ namespace VsCodeMobileUtil
 		{
 			var options = new OptionSet();
 
+			var targetPlatformIdentifier = string.Empty;
 			var command = helpCommand;
 			var id = Guid.NewGuid().ToString();
 
 			options.Add("c|command=", "get the tool version", s => command = s?.ToLowerInvariant()?.Trim() ?? helpCommand);
 			options.Add("h|help", "prints the help", s => command = helpCommand);
 			options.Add("i|id=", "unique identifier of the command", s => id = s);
+			options.Add("t|tpi=", "target platform identifier", s => targetPlatformIdentifier = s);
 
 			var extras = options.Parse(args);
 
@@ -45,9 +44,9 @@ namespace VsCodeMobileUtil
 				responseObject = command switch
 				{
 					"version" => Version(),
-					"devices" => AllDevices(),
+					"devices" => AllDevices(targetPlatformIdentifier),
 					"android-devices" => AndroidDevices(),
-					"ios-devices" => iOSDevices(),
+					"ios-devices" => XCode.GetDevices(),
 					"android-start-emulator" => AndroidStartEmulator(extras),
 					"debug" => Debug(),
 					_ => Version()
@@ -79,43 +78,108 @@ namespace VsCodeMobileUtil
 		}
 
 		static object Version()
-			=> new { Version = "0.1.1" };
-
-		static DirectoryInfo GetAndroidSdkHome()
-		{
-			var sdkHome = AndroidSdk.FindHome();
-
-			if (sdkHome == null)
-				throw new Exception("Android SDK Not Found");
-
-			return sdkHome;
-		}
+			=> new { Version = "0.2.0" };
 
 		static IEnumerable<DeviceData> AndroidDevices()
-			=> AndroidSdk.GetEmulatorsAndDevices(GetAndroidSdkHome()).Result;
-
-		static AppleDevicesAndSimulators iOSDevices()
 		{
-			var result = new AppleDevicesAndSimulators();
+			const int HighPriority = 0;
+			const int MedPriority = 1;
+			const int LowPriority = 2;
 
-			Task.WhenAll(
-				Task.Run(() => result.Devices = XCode.GetInstrumentsDevices(true)),
-				Task.Run(async () => result.Simulators = await XCode.GetDevicePairs()))
-				.Wait();
+			var results = new List<(DeviceData Device, int Priority)>();
 
-			return result;
+			// Get ADB Devices (includes emulators)
+			var adb = new AndroidSdk.Adb();
+			var adbDevices = adb.GetDevices() ?? Enumerable.Empty<AndroidSdk.Adb.AdbDevice>();
+
+			// Split out emulators and physical devices
+			var emulators = adbDevices?.Where(d => d.IsEmulator)?.Select(e => new { EmulatorName = adb.GetEmulatorName(e.Serial), Emulator = e});
+			var devices = adbDevices?.Where(d => !d.IsEmulator);
+
+			// Physical devices are easy
+			foreach (var d in devices)
+			{
+				results.Add((new DeviceData
+				{
+					IsEmulator = false,
+					IsRunning = true,
+					Name = d.Device,
+					Platforms = new[] { "android" },
+					Serial = d.Serial,
+					Version = d.Model
+				}, HighPriority));
+			}
+
+			// Get all Avds
+			var avdManager = new AndroidSdk.AvdManager();
+			var avds = avdManager.ListAvds() ?? Enumerable.Empty<AndroidSdk.AvdManager.Avd>();
+
+			// Look through all avd's to list, but let's be smart and see if any of them
+			// are already running (so were listed in the adb devices output)
+			foreach (var a in avds)
+			{
+				var avdConfig = ParseAvdConfigIni(Path.Combine(a.Path, "config.ini"));
+
+				var abi = avdConfig?["abi.type"] ?? string.Empty;
+				var architecture = avdConfig?["hw.cpu.arch"] ?? string.Empty;
+				var manufacturer = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(avdConfig?["hw.device.manufacturer"] ?? string.Empty);
+				var model = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(avdConfig?["hw.device.name"] ?? string.Empty);
+				var tag = avdConfig?["tag.display"] ?? string.Empty;
+
+				// See if ADB returned a running instance
+				var emulator = emulators.FirstOrDefault(e => e.EmulatorName == a.Name);
+
+				results.Add((new DeviceData
+				{
+					IsEmulator = true,
+					IsRunning = emulator != null,
+					Name = a.Name,
+					Details = emulator != null
+						? emulator.Emulator.Product + " " + emulator.Emulator.Model
+						: manufacturer + " " + model + " (" + architecture + ")",
+					Platforms = new[] { "android" },
+					Serial = emulator?.Emulator?.Serial ?? a.Name,
+					Version = a.BasedOn,
+					RuntimeIdentifier = architecture switch
+					{
+						"armeabi-v7a" => "android-arm",
+						"armeabi" => "android-arm",
+						"arm" => "android-arm",
+						"arm64" => "android-arm64",
+						"arm64-v8a" => "android-arm64",
+						"x86" => "android-x86",
+						"x86_64" => "android-x64",
+						_ => "android-arm"
+					}
+				}, emulator == null ? LowPriority : MedPriority));
+			}
+
+			return results.OrderBy(t => t.Priority).Select(t => t.Device);
 		}
 
-		static IEnumerable<DeviceData> AllDevices()
+		
+		static IEnumerable<DeviceData> AllDevices(string targetPlatformId)
 		{
-			var result = AndroidDevices();
+			var results = new List<DeviceData>();
+
+			if (string.IsNullOrEmpty(targetPlatformId) || targetPlatformId.Equals("android", StringComparison.OrdinalIgnoreCase))
+			{
+				var androidDevices = AndroidDevices();
+				if (androidDevices?.Any() ?? false)
+					results.AddRange(androidDevices);
+			}
 
 			if (Util.IsWindows)
-				return result;
+				return results;
 
-			var iosDevices = XCode.GetSimulatorsAndDevices();
+			if (string.IsNullOrEmpty(targetPlatformId) || targetPlatformId.Equals("ios", StringComparison.OrdinalIgnoreCase))
+			{
+				var iosDevices = XCode.GetDevices(targetPlatformId);
+				if (iosDevices?.Any() ?? false)
+					results.AddRange(iosDevices);
+			}
 
-			return result.Concat(iosDevices);
+			return results;
 		}
 
 		static SimpleResult AndroidStartEmulator(IEnumerable<string> args)
@@ -125,9 +189,11 @@ namespace VsCodeMobileUtil
 			if (string.IsNullOrWhiteSpace(avdName))
 				throw new ArgumentNullException("AvdName");
 
-			var serial = AndroidSdk.StartEmulatorAndWaitForBoot(GetAndroidSdkHome(), avdName);
+			var emu = new AndroidSdk.Emulator();
+			var p = emu.Start(avdName);
+			var success = p.WaitForBootComplete(TimeSpan.FromSeconds(200));
 
-			return new SimpleResult { Success = !string.IsNullOrWhiteSpace(serial) };
+			return new SimpleResult { Success = success };
 		}
 
 		static SimpleResult Debug()
@@ -135,6 +201,30 @@ namespace VsCodeMobileUtil
 			var json = Console.ReadLine();
 
 			return new SimpleResult { Success = true };
+		}
+
+		static Dictionary<string, string> ParseAvdConfigIni(string file)
+		{
+			if (!File.Exists(file))
+				return new Dictionary<string, string>();
+
+			var r = new Dictionary<string, string>();
+
+			foreach (var line in File.ReadAllLines(file))
+			{
+
+				if (!line.Contains('='))
+					continue;
+
+				var parts = line.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
+
+				if ((parts?.Length ?? 0) == 2)
+				{
+					r[parts[0]] = parts[1];
+				}
+			}
+
+			return r;
 		}
 	}
 }

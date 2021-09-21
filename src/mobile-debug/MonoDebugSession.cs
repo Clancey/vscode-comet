@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using VsCodeMobileUtil;
 using Mono.Debugging.Client;
+using Microsoft.NET.Sdk.WorkloadManifestReader;
 #if !EXCLUDE_HOT_RELOAD
 using VSCodeDebug.HotReload;
 #endif
@@ -179,7 +180,7 @@ namespace VSCodeDebug
 		{
 			OperatingSystem os = Environment.OSVersion;
 			if (os.Platform != PlatformID.MacOSX && os.Platform != PlatformID.Unix && os.Platform != PlatformID.Win32NT) {
-				SendErrorResponse(response, 3000, "Mono Debug is not supported on this platform ({_platform}).", new { _platform = os.Platform.ToString() }, true, true);
+				SendErrorResponse(response, 3000, "Debugging is not supported on this platform ({_platform}).", new { _platform = os.Platform.ToString() }, true, true);
 				return;
 			}
 
@@ -335,22 +336,40 @@ namespace VSCodeDebug
 			//		args));
 
 			var workingDir = Path.GetDirectoryName(launchOptions.Project);
-			const string sdkRoot = "-sdkroot /Applications/Xcode.app/Contents/Developer";
+			var xcodePath = Path.Combine(XCode.GetBestXcode(), "Contents", "Developer");
+			string sdkRoot = $"-sdkroot {xcodePath}";
+
+			
+
 			SendConsoleEvent($"Using `{sdkRoot}`");
 
 			string appPath = default;
+			DateTime appPathLastWrite = DateTime.MinValue;
 			var output = Path.Combine(
 				workingDir,
 				"bin",
 				launchOptions.Configuration,
-				launchOptions.ProjectTargetFramework,
-				launchOptions.RuntimeIdentifier);
+				launchOptions.ProjectTargetFramework);
 
 			if (Directory.Exists(output))
 			{
-				var p = Directory.EnumerateDirectories(output, "*.app")?.FirstOrDefault();
-				if (!string.IsNullOrEmpty(p))
-					appPath = p;
+				var ridDirs = Directory.GetDirectories(output) ?? new string[0];
+
+				foreach (var ridDir in ridDirs)
+				{
+					// Find the newest .app generated and assume that's the one we want
+					var appDirs = Directory.EnumerateDirectories(ridDir, "*.app", SearchOption.AllDirectories);
+
+					foreach (var appDir in appDirs)
+					{
+						var appDirTime = Directory.GetLastWriteTime(appDir);
+						if (appDirTime > appPathLastWrite)
+						{
+							appPath = appDir;
+							appPathLastWrite = appDirTime;
+						}
+					}
+				}
 			}
 			
 			if (string.IsNullOrEmpty(appPath))
@@ -363,10 +382,9 @@ namespace VSCodeDebug
 
 			SendConsoleEvent($"Found .app: {appPath}");
 
-
+			var dotnetSdkDir = Microsoft.DotNet.NativeWrapper.EnvironmentProvider.GetDotnetExeDirectory();
 			var mlaunchPath = string.Empty;
-
-			var dotnetSkdPath = "/usr/local/share/dotnet/packs/Microsoft.iOS.Sdk/"; // 14.4.100-ci.main.1192/tools/bin/mlaunch
+			var dotnetSkdPath = Path.Combine(dotnetSdkDir, "packs", "Microsoft.iOS.Sdk"); // 14.4.100-ci.main.1192/tools/bin/mlaunch
 
 			if (!Directory.Exists(dotnetSkdPath))
 			{
@@ -376,6 +394,8 @@ namespace VSCodeDebug
 				return (false, "");
 			}
 
+			// TODO: Use WorkloadResolver to get pack info for `Microsoft.iOS.Sdk` to choose
+			// the actual one that's being used - just not sure how to get dotnet sdk version in use
 			SendConsoleEvent($"Looking for Microsoft.iOS.Sdk tools in: {dotnetSkdPath}");
 
 			foreach (var dir in Directory.GetDirectories(dotnetSkdPath).Reverse())
@@ -405,7 +425,8 @@ namespace VSCodeDebug
 				sdkRoot,
 				$"--launchsim \"{appPath}\"",
 				$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
-				$"--sdk {launchOptions.iOSSimulatorVersion} --device=:v2:udid={launchOptions.iOSSimulatorDeviceUdid}"
+				$"--device=:v2:udid={launchOptions.DeviceId}"
+				//$"--sdk {launchOptions.iOSSimulatorVersion} --device=:v2:udid={launchOptions.DeviceId}"
 				//$"--sdk {launchOptions.iOSSimulatorVersion} --device=:v2:runtime={launchOptions.iOSSimulatorDevice},devicetype={launchOptions.iOSSimulatorDeviceType}"
 				);
 			return success;
@@ -462,19 +483,20 @@ namespace VSCodeDebug
 
 		(bool success, string message) LaunchAndroid (LaunchData options, int port)
 		{
-			var home = AndroidSdk.FindHome ();
-
-			var adbSerial = options.AdbDeviceId;
-
 			SendConsoleEvent($"Launching Android: {options.AdbDeviceName}");
+
+			var booted = false;
 
 			if (!string.IsNullOrWhiteSpace (options.AdbDeviceName)) {
 
 				SendConsoleEvent($"Waiting for Emulator... {options.AdbDeviceName}");
-				adbSerial = AndroidSdk.StartEmulatorAndWaitForBoot (home, options.AdbDeviceName);
+				var emu = new AndroidSdk.Emulator();
+				var emuProc = emu.Start(options.AdbDeviceName);
+
+				booted = emuProc.WaitForBootComplete();
 			}
 
-			if (string.IsNullOrWhiteSpace(adbSerial))
+			if (!booted)
 			{
 				SendConsoleEvent($"Failed to launch or wait for emulator... {options.AdbDeviceName}");
 				return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");

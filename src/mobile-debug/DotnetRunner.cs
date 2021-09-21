@@ -10,8 +10,7 @@ namespace VSCodeDebug
 	{
 		static DotnetRunner()
 		{
-			var r = new Microsoft.DotNet.DotNetSdkResolver.NETCoreSdkResolver();
-			sdkRoot = r.GetDotnetExeDirectory();
+			sdkRoot = Microsoft.DotNet.NativeWrapper.EnvironmentProvider.GetDotnetExeDirectory();
 			DotNetExecutablePath = Path.Combine(sdkRoot, DotNetExeName);
 		}
 		public static (bool Success, string Output) Run(Action<string> consoleOutputHandler, string workingDir, params string[] args)
@@ -28,7 +27,8 @@ namespace VSCodeDebug
 		static string DotNetExeName
 			=> Util.IsWindows ? "dotnet.exe" : "dotnet";
 		
-		public DotnetRunner(string args, string workingDir, CancellationToken cancellationToken, Action<string> outputHandler) : base(DotNetExecutablePath, args, cancellationToken, workingDir, outputHandler)
+		public DotnetRunner(string args, string workingDir, CancellationToken cancellationToken, Action<string> outputHandler)
+			: base(DotNetExecutablePath, args, cancellationToken, workingDir, outputHandler)
 		{
 
 		}

@@ -62,6 +62,7 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 
 				var projectType = MobileProjectManager.getProjectType(startupInfo.TargetFramework);
 				var projectIsCore = MobileProjectManager.getProjectIsCore(startupInfo.TargetFramework);
+				var projectTfm = startupInfo.TargetFramework;
 
 				config['projectType'] = projectType;
 				config['projectIsCore'] = projectIsCore;
@@ -85,26 +86,18 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 
 				if (device) {
 					if (projectType === ProjectType.Android) {
-						if (device.serial)
-							config['adbDeviceId'] = device.serial;
 						if (device.isEmulator)
 							config['adbEmulatorName'] = device.name;
 
 					} else if (projectType === ProjectType.iOS) {
 						
-						if (device.iosSimulatorDevice)
+						if (device.isEmulator)
 						{
 							config['projectPlatform'] = 'iPhoneSimulator';
-							config['iosSimulatorDeviceType'] = device.iosSimulatorDevice.deviceTypeIdentifier;
-							config['iosSimulatorRuntime'] = device.iosSimulatorDevice.runtime.identifier;
-							config['iosSimulatorVersion'] = device.iosSimulatorDevice.runtime.version;
-							config['iosSimulatorUdid'] = device.iosSimulatorDevice.udid;
-							config['runtimeIdentifier'] = 'iossimulator-x64';
 						}
 						else
 						{
 							config['projectPlatform'] = 'iPhone';
-							config['iosDeviceId'] = device.serial;
 						}
 					}
 
@@ -115,7 +108,7 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 							config['device'] = device.name;
 					}
 
-					config['devicePlatform'] = device.platform;
+					config['devicePlatform'] = projectTfm;
 				}
 			}
 		}
