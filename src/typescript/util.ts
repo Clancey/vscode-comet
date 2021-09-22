@@ -33,8 +33,6 @@ export class MobileUtil
 
 	constructor()
 	{
-		var thisExtension = vscode.extensions.getExtension('Clancey.comet-debug');
-
 		var os = require('os');
 
 		var plat = os.platform();
@@ -42,9 +40,18 @@ export class MobileUtil
 		if (plat.indexOf('win32') >= 0)
 			this.isUnix = false;
 
-		var extPath = thisExtension.extensionPath;
+		this.UtilPath = MobileUtil.GetUtilPath();
+	}
 
-		this.UtilPath = path.join(extPath, 'src', 'mobile-debug', 'bin', 'Debug', 'net6.0', 'mobile-debug.dll');
+	public static GetExtensionPath() : string
+	{
+		return vscode.extensions.getExtension('Clancey.comet-debug').extensionPath;
+	}
+
+	public static GetUtilPath() : string
+	{
+		var extPath = this.GetExtensionPath();
+		return path.join(extPath, 'src', 'mobile-debug', 'bin', 'Debug', 'net6.0', 'mobile-debug.dll');
 	}
 
 	async RunCommand<TResult>(cmd: string, args: string[] = null)

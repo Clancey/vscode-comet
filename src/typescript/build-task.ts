@@ -5,6 +5,8 @@ import * as vscode from 'vscode';
 //import {ProjectType } from './msbuild-project-analyzer';
 import { MobileProjectManager, ProjectType } from './project-manager';
 import * as child from 'child_process';
+import { MobileUtil } from './util';
+import { start } from 'repl';
 
 interface ExecResult {
     stdout: string,
@@ -24,14 +26,15 @@ function execFileAsync(file: string, args?: string[]): Thenable<ExecResult> {
 }
 
 function existsAsync(path: string | Buffer): Promise<boolean> {
-
-    return new Promise((resolve) => fs.exists(path, resolve));
+	return new Promise((resolve) => fs.exists(path, resolve));
 }
 
 interface MobileBuildTaskDefinition extends vscode.TaskDefinition {
 	/**
 	 * Additional build flags
 	 */
+
+	label: string;
 
 	task: string;
 
@@ -48,6 +51,8 @@ interface MobileBuildTaskDefinition extends vscode.TaskDefinition {
 	platform:string;
 
 	flags?: string[];
+
+	dependsOn: string[];
 }
 
 export class MobileBuildTaskProvider implements vscode.TaskProvider {
@@ -139,10 +144,27 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 		if (!MobileProjectManager.getProjectIsCore(startupInfo.TargetFramework))
 			command = await MobileBuildTaskProvider.locateMSBuild();
 
-		return [
-			this.getTask(command, "Build", flags),
-			//this.getTask(command, "Run", flags),
-		]
+		var startupInfo = MobileProjectManager.Shared.StartupInfo;
+		var device = startupInfo.Device;
+
+		return [ 
+			this.getStartEmulatorTask(device.serial),
+			this.getTask(command, "Build", flags) 
+		];
+	}
+
+	private getStartEmulatorTask(avdName: string) : vscode.Task
+	{
+		return new vscode.Task(
+			{
+				label: "StartEmulator",
+				type: "comet",
+				command: "dotnet"
+			},
+			vscode.TaskScope.Workspace,
+			"StartEmulator",
+			"comet",
+			new vscode.ProcessExecution("dotnet", [ MobileUtil.GetUtilPath(), "util", "-c=android-start-emulator", avdName ]));
 	}
 
 	private getTask(command:string ,target: string, flags: string[], definition?: MobileBuildTaskDefinition): vscode.Task{
@@ -160,6 +182,7 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 
 		if (definition === undefined) {
 			definition = {
+				label: "Build",
 				task: "MSBuild",
 				command,
 				type: MobileBuildTaskProvider.MobileBuildScriptType,
@@ -168,8 +191,14 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 				projectType,
 				platform,
 				target,
-				flags
+				flags,
+				dependsOn: [ ]
 			};
+		
+			if (projectType == ProjectType.Android && device.isEmulator && !device.isRunning) {
+				definition.dependsOn = [ "comet: StartEmulator" ];
+			}
+		
 		}
 
 		var platformArg = '';
