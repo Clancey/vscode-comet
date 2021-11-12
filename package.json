@@ -159,7 +159,7 @@
 			{
 				"type": "comet",
 				"label": ".NET Comet (Mobile)",
-				"program": "./src/mobile-debug/bin/Debug/net472/mobile-debug.exe",
+				"program": "./src/mobile-debug/bin/Debug/net6.0/mobile-debug.exe",
 				"osx": {
 					"runtime": "mono"
 				},

@@ -25,9 +25,9 @@ function BuildNet
 	& dotnet build /p:Configuration=Debug ./external/Reloadify3000/Reloadify.CommandLine/Reloadify.CommandLine.csproj
 
 	Write-Host "Copying Reloadify 3000 output"
-	Remove-Item ./src/mobile-debug/bin/Debug/net472/Reloadify -Force -Recurse
-	New-Item -ItemType Directory -Force -Path "./src/mobile-debug/bin/Debug/net472/Reloadify"
-	Copy-Item  -Path "./external/Reloadify3000/Reloadify.CommandLine/bin/Debug/net6.0/*"  -Destination "./src/mobile-debug/bin/Debug/net472/Reloadify/" -Recurse
+	Remove-Item ./src/mobile-debug/bin/Debug/net6.0/Reloadify -Force -Recurse
+	New-Item -ItemType Directory -Force -Path "./src/mobile-debug/bin/Debug/net6.0/Reloadify"
+	Copy-Item  -Path "./external/Reloadify3000/Reloadify.CommandLine/bin/Debug/net6.0/*"  -Destination "./src/mobile-debug/bin/Debug/net6.0/Reloadify/" -Recurse
 }
 
 function BuildTypeScript

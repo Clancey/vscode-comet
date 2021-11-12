@@ -2,7 +2,7 @@
 */**
 **/.DS_Store
 !syntaxes/*.json
-!src/mobile-debug/bin/Debug/net472/**/*
+!src/mobile-debug/bin/Debug/**/*
 !dist/extension.js
 !node_modules/vscode-nls/**/*
 !node_modules/vscode-debugprotocol/**/*
