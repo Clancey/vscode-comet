@@ -12,7 +12,7 @@ jobs:
     name: CI
     env:
       VSIX_MAJOR: 0.4.0
-      DOTNET_VERSION: 6.0.100-preview.4.21226.14
+      DOTNET_VERSION: 6.0.100
     runs-on: macos-latest
     steps:
     - name: Checkout
