@@ -16,7 +16,7 @@ function BuildNet
 {
 	Write-Host "Building .NET Project..."
 
-	& dotnet /r /p:Configuration=Debug ./src/mobile-debug/mobile-debug.csproj
+	& dotnet build /r /p:Configuration=Debug ./src/mobile-debug/mobile-debug.csproj
 
 	Write-Host "Done .NET Project."
 
