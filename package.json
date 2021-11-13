@@ -125,15 +125,6 @@
 					".xaml"
 				]
 			}
-			,{
-				"id": "C#",
-				"aliases": [
-					"csharp"
-				],
-				"extensions": [
-					".cs"
-				]
-			}
 		],
 		"grammars": [
 			{
