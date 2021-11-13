@@ -125,6 +125,15 @@
 					".xaml"
 				]
 			}
+			,{
+				"id": "C#",
+				"aliases": [
+					"csharp"
+				],
+				"extensions": [
+					".cs"
+				]
+			}
 		],
 		"grammars": [
 			{
@@ -159,13 +168,8 @@
 			{
 				"type": "comet",
 				"label": ".NET Comet (Mobile)",
-				"program": "./src/mobile-debug/bin/Debug/net6.0/mobile-debug.exe",
-				"osx": {
-					"runtime": "mono"
-				},
-				"linux": {
-					"runtime": "mono"
-				},
+				"program": "./src/mobile-debug/bin/Debug/net6.0/mobile-debug.dll",
+				"runtime" : "dotnet",
 				"initialConfigurations": [
 					{
 						"name": "%comet.launch.config.name%",
