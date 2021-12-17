@@ -495,11 +495,20 @@ namespace VSCodeDebug
 
 				booted = emuProc.WaitForBootComplete();
 			}
-
+			
 			if (!booted)
 			{
-				SendConsoleEvent($"Failed to launch or wait for emulator... {options.AdbDeviceName}");
-				return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");
+				// We don't know if it's a device or emulator, and we obviously don't need to boot a device
+				// But we want to make sure ADB sees whatever the target is
+				var adb = new AndroidSdk.Adb();
+				var adbDevice = adb.GetDevices()?.FirstOrDefault(d => d.Serial.Equals(options.DeviceId, StringComparison.InvariantCultureIgnoreCase));
+
+				// If it's an emulator we want to make sure it was booted
+                if (adbDevice == null || adbDevice.IsEmulator)
+                {
+					SendConsoleEvent($"Failed to launch or wait for emulator or device... {options.AdbDeviceName}");
+					return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");
+				}
 			}
 
 			SendConsoleEvent($"Emulator ready! ({options.AdbDeviceName})");
