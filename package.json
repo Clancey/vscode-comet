@@ -124,6 +124,15 @@
 				"extensions": [
 					".xaml"
 				]
+			},
+			{
+				"id": "csharp",
+				"aliases": [
+					"C#"
+				],
+				"extensions": [
+					".cs"
+				]
 			}
 		],
 		"grammars": [
