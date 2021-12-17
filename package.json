@@ -195,7 +195,19 @@
 							}
 						}
 					}
-				}
+				},
+				"configurationSnippets": [
+					{
+						"label": ".NET Mobile (Comet): Debug Configuration",
+						"description": "A new configuration for building and debugging a .NET Mobile (Comet) app.",
+						"body": {
+							"name": "%comet.launch.config.name%",
+							"type": "comet",
+							"request": "launch",
+							"preLaunchTask": "comet: Build"
+						}
+					}
+				]
 			}
 		]
 	}
