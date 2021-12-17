@@ -160,7 +160,8 @@
 				"type": "comet",
 				"label": ".NET Comet (Mobile)",
 				"program": "./src/mobile-debug/bin/Debug/net6.0/mobile-debug.dll",
-				"runtime" : "dotnet",
+				"runtime": "dotnet",
+				"languages": ["csharp"],
 				"initialConfigurations": [
 					{
 						"name": "%comet.launch.config.name%",
