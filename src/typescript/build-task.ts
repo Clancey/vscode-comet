@@ -176,8 +176,10 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 		if (this.platform && !isCore)
 			platformArg = `;Platform=${platform}`;
 
+		// Android can run right from the build, no need to do it in mobile-debug
 		var msbuildTarget = 'Run';
 
+		// The mobile-debug will use mlaunch to run rather than suggesting it here
 		if (projectType == ProjectType.iOS || projectType == ProjectType.MacCatalyst)
 			msbuildTarget = 'Build';
 		
