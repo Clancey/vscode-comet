@@ -220,7 +220,7 @@ namespace VsCodeMobileUtil
 
 				if ((parts?.Length ?? 0) == 2)
 				{
-					r[parts[0]] = parts[1];
+					r[parts[0].Trim()] = parts[1].Trim();
 				}
 			}
 
