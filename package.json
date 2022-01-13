@@ -55,7 +55,7 @@
 		"typescript": "^4.2.2",
 		"vsce": "^1.85.0",
 		"vscode-debugadapter-testsupport": "^1.45.0",
-		"vscode-nls-dev": "^3.3.2",
+		"vscode-nls-dev": "^4.0.0",
 		"webpack": "^5.24.2",
 		"webpack-cli": "^4.5.0"
 	},
@@ -124,6 +124,15 @@
 				"extensions": [
 					".xaml"
 				]
+			},
+			{
+				"id": "csharp",
+				"aliases": [
+					"C#"
+				],
+				"extensions": [
+					".cs"
+				]
 			}
 		],
 		"grammars": [
@@ -160,13 +169,14 @@
 				"type": "comet",
 				"label": ".NET Comet (Mobile)",
 				"program": "./src/mobile-debug/bin/Debug/net6.0/mobile-debug.dll",
-				"runtime" : "dotnet",
+				"runtime": "dotnet",
+				"languages": ["csharp"],
 				"initialConfigurations": [
 					{
 						"name": "%comet.launch.config.name%",
 						"type": "comet",
 						"request": "launch",
-						"preLaunchTask": "comet: Run"
+						"preLaunchTask": "comet: Build"
 					}
 				],
 				"configurationAttributes": {
@@ -185,7 +195,19 @@
 							}
 						}
 					}
-				}
+				},
+				"configurationSnippets": [
+					{
+						"label": ".NET Mobile (Comet): Debug Configuration",
+						"description": "A new configuration for building and debugging a .NET Mobile (Comet) app.",
+						"body": {
+							"name": "%comet.launch.config.name%",
+							"type": "comet",
+							"request": "launch",
+							"preLaunchTask": "comet: Build"
+						}
+					}
+				]
 			}
 		]
 	}
