@@ -120,11 +120,9 @@ namespace VsCodeMobileUtil
 			{
 				var avdConfig = ParseAvdConfigIni(Path.Combine(a.Path, "config.ini"));
 
-				var abi = avdConfig?["abi.type"] ?? string.Empty;
 				var architecture = avdConfig?["hw.cpu.arch"] ?? string.Empty;
 				var manufacturer = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(avdConfig?["hw.device.manufacturer"] ?? string.Empty);
 				var model = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(avdConfig?["hw.device.name"] ?? string.Empty);
-				var tag = avdConfig?["tag.display"] ?? string.Empty;
 
 				// See if ADB returned a running instance
 				var emulator = emulators.FirstOrDefault(e => e.EmulatorName == a.Name);
