@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
+//import { CompletionTriggerKind, CompletionItemKind, CompletionItemTag, InsertTextFormat } from 'vscode-languageserver-protocol';
 
 export module Requests {
     export const AddToProject = '/addtoproject';
-    export const AutoComplete = '/autocomplete';
     export const CodeCheck = '/codecheck';
     export const CodeFormat = '/codeformat';
     export const ChangeBuffer = '/changebuffer';
@@ -17,7 +17,7 @@ export module Requests {
     export const FormatAfterKeystroke = '/formatAfterKeystroke';
     export const FormatRange = '/formatRange';
     export const GetCodeActions = '/getcodeactions';
-    export const GoToDefinition = '/gotoDefinition';
+    export const GoToTypeDefinition = '/gototypedefinition';
     export const FindImplementations = '/findimplementations';
     export const Project = '/project';
     export const Projects = '/projects';
@@ -28,7 +28,20 @@ export module Requests {
     export const TypeLookup = '/typelookup';
     export const UpdateBuffer = '/updatebuffer';
     export const Metadata = '/metadata';
+    export const RunFixAll = '/runfixall';
+    export const GetFixAll = '/getfixall';
     export const ReAnalyze = '/reanalyze';
+    export const QuickInfo = '/quickinfo';
+    export const Completion = '/completion';
+    export const CompletionResolve = '/completion/resolve';
+    export const CompletionAfterInsert = '/completion/afterInsert';
+    export const SourceGeneratedFile = '/sourcegeneratedfile';
+    export const UpdateSourceGeneratedFile = '/updatesourcegeneratedfile';
+    export const SourceGeneratedFileClosed = '/sourcegeneratedfileclosed';
+    export const InlayHint = '/inlayHint';
+    export const InlayHintResolve = '/inlayHint/resolve';
+    export const FileOpen = '/open';
+    export const FileClose = '/close';
 }
 
 export namespace WireProtocol {
@@ -66,10 +79,7 @@ export interface Request extends FileBasedRequest {
     Column?: number;
     Buffer?: string;
     Changes?: LinePositionSpanTextChange[];
-}
-
-export interface GoToDefinitionRequest extends Request {
-    WantMetadata?: boolean;
+    ApplyChangesTogether?: boolean;
 }
 
 export interface FindImplementationsRequest extends Request {
@@ -176,10 +186,6 @@ export interface ResourceLocation {
     Column: number;
 }
 
-export interface GoToDefinitionResponse extends ResourceLocation {
-    MetadataSource?: MetadataSource;
-}
-
 export interface Error {
     Message: string;
     Line: number;
@@ -208,6 +214,8 @@ export interface QuickFix {
 
 export interface SymbolLocation extends QuickFix {
     Kind: string;
+    ContainingSymbolName?: string;
+    GeneratedFileInfo?: SourceGeneratedFileInfo;
 }
 
 export interface QuickFixResponse {
@@ -253,50 +261,40 @@ export interface GetCodeActionsResponse {
     CodeActions: string[];
 }
 
+export interface RunFixAllActionResponse {
+    Text: string;
+    Changes: FileOperationResponse[];
+}
+
+export interface FixAllItem {
+    Id: string;
+    Message: string;
+}
+
+export interface GetFixAllResponse {
+    Items: FixAllItem[];
+}
+
 export interface SyntaxFeature {
     Name: string;
     Data: string;
 }
 
-export interface AutoCompleteRequest extends Request {
-    WordToComplete: string;
-    WantDocumentationForEveryCompletionResult?: boolean;
-    WantImportableTypes?: boolean;
-    WantMethodHeader?: boolean;
-    WantSnippet?: boolean;
-    WantReturnType?: boolean;
-    WantKind?: boolean;
-    TriggerCharacter?: string;
-}
-
-export interface AutoCompleteResponse {
-    CompletionText: string;
-    Description: string;
-    DisplayText: string;
-    RequiredNamespaceImport: string;
-    MethodHeader: string;
-    ReturnType: string;
-    Snippet: string;
-    Kind: string;
-    IsSuggestionMode: boolean;
-    Preselect: boolean;
-}
-
 export interface ProjectInformationResponse {
     MsBuildProject: MSBuildProject;
-    DotNetProject: DotNetProject;
 }
 
-export enum DiagnosticStatus
-{
-    Processing = 0,
-    Ready = 1
+export enum BackgroundDiagnosticStatus {
+    Started = 0,
+    Progress = 1,
+    Finished = 2
 }
 
-export interface ProjectDiagnosticStatus {
-    Status: DiagnosticStatus;
-    ProjectFilePath: string;
-    Type: "background";
+export interface BackgroundDiagnosticStatusMessage {
+    Status: BackgroundDiagnosticStatus;
+    NumberProjects: number;
+    NumberFilesTotal: number;
+    NumberFilesRemaining: number;
 }
 
 export interface WorkspaceInformationResponse {
@@ -325,15 +323,21 @@ export interface CakeContext {
 
 export interface MSBuildProject {
     ProjectGuid: string;
+    /** Absolute path to the csproj file. */
     Path: string;
     AssemblyName: string;
+    /** Absolute path to the output assembly DLL. */
     TargetPath: string;
     TargetFramework: string;
     SourceFiles: string[];
     TargetFrameworks: TargetFramework[];
+    /** Absolute path to the output directory. */
     OutputPath: string;
     IsExe: boolean;
     IsUnityProject: boolean;
+    IsWebProject: boolean;
+    IsBlazorWebAssemblyStandalone: boolean;
+    IsBlazorWebAssemblyHosted: boolean;
 }
 
 export interface TargetFramework {
@@ -373,13 +377,24 @@ export interface DotNetFramework {
 export interface RenameRequest extends Request {
     RenameTo: string;
     WantsTextChanges?: boolean;
+    ApplyTextChanges: boolean;
 }
 
-export interface ModifiedFileResponse {
+export interface FileOperationResponse {
     FileName: string;
+    ModificationType: FileModificationType;
+}
+
+export interface ModifiedFileResponse extends FileOperationResponse {
     Buffer: string;
     Changes: TextChange[];
-    ModificationType: FileModificationType;
+}
+
+export interface RenamedFileResponse extends FileOperationResponse {
+    NewFileName: string;
+}
+
+export interface OpenFileResponse extends FileOperationResponse {
 }
 
 export enum FileModificationType {
@@ -447,9 +462,13 @@ export interface UnresolvedDependenciesMessage {
 
 export interface ProjectConfigurationMessage {
     ProjectId: string;
+    SessionId: string;
+    OutputKind: number;
+    ProjectCapabilities: string[];
     TargetFrameworks: string[];
     References: string[];
     FileExtensions: string[];
+    FileCounts: number[];
 }
 
 export interface PackageDependency {
@@ -464,8 +483,146 @@ export interface FilesChangedRequest extends Request {
 export enum FileChangeType {
     Change = "Change",
     Create = "Create",
-    Delete = "Delete"
+    Delete = "Delete",
+    DirectoryDelete = "DirectoryDelete"
 }
+
+export enum FixAllScope {
+    Document = "Document",
+    Project = "Project",
+    Solution = "Solution"
+}
+
+export interface GetFixAllRequest extends FileBasedRequest {
+    Scope: FixAllScope;
+    FixAllFilter?: FixAllItem[];
+}
+
+export interface RunFixAllRequest extends FileBasedRequest {
+    Scope: FixAllScope;
+    FixAllFilter?: FixAllItem[];
+    WantsTextChanges: boolean;
+    WantsAllCodeActionOperations: boolean;
+    ApplyChanges: boolean;
+}
+
+export interface QuickInfoRequest extends Request {
+}
+
+export interface QuickInfoResponse {
+    Markdown?: string;
+}
+
+// export interface CompletionRequest extends Request {
+//     CompletionTrigger: CompletionTriggerKind;
+//     TriggerCharacter?: string;
+// }
+
+export interface CompletionResponse {
+    IsIncomplete: boolean;
+    Items: OmnisharpCompletionItem[];
+}
+
+export interface CompletionResolveRequest {
+    Item: OmnisharpCompletionItem;
+}
+
+export interface CompletionResolveResponse {
+    Item: OmnisharpCompletionItem;
+}
+
+export interface CompletionAfterInsertionRequest {
+    Item: OmnisharpCompletionItem;
+}
+
+export interface CompletionAfterInsertResponse {
+    Changes?: LinePositionSpanTextChange[];
+    Line?: number;
+    Column?: number;
+}
+
+export interface OmnisharpCompletionItem {
+    Label: string;
+    // Kind: CompletionItemKind;
+    // Tags?: CompletionItemTag[];
+    Detail?: string;
+    Documentation?: string;
+    Preselect: boolean;
+    SortText?: string;
+    FilterText?: string;
+    InsertText?: string;
+    //InsertTextFormat?: InsertTextFormat;
+    TextEdit?: LinePositionSpanTextChange;
+    CommitCharacters?: string[];
+    AdditionalTextEdits?: LinePositionSpanTextChange[];
+    Data: any;
+    HasAfterInsertStep: boolean;
+}
+
+export interface SourceGeneratedFileInfo {
+    ProjectGuid: string;
+    DocumentGuid: string;
+}
+
+export interface SourceGeneratedFileRequest extends SourceGeneratedFileInfo {
+}
+
+export interface SourceGeneratedFileResponse {
+    Source: string;
+    SourceName: string;
+}
+
+export interface UpdateSourceGeneratedFileRequest extends SourceGeneratedFileInfo {
+}
+
+export interface UpdateSourceGeneratedFileResponse {
+    UpdateType: UpdateType;
+    Source?: string;
+}
+
+export enum UpdateType {
+    Unchanged,
+    Deleted,
+    Modified
+}
+
+export interface SourceGeneratedFileClosedRequest extends SourceGeneratedFileInfo {
+}
+
+export interface InlayHintRequest {
+    Location: V2.Location;
+}
+
+export interface InlayHint {
+    Position: V2.Point;
+    Label: string;
+    Tooltip?: string;
+    Data: any;
+    TextEdits?: LinePositionSpanTextChange[];
+}
+
+export interface InlayHintResponse {
+    InlayHints: InlayHint[];
+}
+
+export interface InlayHintResolve {
+    Hint: InlayHint;
+}
+
+export interface Definition {
+    Location: V2.Location;
+    MetadataSource?: MetadataSource;
+    SourceGeneratedFileInfo?: SourceGeneratedFileInfo;
+}
+
+export interface GoToTypeDefinitionRequest extends Request {
+    WantMetadata?: boolean;
+}
+
+export interface GoToTypeDefinitionResponse {
+    Definitions?: Definition[];
+}
+
 
 export namespace V2 {
 
@@ -475,12 +632,35 @@ export namespace V2 {
         export const GetTestStartInfo = '/v2/getteststartinfo';
         export const RunTest = '/v2/runtest';
         export const RunAllTestsInClass = "/v2/runtestsinclass";
+        export const RunTestsInContext = "/v2/runtestsincontext";
         export const DebugTestGetStartInfo = '/v2/debugtest/getstartinfo';
         export const DebugTestsInClassGetStartInfo = '/v2/debugtestsinclass/getstartinfo';
+        export const DebugTestsInContextGetStartInfo = '/v2/debugtestsincontext/getstartinfo';
         export const DebugTestLaunch = '/v2/debugtest/launch';
         export const DebugTestStop = '/v2/debugtest/stop';
+        export const DiscoverTests = '/v2/discovertests';
         export const BlockStructure = '/v2/blockstructure';
         export const CodeStructure = '/v2/codestructure';
+        export const Highlight = '/v2/highlight';
+        export const GoToDefinition = '/v2/gotodefinition';
+    }
+
+    export interface SemanticHighlightSpan {
+        StartLine: number;
+        StartColumn: number;
+        EndLine: number;
+        EndColumn: number;
+        Type: number;
+        Modifiers: number[];
+    }
+
+    export interface SemanticHighlightRequest extends Request {
+        Range?: Range;
+        VersionedText?: string;
+    }
+
+    export interface SemanticHighlightResponse {
+        Spans: SemanticHighlightSpan[];
     }
 
     export interface Point {
@@ -493,6 +673,11 @@ export namespace V2 {
         End: Point;
     }
 
+    export interface Location {
+        FileName: string;
+        Range: Range;
+    }
+
     export interface GetCodeActionsRequest extends Request {
         Selection?: Range;
     }
@@ -500,6 +685,7 @@ export namespace V2 {
     export interface OmniSharpCodeAction {
         Identifier: string;
         Name: string;
+        CodeActionKind?: string;
     }
 
     export interface GetCodeActionsResponse {
@@ -511,10 +697,11 @@ export namespace V2 {
         Selection?: Range;
         WantsTextChanges: boolean;
         WantsAllCodeActionOperations: boolean;
+        ApplyTextChanges: boolean;
     }
 
     export interface RunCodeActionResponse {
-        Changes: ModifiedFileResponse[];
+        Changes: FileOperationResponse[];
     }
 
     export interface MSBuildProjectDiagnostics {
@@ -556,16 +743,30 @@ export namespace V2 {
     }
 
     // dotnet-test endpoints
-    export interface DebugTestGetStartInfoRequest extends Request {
-        MethodName: string;
+    interface BaseTestRequest extends Request {
+        RunSettings: string;
         TestFrameworkName: string;
         TargetFrameworkVersion: string;
+        NoBuild?: boolean;
     }
 
-    export interface DebugTestClassGetStartInfoRequest extends Request {
+    interface SingleTestRequest extends BaseTestRequest {
+        MethodName: string;
+    }
+
+    interface MultiTestRequest extends BaseTestRequest {
         MethodNames: string[];
-        TestFrameworkName: string;
-        TargetFrameworkVersion: string;
+    }
+
+    interface TestsInContextRequest extends Request {
+        RunSettings?: string;
+        TargetFrameworkVersion?: string;
+    }
+
+    export interface DebugTestGetStartInfoRequest extends SingleTestRequest {
+    }
+
+    export interface DebugTestClassGetStartInfoRequest extends MultiTestRequest {
     }
 
     export interface DebugTestGetStartInfoResponse {
@@ -573,6 +774,9 @@ export namespace V2 {
         Arguments: string;
         WorkingDirectory: string;
         EnvironmentVariables: Map<string, string>;
+        Succeeded: boolean;
+        ContextHadNoTests: boolean;
+        FailureReason?: string;
     }
 
     export interface DebugTestLaunchRequest extends Request {
@@ -588,10 +792,23 @@ export namespace V2 {
     export interface DebugTestStopResponse {
     }
 
-    export interface GetTestStartInfoRequest extends Request {
-        MethodName: string;
-        TestFrameworkName: string;
-        TargetFrameworkVersion: string;
+    export interface DiscoverTestsRequest extends BaseTestRequest {
+
+    }
+
+    export interface TestInfo {
+        FullyQualifiedName: string;
+        DisplayName: string;
+        Source: string;
+        CodeFilePath: string;
+        LineNumber: number;
+    }
+
+    export interface DiscoverTestsResponse {
+        Tests: TestInfo[];
+    }
+
+    export interface GetTestStartInfoRequest extends SingleTestRequest {
     }
 
     export interface GetTestStartInfoResponse {
@@ -600,16 +817,16 @@ export namespace V2 {
         WorkingDirectory: string;
     }
 
-    export interface RunTestRequest extends Request {
-        MethodName: string;
-        TestFrameworkName: string;
-        TargetFrameworkVersion: string;
+    export interface RunTestRequest extends SingleTestRequest {
     }
 
-    export interface RunTestsInClassRequest extends Request {
-        MethodNames: string[];
-        TestFrameworkName: string;
-        TargetFrameworkVersion: string;
+    export interface RunTestsInClassRequest extends MultiTestRequest {
+    }
+
+    export interface RunTestsInContextRequest extends TestsInContextRequest {
+    }
+
+    export interface DebugTestsInContextGetStartInfoRequest extends TestsInContextRequest {
     }
 
     export module TestOutcomes {
@@ -633,6 +850,7 @@ export namespace V2 {
         Failure: string;
         Pass: boolean;
         Results: DotNetTestResult[];
+        ContextHadNoTests: boolean;
     }
 
     export interface TestMessageEvent {
@@ -731,23 +949,53 @@ export namespace V2 {
             walker(elements);
         }
     }
+
+    export interface GoToDefinitionRequest extends Request {
+        WantMetadata?: boolean;
+    }
+
+    export interface GoToDefinitionResponse {
+        Definitions?: Definition[];
+    }
+
+    export interface Definition {
+        Location: Location;
+        MetadataSource?: MetadataSource;
+        SourceGeneratedFileInfo?: SourceGeneratedFileInfo;
+    }
 }
 
-export function findNetFrameworkTargetFramework(project: MSBuildProject): TargetFramework {
-    let regexp = new RegExp('^net[1-4]');
+export function findNetFrameworkTargetFramework(project: MSBuildProject): TargetFramework | undefined {
+    const regexp = new RegExp('^net[1-4]');
     return project.TargetFrameworks.find(tf => regexp.test(tf.ShortName));
 }
 
-export function findNetCoreAppTargetFramework(project: MSBuildProject): TargetFramework {
+export function findNetCoreTargetFramework(project: MSBuildProject): TargetFramework | undefined {
+    return findNetCoreAppTargetFramework(project) ?? findModernNetFrameworkTargetFramework(project);
+}
+
+export function findNetCoreAppTargetFramework(project: MSBuildProject): TargetFramework | undefined {
     return project.TargetFrameworks.find(tf => tf.ShortName.startsWith('netcoreapp'));
 }
 
-export function findNetStandardTargetFramework(project: MSBuildProject): TargetFramework {
+export function findModernNetFrameworkTargetFramework(project: MSBuildProject): TargetFramework | undefined {
+    const regexp = new RegExp('^net[5-9]');
+    const targetFramework = project.TargetFrameworks.find(tf => regexp.test(tf.ShortName));
+
+    // Shortname is being reported as net50 instead of net5.0
+    if (targetFramework !== undefined && targetFramework.ShortName.charAt(4) !== ".") {
+        targetFramework.ShortName = `${targetFramework.ShortName.substring(0, 4)}.${targetFramework.ShortName.substring(4)}`;
+    }
+
+    return targetFramework;
+}
+
+export function findNetStandardTargetFramework(project: MSBuildProject): TargetFramework | undefined {
     return project.TargetFrameworks.find(tf => tf.ShortName.startsWith('netstandard'));
 }
 
-export function isDotNetCoreProject(project: MSBuildProject): Boolean {
-    return findNetCoreAppTargetFramework(project) !== undefined ||
+export function isDotNetCoreProject(project: MSBuildProject): boolean {
+    return findNetCoreTargetFramework(project) !== undefined ||
         findNetStandardTargetFramework(project) !== undefined ||
         findNetFrameworkTargetFramework(project) !== undefined;
 }
@@ -790,7 +1038,10 @@ export function findExecutableMSBuildProjects(projects: MSBuildProject[]) {
     let result: MSBuildProject[] = [];
 
     projects.forEach(project => {
-        if (project.IsExe && findNetCoreAppTargetFramework(project) !== undefined) {
+        const projectIsNotNetFramework = findNetCoreTargetFramework(project) !== undefined
+            || project.IsBlazorWebAssemblyStandalone;
+
+        if (project.IsExe && projectIsNotNetFramework) {
             result.push(project);
         }
     });

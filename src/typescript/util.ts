@@ -24,6 +24,7 @@ const path = require('path');
 const execa = require('execa');
 
 import * as vscode from 'vscode';
+import { extensionId } from './extensionInfo';
 
 export class MobileUtil
 {
@@ -33,7 +34,7 @@ export class MobileUtil
 
 	constructor()
 	{
-		var thisExtension = vscode.extensions.getExtension('Clancey.comet-debug');
+		var thisExtension = vscode.extensions.getExtension(extensionId);
 
 		var os = require('os');
 

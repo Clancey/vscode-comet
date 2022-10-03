@@ -289,6 +289,8 @@ namespace VSCodeDebug
 			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_HOSTS__", "127.0.0.1");
 			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_PORT__", port.ToString());
 
+
+			
 			var args = new string[]
 			{
 				"build",

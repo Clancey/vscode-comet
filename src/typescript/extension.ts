@@ -11,11 +11,13 @@ import { EmulatorItem, MobileEmulatorProvider } from "./sidebar"
 import { execArgv } from 'process';
 import { SimpleResult } from "./util";
 import { MobileUtil } from "./util";
-import { MobileProjectManager } from "./project-manager";
+import { MobileProjectManager, ProjectInfo, WorkspaceInfo } from "./project-manager";
 import { MobileConfigurationProvider } from "./configuration";
 import { OutputChannel } from 'vscode';
-import { MSBuildProject } from './omnisharp/protocol';
+import { DotNetConfiguration, DotNetWorkspaceInformation, MSBuildProject } from './omnisharp/protocol';
 import { MobileBuildTaskProvider } from './build-task';
+import { outputChanelName } from './extensionInfo';
+
 
 const localize = nls.config({ locale: process.env.VSCODE_NLS_CONFIG })();
 
@@ -31,9 +33,11 @@ var currentDebugSession: vscode.DebugSession;
 
 var buildTaskProvider: MobileBuildTaskProvider;
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 
-	output = vscode.window.createOutputChannel("Comet for .NET Mobile");
+	output = vscode.window.createOutputChannel(outputChanelName);
+
+
 
 	this.projectManager = new MobileProjectManager(context);
 
@@ -74,7 +78,7 @@ export function activate(context: vscode.ExtensionContext) {
 	setUpHotReload(context);
 
 	//output.appendLine("Initialization succeeded");
-	output.show();
+	//output.show();
 }
 
 export function deactivate() {

@@ -54,9 +54,6 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 				if (!config['projectPath'])
 					config['projectPath'] = project.Path;
 
-				if (!config['projectOutputPath'])
-					config['projectOutputPath'] = project.OutputPath;
-
 				if (!config['projectConfiguration'])
 					config['projectConfiguration'] = startupInfo.Configuration;
 
@@ -66,7 +63,7 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 
 				config['projectType'] = projectType;
 				config['projectIsCore'] = projectIsCore;
-				config['projectTargetFramework'] = startupInfo.TargetFramework;
+				config['projectTargetFramework'] = startupInfo.TargetFramework.FullName;
 				config['projectPlatform'] = MobileProjectManager.getSelectedProjectPlatform();
 
 				config['debugPort'] = startupInfo.DebugPort;
@@ -108,7 +105,7 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 							config['device'] = device.name;
 					}
 
-					config['devicePlatform'] = projectTfm;
+					config['devicePlatform'] = projectTfm.Platform;
 				}
 			}
 		}
