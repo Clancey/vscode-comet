@@ -7,14 +7,10 @@
 import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { EmulatorItem, MobileEmulatorProvider } from "./sidebar"
-import { execArgv } from 'process';
-import { SimpleResult } from "./util";
-import { MobileUtil } from "./util";
-import { MobileProjectManager, ProjectInfo, WorkspaceInfo } from "./project-manager";
+import { MobileEmulatorProvider } from "./sidebar"
+import { MobileProjectManager } from "./project-manager";
 import { MobileConfigurationProvider } from "./configuration";
 import { OutputChannel } from 'vscode';
-import { DotNetConfiguration, DotNetWorkspaceInformation, MSBuildProject } from './omnisharp/protocol';
 import { MobileBuildTaskProvider } from './build-task';
 import { outputChanelName } from './extensionInfo';
 
@@ -28,7 +24,7 @@ projectManager: MobileProjectManager;
 let omnisharp: any = null;
 let output: OutputChannel = null;
 
-var treeViewProvider: MobileEmulatorProvider; 
+//var treeViewProvider: MobileEmulatorProvider; 
 var currentDebugSession: vscode.DebugSession;
 
 var buildTaskProvider: MobileBuildTaskProvider;
@@ -106,10 +102,10 @@ export function setUpHotReload(context: vscode.ExtensionContext)
 			var relativePath = td.fileName.split('\\').pop().split('/').pop();
 			currentDebugSession.customRequest("DocumentChanged", { fullPath: td.fileName, relativePath: relativePath });
 		}, 200);
-    }));
+	}));
 
 	/*
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((td) => {
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((td) => {
 		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
 		// Hopefully we can improve in future: https://github.com/Microsoft/vscode/issues/42913
 		if (hotReloadDelayTimer) {
@@ -117,8 +113,8 @@ export function setUpHotReload(context: vscode.ExtensionContext)
 		}
 
 		hotReloadDelayTimer = setTimeout(() => {
-            hotReloadDelayTimer = null;
-            CometDebugger.Shared.SendDocumentChanged(td.document.fileName, td.document.getText());
+			hotReloadDelayTimer = null;
+			CometDebugger.Shared.SendDocumentChanged(td.document.fileName, td.document.getText());
 		}, 800);
 	}));
 	*/

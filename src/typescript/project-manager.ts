@@ -7,6 +7,10 @@ import { BaseEvent, WorkspaceInformationUpdated } from './omnisharp/loggingEvent
 import { EventType } from './omnisharp/EventType';
 import { DeviceData, MobileUtil } from "./util";
 import { extensionId } from "./extensionInfo";
+import { ProjectInfo } from "./ProjectInfo";
+import { WorkspaceInfo } from "./WorkspaceInfo";
+import { TargetFrameworkInfo } from "./TargetFrameworkInfo";
+import { MobileSessionStartupInfo } from "./MobileSessionStartupInfo";
 
 const path = require('path');
 let fs = require('fs');
@@ -24,51 +28,6 @@ export enum ProjectType
 	Blazor,
 }
 
-export class ProjectInfo {
-	
-	Name: string;
-	Path: string;
-	AssemblyName: string;
-	TargetFrameworks: TargetFrameworkInfo[];
-	IsExe: boolean;
-	Configurations: string[];
-	Platforms: string[];
-}
-
-export class WorkspaceInfo {
-	Solution: SolutionInfo;
-}
-
-export class SolutionInfo {
-	Projects: ProjectInfo[];
-}
-
-export class TargetFrameworkInfo {
-
-	FullName: string;
-	Platform: string;
-	Version: string;
-	PlatformVersion: string;
-}
-
-export class MobileSessionStartupInfo {
-	constructor() {
-		this.Project = undefined;
-		this.Configuration = undefined;
-		this.Platform = undefined;
-		this.TargetFramework = undefined;
-		this.DebugPort = 55555;
-		this.Device = undefined;
-	}
-
-	Project: ProjectInfo;
-	Configuration: string;
-	Platform: string;
-	TargetFramework: TargetFrameworkInfo;
-	Device: DeviceData;
-	DebugPort: number = 55555;
-}
-
 export class MobileProjectManager {
 	static selectProjectCommandId: string = "dotnetmobile.selectProject";
 	static selectDeviceCommandId: string = "dotnetmobile.selectDevice";
@@ -79,6 +38,8 @@ export class MobileProjectManager {
 
 	omnisharp: any;
 	context: vscode.ExtensionContext;
+	dotnetProjectAnalyzerRpc: rpc.MessageConnection;
+	rpcEvaluateProjectRequest : rpc.RequestType2<string, any, ProjectInfo, void>;
 
 	constructor(context: vscode.ExtensionContext) {
 		MobileProjectManager.Shared = this;
@@ -101,16 +62,16 @@ export class MobileProjectManager {
 		let childProcess = cp.spawn(analyzerExePath);
 
 		// Use stdin and stdout for communication:
-		let connection = rpc.createMessageConnection(
+		this.dotnetProjectAnalyzerRpc = rpc.createMessageConnection(
 			new rpc.StreamMessageReader(childProcess.stdout),
 			new rpc.StreamMessageWriter(childProcess.stdin));
 		
-		let notification = new rpc.NotificationType<WorkspaceInfo>('WorkspaceChanged');
-		let loadReq = new rpc.RequestType3<string, string, string, void, void>('OpenWorkspace');
-
+		let rpcWorkspaceChangedNotification = new rpc.NotificationType<WorkspaceInfo>('WorkspaceChanged');
+		let rpcOpenWorkspaceRequest = new rpc.RequestType3<string, string, string, void, void>('OpenWorkspace');
+		this.rpcEvaluateProjectRequest = new rpc.RequestType2<string, any, ProjectInfo, void>('EvaluateProject');
 		this.updateMenus();
 
-		connection.onNotification(notification, (workspace: WorkspaceInfo) => {
+		this.dotnetProjectAnalyzerRpc.onNotification(rpcWorkspaceChangedNotification, (workspace: WorkspaceInfo) => {
 
 			this.StartupProjects = workspace.Solution.Projects.filter(p => p.IsExe || !p.IsExe);
 
@@ -143,7 +104,7 @@ export class MobileProjectManager {
 		});
 
 
-		connection.listen();
+		this.dotnetProjectAnalyzerRpc.listen();
 
 		this.omnisharp.eventStream.subscribe(async (e: BaseEvent) => {
 
@@ -153,8 +114,8 @@ export class MobileProjectManager {
 
 				var slnPath = (<WorkspaceInformationUpdated>e).info.MsBuild.SolutionPath;
 
-				connection.sendRequest(
-					loadReq,
+				this.dotnetProjectAnalyzerRpc.sendRequest(
+					rpcOpenWorkspaceRequest,
 					slnPath,
 					this.StartupInfo?.Configuration,
 					this.StartupInfo?.Platform);
