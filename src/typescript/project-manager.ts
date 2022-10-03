@@ -286,6 +286,15 @@ export class MobileProjectManager {
 
 		if (projectSelectionWasChanged)
 		{
+			// Get evaluated project
+			var evaluatedProject = await this.dotnetProjectAnalyzerRpc.sendRequest(this.rpcEvaluateProjectRequest,
+				selectedProject.Path,
+				{
+					TargetFramework: selectedTargetFramework.FullName,
+					Configuration: selectedConfiguration
+				});
+
+			MobileProjectManager.Shared.StartupInfo.Project = evaluatedProject;
 			MobileProjectManager.Shared.StartupInfo.Device = undefined;
 		}
 

@@ -12,6 +12,8 @@ public class ProjectInfo
     
 	public string[] Configurations { get; set; }
     public string[] Platforms { get; set; }
+
+    public string OutputPath { get;set; }
 }
 
 public class TargetFrameworkInfo
