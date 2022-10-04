@@ -10,11 +10,18 @@ public partial class WorkspaceAnalyzer : IWorkspaceAnalyzerService
 
 	public MSBuildWorkspace? CurrentWorkspace { get; private set; }
 
+	string currentWorkspacePath = string.Empty;
+
 	public string CurrentConfiguration { get; private set; } = "Debug";
 	public string CurrentPlatform { get; private set; } = "AnyCPU";
 
 	public async Task OpenWorkspace(string path, string? configuration, string? platform)
 	{
+		if (path.Equals(currentWorkspacePath))
+			return;
+
+		currentWorkspacePath = path;
+
 		ProjectCollection.UnloadAllProjects();
 
 		if (CurrentWorkspace is not null)
@@ -39,6 +46,7 @@ public partial class WorkspaceAnalyzer : IWorkspaceAnalyzerService
 		CurrentWorkspace.WorkspaceChanged += CurrentWorkspace_WorkspaceChanged;
 		CurrentWorkspace.WorkspaceFailed += CurrentWorkspace_WorkspaceFailed;
 
+		
 		await CurrentWorkspace.OpenSolutionAsync(path);
 	}
 
@@ -49,12 +57,15 @@ public partial class WorkspaceAnalyzer : IWorkspaceAnalyzerService
 
 	void DoThingsToProject(Solution solution, ProjectId? projectId, Action<Microsoft.Build.Evaluation.Project> thingToDo)
 	{
-		var projects = solution.Projects.Where(p => p.Id.Equals(projectId));
-
-		foreach (var rmp in projects)
+		lock (parseLock)
 		{
-			foreach (var p in ProjectCollection.GetLoadedProjects(rmp.FilePath))
-				thingToDo(p);
+			var projects = solution.Projects.Where(p => p.Id.Equals(projectId));
+
+			foreach (var rmp in projects)
+			{
+				foreach (var p in ProjectCollection.GetLoadedProjects(rmp.FilePath))
+					thingToDo(p);
+			}
 		}
 	}
 	private async void CurrentWorkspace_WorkspaceChanged(object? sender, Microsoft.CodeAnalysis.WorkspaceChangeEventArgs e)
@@ -118,7 +129,11 @@ public partial class WorkspaceAnalyzer : IWorkspaceAnalyzerService
 
 		foreach (var p in slnProjects.GroupBy(p => p.FilePath))
 		{
-			projectInfos.Add(ParseProject(p.Key, false, new Dictionary<string, string>()));
+			projectInfos.Add(ParseProject(p.Key, false, new Dictionary<string, string>
+			{
+				["Configuration"] = CurrentConfiguration,
+				["Platform"] = CurrentPlatform
+			}));
 		}
 
 		WorkspaceChanged?.Invoke(this, new WorkspaceInfo
@@ -145,65 +160,75 @@ public partial class WorkspaceAnalyzer : IWorkspaceAnalyzerService
 		return Task.FromResult(projectInfo);
 	}
 
+	static readonly object parseLock = new();
+
 	ProjectInfo ParseProject(string projectFile, bool reevaluate, IDictionary<string, string> properties)
 	{
-		ProjectCollection pc;
-
-		if (!properties.ContainsKey("Configuration"))
-			properties["Configuration"] = CurrentConfiguration;
-		if (!properties.ContainsKey("Platform"))
-			properties["Platform"] = CurrentConfiguration;
-
-		var msbuildProject = ProjectCollection.GetLoadedProjects(projectFile)?.FirstOrDefault();
-
-		if (msbuildProject is null)
-			msbuildProject = ProjectCollection.LoadProject(projectFile, properties, null);
-
-		// Update the properties
-		foreach (var prop in properties)
-			msbuildProject.SetGlobalProperty(prop.Key, prop.Value);
-
-		if (reevaluate)
-			msbuildProject.ReevaluateIfNecessary();
-
-		var asmName = msbuildProject.GetPropertyValue("AssemblyName");
-
-		var isExe = msbuildProject.GetPropertyValue("OutputType")?.Equals("exe", StringComparison.OrdinalIgnoreCase) ?? false;
-		var tfms = msbuildProject.GetPropertyValue("TargetFrameworks");
-		if (string.IsNullOrEmpty(tfms))
-			tfms = msbuildProject.GetPropertyValue("TargetFramework");
-
-		var configs = msbuildProject.GetPropertyValue("Configurations");
-		if (string.IsNullOrEmpty(configs))
-			configs = msbuildProject.GetPropertyValue("Configuration");
-
-		var plats = msbuildProject.GetPropertyValue("Platforms");
-		if (string.IsNullOrEmpty(plats))
-			plats = msbuildProject.GetPropertyValue("Platform");
-
-		var tfmInfos = new List<TargetFrameworkInfo>();
-
-		foreach (var tfmstr in tfms.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+		lock (parseLock)
 		{
-			var nfw = NuGet.Frameworks.NuGetFramework.Parse(tfmstr);
-			tfmInfos.Add(new TargetFrameworkInfo
+			ProjectCollection pc;
+
+			if (!properties.ContainsKey("Configuration"))
+				properties["Configuration"] = CurrentConfiguration;
+			if (!properties.ContainsKey("Platform"))
+				properties["Platform"] = CurrentPlatform;
+
+			var msbuildProject = ProjectCollection.GetLoadedProjects(projectFile)?.FirstOrDefault();
+
+			if (msbuildProject is null)
+				msbuildProject = ProjectCollection.LoadProject(projectFile, properties, null);
+
+			// Update the properties
+			foreach (var prop in properties)
+				msbuildProject.SetGlobalProperty(prop.Key, prop.Value);
+
+			if (reevaluate)
+				msbuildProject.ReevaluateIfNecessary();
+
+			var asmName = msbuildProject.GetPropertyValue("AssemblyName");
+
+			var isExe = msbuildProject.GetPropertyValue("OutputType")?.Equals("exe", StringComparison.OrdinalIgnoreCase) ?? false;
+			var tfms = msbuildProject.GetPropertyValue("TargetFrameworks");
+			if (string.IsNullOrEmpty(tfms))
+				tfms = msbuildProject.GetPropertyValue("TargetFramework");
+
+			var configs = msbuildProject.GetPropertyValue("Configurations");
+			if (string.IsNullOrEmpty(configs))
+				configs = msbuildProject.GetPropertyValue("Configuration");
+
+			var plats = msbuildProject.GetPropertyValue("Platforms");
+			if (string.IsNullOrEmpty(plats))
+				plats = msbuildProject.GetPropertyValue("Platform");
+
+			var tfmInfos = new List<TargetFrameworkInfo>();
+
+			foreach (var tfmstr in tfms.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
 			{
-				FullName = tfmstr,
-				Platform = nfw.Platform,
-				Version = nfw.Version.ToString(),
-				PlatformVersion = nfw.PlatformVersion == new Version() ? null : nfw.PlatformVersion.ToString()
-			});
-		}
+				var nfw = NuGet.Frameworks.NuGetFramework.Parse(tfmstr);
+				tfmInfos.Add(new TargetFrameworkInfo
+				{
+					FullName = tfmstr,
+					Platform = nfw.Platform,
+					Version = nfw.Version.ToString(),
+					PlatformVersion = nfw.PlatformVersion == new Version() ? null : nfw.PlatformVersion.ToString()
+				});
+			}
 
-		return new ProjectInfo
-		{
-			IsExe = isExe,
-			Name = asmName,
-			Path = msbuildProject.FullPath ?? string.Empty,
-			Platforms = plats.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
-			Configurations = configs.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
-			TargetFrameworks = tfmInfos.ToArray(),
-			OutputPath = msbuildProject.GetPropertyValue("OutputPath")
-		};
+			var props = new Dictionary<string, string>();
+			foreach (var p in msbuildProject.AllEvaluatedProperties)
+				props[p.Name] = p.EvaluatedValue;
+
+			return new ProjectInfo
+			{
+				IsExe = isExe,
+				Name = asmName,
+				Path = msbuildProject.FullPath ?? string.Empty,
+				Platforms = plats.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+				Configurations = configs.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+				TargetFrameworks = tfmInfos.ToArray(),
+				OutputPath = msbuildProject.GetPropertyValue("OutputPath"),
+				Properties = props
+			};
+		}
 	}
 }

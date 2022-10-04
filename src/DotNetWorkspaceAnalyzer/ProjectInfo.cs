@@ -14,6 +14,8 @@ public class ProjectInfo
     public string[] Platforms { get; set; }
 
     public string OutputPath { get;set; }
+
+    public IReadOnlyDictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
 }
 
 public class TargetFrameworkInfo
