@@ -195,7 +195,7 @@ namespace VSCodeDebug
 				supportsConditionalBreakpoints = false,
 
 				// This debug adapter does not support a side effect free evaluate request for data hovers.
-				supportsEvaluateForHovers = false,
+				supportsEvaluateForHovers = true,
 
 				// This debug adapter does not support exception breakpoint filters
 				exceptionBreakpointFilters = new dynamic[0]
