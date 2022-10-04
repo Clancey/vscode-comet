@@ -6,7 +6,8 @@ namespace VsCodeMobileUtil {
 			public const string Output = "projectOutputPath";
 			public const string Platform = "projectPlatform";
 			public const string ProjectPath = "projectPath";
-			public const string ProjectType = "projectType";
+            public const string ProjectProperties = "projectProperties";
+            public const string ProjectType = "projectType";
 			public const string ProjectTargetFramework = "projectTargetFramework";
 			public const string ProjectIsCore = "projectIsCore";
 			public const string RuntimeIdentifier = "runtimeIdentifier";

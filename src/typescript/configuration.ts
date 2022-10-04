@@ -51,6 +51,9 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 
 			if (project) {
 
+				if (!config['projectProperties'])
+					config['projectProperties']	= project.Properties;
+
 				if (!config['projectPath'])
 					config['projectPath'] = project.Path;
 

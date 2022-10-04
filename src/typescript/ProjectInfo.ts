@@ -1,5 +1,8 @@
 import { TargetFrameworkInfo } from "./TargetFrameworkInfo";
 
+export interface IDictionary {
+    [index:string]: string;
+}
 
 export class ProjectInfo {
 
@@ -11,4 +14,5 @@ export class ProjectInfo {
 	Configurations: string[];
 	Platforms: string[];
 	OutputPath: string;
+	Properties: IDictionary;
 }
