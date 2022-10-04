@@ -119,7 +119,7 @@ namespace VSCodeDebug
 			_session.TargetReady += (sender, e) => {
 				_activeProcess = _session.GetProcesses().SingleOrDefault();
 
-				_hotReloadManager.Start(_session);
+				_hotReloadManager?.Start(_session);
 			};
 
 			_session.TargetExited += (sender, e) => {
@@ -281,33 +281,40 @@ namespace VSCodeDebug
 
 		async Task<(bool success, string message)> LaunchCatalyst(LaunchData launchOptions, int port)
 		{
-			var projectDir = Path.GetDirectoryName(launchOptions.Project);
+			var projectDir = launchOptions.GetProjectPropertyPathValue("MSBuildProjectDirectory");
+            var outputPath = launchOptions.GetProjectPropertyPathValue("OutputPath");
 
-			if (!Directory.Exists(projectDir))
-				projectDir = launchOptions.WorkspaceDirectory;
+			if (!Path.IsPathRooted(outputPath))
+				outputPath = Path.GetFullPath(outputPath, projectDir);
 
-			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_HOSTS__", "127.0.0.1");
-			Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_PORT__", port.ToString());
+            var targetDir = launchOptions.GetProjectPropertyPathValue("TargetDir")
+				?? projectDir
+				?? launchOptions.WorkspaceDirectory;
 
+			var targetName = launchOptions.GetProjectPropertyValue("TargetName")
+				?? launchOptions.GetProjectPropertyValue("AssemblyName")
+				?? launchOptions.AppName;
 
+			var targetPath = Path.Combine(targetDir, targetName + ".app");
+
+            // _XamarinSdkRootDirectory - /usr/local/share/dotnet/packs/Microsoft.MacCatalyst.Sdk/15.4.1180-rc.2/
+            
 			
-			var args = new string[]
-			{
-				"build",
-				//"--no-restore",
-				"-f",
-				launchOptions.ProjectTargetFramework,
-				$"\"{launchOptions.Project}\"",
-				"-t:Run" //,
-				//"-verbosity:diag"
-			};
+			//Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_HOSTS__", "127.0.0.1");
+			//Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_PORT__", port.ToString());
 
-			SendConsoleEvent("Executing: dotnet " + string.Join(" ", args));
+			var spr = new ShellProcessRunner("/usr/bin/open",
+				$"\"{targetPath}\"",
+				CancellationToken.None,
+				launchOptions.WorkspaceDirectory,
+				d => SendConsoleEvent(d), new Dictionary<string, string>
+				{
+					["__XAMARIN_DEBUG_HOSTS__"] = "127.0.0.1",
+                    ["__XAMARIN_DEBUG_PORT__"] = port.ToString(),
+                });
 
-			return await Task.Run(() => DotnetRunner.Run(
-					d => SendConsoleEvent(d),
-					projectDir,
-					args));
+			var r = spr.WaitForExit();
+			return (r.ExitCode == 0, string.Join("\r\n", r.StandardError));
 		}
 
 		async Task<(bool success, string message)> LaunchiOS(Response response, LaunchData launchOptions, int port)
