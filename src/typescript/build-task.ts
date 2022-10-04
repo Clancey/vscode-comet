@@ -194,7 +194,7 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 			args.unshift("build");
 			
 			if (tfm)
-				args.push(`-p:TargetFramework=${tfm}`);
+				args.push(`-p:TargetFramework=${tfm.FullName}`);
 		}
 
 		if (configuration.toLowerCase() === "debug")
