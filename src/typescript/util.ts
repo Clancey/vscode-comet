@@ -24,7 +24,7 @@ const path = require('path');
 const execa = require('execa');
 
 import * as vscode from 'vscode';
-import { extensionId } from './extensionInfo';
+import { extensionId, extensionPath, mobileDebugPath } from './extensionInfo';
 
 export class MobileUtil
 {
@@ -34,8 +34,6 @@ export class MobileUtil
 
 	constructor()
 	{
-		var thisExtension = vscode.extensions.getExtension(extensionId);
-
 		var os = require('os');
 
 		var plat = os.platform();
@@ -43,9 +41,7 @@ export class MobileUtil
 		if (plat.indexOf('win32') >= 0)
 			this.isUnix = false;
 
-		var extPath = thisExtension.extensionPath;
-
-		this.UtilPath = path.join(extPath, 'src', 'mobile-debug', 'bin', 'Debug', 'net6.0', 'mobile-debug.dll');
+		this.UtilPath = mobileDebugPath;
 	}
 
 	async RunCommand<TResult>(cmd: string, args: string[] = null)

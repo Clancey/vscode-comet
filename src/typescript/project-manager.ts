@@ -6,7 +6,7 @@ import * as rpc from 'vscode-jsonrpc/node';
 import { BaseEvent, WorkspaceInformationUpdated } from './omnisharp/loggingEvents';
 import { EventType } from './omnisharp/EventType';
 import { DeviceData, MobileUtil } from "./util";
-import { extensionId } from "./extensionInfo";
+import { analyzerExePath, extensionId } from "./extensionInfo";
 import { ProjectInfo } from "./ProjectInfo";
 import { WorkspaceInfo } from "./WorkspaceInfo";
 import { TargetFrameworkInfo } from "./TargetFrameworkInfo";
@@ -56,9 +56,6 @@ export class MobileProjectManager {
 
 		var loadingStatusBarItemHidden = false;
 
-		var extPath = vscode.extensions.getExtension(extensionId).extensionPath;
-
-		var analyzerExePath = path.join(extPath, 'src', 'DotNetWorkspaceAnalyzer', 'bin', 'Debug', 'net6.0', 'DotNetWorkspaceAnalyzer');
 		let childProcess = cp.spawn(analyzerExePath);
 
 		// Use stdin and stdout for communication:
