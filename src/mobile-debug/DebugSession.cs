@@ -188,6 +188,16 @@ namespace VSCodeDebug
 		public bool supportsConditionalBreakpoints;
 		public bool supportsEvaluateForHovers;
 		public dynamic[] exceptionBreakpointFilters;
+
+		public bool supportsStepBack = false;
+		public bool supportsExceptionInfoRequest = true;
+		public bool supportsSetExpression = false;
+		public bool supportsSetVariable = false;
+		public bool supportsDisassembleRequest = false;
+		public bool supportsReadMemoryRequest = false;
+		public bool supportsWriteMemoryRequest = false;
+		public bool supportSuspendDebuggee = false;
+		public bool supportTerminateDebuggee = false;
 	}
 
 	public class ErrorResponseBody : ResponseBody {
@@ -240,12 +250,31 @@ namespace VSCodeDebug
 	public class EvaluateResponseBody : ResponseBody
 	{
 		public string result { get; }
+		public string type { get; }
+
 		public int variablesReference { get; }
 
-		public EvaluateResponseBody(string value, int reff = 0) {
+		public VariablePresentationHint variablePresentationHint { get; }
+
+		public EvaluateResponseBody(string value, int reff = 0, string type = null, VariablePresentationHint presentationHint = null) {
 			result = value;
 			variablesReference = reff;
+			this.type = type;
+			variablePresentationHint = presentationHint;
 		}
+	}
+
+	public class VariablePresentationHint
+	{
+		public VariablePresentationHint(string kind, string[] attrs)
+		{
+			this.kind = kind;
+			attributes = attrs;
+		}
+
+		public string[] attributes { get;}
+
+		public string kind { get; }
 	}
 
 	public class SetBreakpointsResponseBody : ResponseBody
