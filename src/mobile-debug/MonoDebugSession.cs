@@ -846,10 +846,14 @@ namespace VSCodeDebug
 				scopes.Add(new Scope("Exception", _variableHandles.Create(new ObjectValue[] { _exception })));
 			}
 
-			var locals = new[] { frame.GetThisReference() }.Concat(frame.GetParameters()).Concat(frame.GetLocalVariables()).Where(x => x != null).ToArray();
-			if (locals.Length > 0) {
-				scopes.Add(new Scope("Local", _variableHandles.Create(locals)));
-			}
+			var paramObs = frame.GetParameters();
+			if (paramObs != null && paramObs.Length > 0)
+				scopes.Add(new Scope("Arguments", _variableHandles.Create(paramObs)));
+
+
+			var allLocalsObjs = frame.GetAllLocals();
+			if (paramObs != null && paramObs.Length > 0)
+				scopes.Add(new Scope("Locals", _variableHandles.Create(allLocalsObjs)));
 
 			SendResponse(response, new ScopesResponseBody(scopes));
 		}
@@ -949,7 +953,8 @@ namespace VSCodeDebug
 							if (val.HasChildren) {
 								handle = _variableHandles.Create(val.GetAllChildren());
 							}
-							SendResponse(response, new EvaluateResponseBody(val.DisplayValue, handle));
+							SendResponse(response, new EvaluateResponseBody(val.DisplayValue, handle, val.TypeName,
+								new VariablePresentationHint(val.IsObject ? "class" : "property", null)));
 							return;
 						}
 					}
