@@ -231,12 +231,6 @@ namespace VSCodeDebug
 
 
 			if (launchOptions.ProjectType == ProjectType.Android) {
-				var r = LaunchAndroid (launchOptions, port);
-				if (!r.success) {
-					SendErrorResponse (response, 3002, r.message);
-					return;
-				}
-
 				//Android takes a few seconds to get the debugger ready....
 				await Task.Delay(3000);
 			}
@@ -488,41 +482,6 @@ namespace VSCodeDebug
 
 			SendConsoleEvent($"mlaunch is running...");
 			return (s, "");
-		}
-
-		(bool success, string message) LaunchAndroid (LaunchData options, int port)
-		{
-			SendConsoleEvent($"Launching Android: {options.AdbDeviceName}");
-
-			var booted = false;
-
-			if (!string.IsNullOrWhiteSpace (options.AdbDeviceName)) {
-
-				SendConsoleEvent($"Waiting for Emulator... {options.AdbDeviceName}");
-				var emu = new AndroidSdk.Emulator();
-				var emuProc = emu.Start(options.AdbDeviceName);
-
-				booted = emuProc.WaitForBootComplete();
-			}
-			
-			if (!booted)
-			{
-				// We don't know if it's a device or emulator, and we obviously don't need to boot a device
-				// But we want to make sure ADB sees whatever the target is
-				var adb = new AndroidSdk.Adb();
-				var adbDevice = adb.GetDevices()?.FirstOrDefault(d => d.Serial.Equals(options.DeviceId, StringComparison.InvariantCultureIgnoreCase));
-
-				// If it's an emulator we want to make sure it was booted
-                if (adbDevice == null || adbDevice.IsEmulator)
-                {
-					SendConsoleEvent($"Failed to launch or wait for emulator or device... {options.AdbDeviceName}");
-					return (false, $"Launching Android Emulator {options.AdbDeviceName} failed.");
-				}
-			}
-
-			SendConsoleEvent($"Emulator ready! ({options.AdbDeviceName})");
-
-			return (true, string.Empty);
 		}
 
 		private void Connect (LaunchData options, IPAddress address, int port)
