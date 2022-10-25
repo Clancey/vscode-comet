@@ -7,156 +7,156 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using VSCodeDebug.Debugger;
 using VsCodeMobileUtil;
 
-namespace VSCodeDebug
+namespace VSCodeDebug;
+
+internal class Program
 {
-	internal class Program
+	const int DEFAULT_PORT = 4711;
+
+	private static bool trace_requests;
+	private static bool trace_responses;
+	static string LOG_FILE_PATH = null;
+
+	private static void Main(string[] argv)
 	{
-		const int DEFAULT_PORT = 4711;
-
-		private static bool trace_requests;
-		private static bool trace_responses;
-		static string LOG_FILE_PATH = null;
-
-		private static void Main(string[] argv)
+		if (argv.Length > 0 && argv[0] == "util")
 		{
-			if (argv.Length > 0 && argv[0] == "util")
-			{
-				UtilRunner.UtilMain(argv.ToList().Skip(1).ToArray());
-				return;
-			}
+			UtilRunner.UtilMain(argv.ToList().Skip(1).ToArray());
+			return;
+		}
 
-			int port = -1;
+		int port = -1;
 
-			// parse command line arguments
-			foreach (var a in argv) {
-				switch (a) {
-				case "--trace":
-					trace_requests = true;
-					break;
-				case "--trace=response":
-					trace_requests = true;
-					trace_responses = true;
-					break;
-				case "--server":
-					port = DEFAULT_PORT;
-					break;
-				default:
-					if (a.StartsWith("--server=")) {
-						if (!int.TryParse(a.Substring("--server=".Length), out port)) {
-							port = DEFAULT_PORT;
-						}
-					}
-					else if( a.StartsWith("--log-file=")) {
-						LOG_FILE_PATH = a.Substring("--log-file=".Length);
-					}
-					break;
-				}
-			}
-
-			if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("mono_debug_logfile")) == false) {
-				LOG_FILE_PATH = Environment.GetEnvironmentVariable("mono_debug_logfile");
+		// parse command line arguments
+		foreach (var a in argv) {
+			switch (a) {
+			case "--trace":
+				trace_requests = true;
+				break;
+			case "--trace=response":
 				trace_requests = true;
 				trace_responses = true;
-			}
-
-			if (port > 0) {
-				// TCP/IP server
-				Program.Log("waiting for debug protocol on port " + port);
-				RunServer(port);
-			} else {
-				// stdin/stdout
-				Program.Log("waiting for debug protocol on stdin/stdout");
-				RunSession(Console.OpenStandardInput(), Console.OpenStandardOutput());
-			}
-		}
-
-		static TextWriter logFile;
-
-		public static void Log(bool predicate, string format, params object[] data)
-		{
-			if (predicate)
-			{
-				Log(format, data);
-			}
-		}
-		
-		public static void Log(string format, params object[] data)
-		{
-			try
-			{
-				Console.Error.WriteLine(format, data);
-
-				if (LOG_FILE_PATH != null)
-				{
-					if (logFile == null)
-					{
-						logFile = File.CreateText(LOG_FILE_PATH);
-					}
-
-					string msg = string.Format(format, data);
-					logFile.WriteLine(string.Format("{0} {1}", DateTime.UtcNow.ToLongTimeString(), msg));
-				}
-			}
-			catch (Exception ex)
-			{
-				if (LOG_FILE_PATH != null)
-				{
-					try
-					{
-						File.WriteAllText(LOG_FILE_PATH + ".err", ex.ToString());
-					}
-					catch
-					{
+				break;
+			case "--server":
+				port = DEFAULT_PORT;
+				break;
+			default:
+				if (a.StartsWith("--server=")) {
+					if (!int.TryParse(a.Substring("--server=".Length), out port)) {
+						port = DEFAULT_PORT;
 					}
 				}
-
-				throw;
+				else if( a.StartsWith("--log-file=")) {
+					LOG_FILE_PATH = a.Substring("--log-file=".Length);
+				}
+				break;
 			}
 		}
 
-		private static void RunSession(Stream inputStream, Stream outputStream)
-		{
-			DebugSession debugSession = new MonoDebugSession();
-			debugSession.TRACE = trace_requests;
-			debugSession.TRACE_RESPONSE = trace_responses;
-			debugSession.Start(inputStream, outputStream).Wait();
+		if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("mono_debug_logfile")) == false) {
+			LOG_FILE_PATH = Environment.GetEnvironmentVariable("mono_debug_logfile");
+			trace_requests = true;
+			trace_responses = true;
+		}
 
-			if (logFile!=null)
+		if (port > 0) {
+			// TCP/IP server
+			Program.Log("waiting for debug protocol on port " + port);
+			RunServer(port);
+		} else {
+			// stdin/stdout
+			Program.Log("waiting for debug protocol on stdin/stdout");
+			RunSession(Console.OpenStandardInput(), Console.OpenStandardOutput());
+		}
+	}
+
+	static TextWriter logFile;
+
+	public static void Log(bool predicate, string format, params object[] data)
+	{
+		if (predicate)
+		{
+			Log(format, data);
+		}
+	}
+	
+	public static void Log(string format, params object[] data)
+	{
+		try
+		{
+			Console.Error.WriteLine(format, data);
+
+			if (LOG_FILE_PATH != null)
 			{
-				logFile.Flush();
-				logFile.Close();
-				logFile = null;
+				if (logFile == null)
+				{
+					logFile = File.CreateText(LOG_FILE_PATH);
+				}
+
+				string msg = string.Format(format, data);
+				logFile.WriteLine(string.Format("{0} {1}", DateTime.UtcNow.ToLongTimeString(), msg));
 			}
 		}
-
-		private static void RunServer(int port)
+		catch (Exception ex)
 		{
-			TcpListener serverSocket = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
-			serverSocket.Start();
+			if (LOG_FILE_PATH != null)
+			{
+				try
+				{
+					File.WriteAllText(LOG_FILE_PATH + ".err", ex.ToString());
+				}
+				catch
+				{
+				}
+			}
 
-			new System.Threading.Thread(() => {
-				while (true) {
-					var clientSocket = serverSocket.AcceptSocket();
-					if (clientSocket != null) {
-						Program.Log(">> accepted connection from client");
+			throw;
+		}
+	}
 
-						new System.Threading.Thread(() => {
-							using (var networkStream = new NetworkStream(clientSocket)) {
-								try {
-									RunSession(networkStream, networkStream);
-								}
-								catch (Exception e) {
-									Console.Error.WriteLine("Exception: " + e);
-								}
+	private static void RunSession(Stream inputStream, Stream outputStream)
+	{
+		var debugSession = new MauiDebugSession();
+		debugSession.TRACE = trace_requests;
+		debugSession.TRACE_RESPONSE = trace_responses;
+		debugSession.Start(inputStream, outputStream).Wait();
+
+		if (logFile!=null)
+		{
+			logFile.Flush();
+			logFile.Close();
+			logFile = null;
+		}
+	}
+
+	private static void RunServer(int port)
+	{
+		TcpListener serverSocket = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
+		serverSocket.Start();
+
+		new System.Threading.Thread(() => {
+			while (true) {
+				var clientSocket = serverSocket.AcceptSocket();
+				if (clientSocket != null) {
+					Program.Log(">> accepted connection from client");
+
+					new System.Threading.Thread(() => {
+						using (var networkStream = new NetworkStream(clientSocket)) {
+							try {
+								RunSession(networkStream, networkStream);
 							}
-							clientSocket.Close();
-							Console.Error.WriteLine(">> client connection closed");
-						}).Start();
-					}
+							catch (Exception e) {
+								Console.Error.WriteLine("Exception: " + e);
+							}
+						}
+						clientSocket.Close();
+						Console.Error.WriteLine(">> client connection closed");
+					}).Start();
 				}
-			}).Start();
-		}
+			}
+		}).Start();
 	}
 }

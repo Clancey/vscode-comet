@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
+using VSCodeDebug;
 
 namespace VsCodeMobileUtil
 {
@@ -79,14 +80,14 @@ namespace VsCodeMobileUtil
 			return defaultValue;
 		}
 
-        public string GetProjectPropertyPathValue(string name, string defaultValue = null)
-        {
-            if (ProjectProperties.TryGetValue(name, out var v))
-                return Util.FixPathSeparators(v);
-            return defaultValue;
-        }
+		public string GetProjectPropertyPathValue(string name, string defaultValue = null)
+		{
+			if (ProjectProperties.TryGetValue(name, out var v))
+				return Utilities.FixPathSeparators(v);
+			return defaultValue;
+		}
 
-        public LaunchData ()
+		public LaunchData ()
 		{
 		}
 
@@ -140,7 +141,7 @@ namespace VsCodeMobileUtil
 
 		static string cleanseStringPaths(string path)
 		{
-			if (Util.IsWindows)
+			if (Utilities.IsWindows)
 				return path;
 			return path.Replace ("\\", "/");
 		}
@@ -178,27 +179,27 @@ namespace VsCodeMobileUtil
 			return s;
 		}
 
-        private static IReadOnlyDictionary<string, string> getDictionary(dynamic container, string propertyName)
-        {
-            try
-            {
+		private static IReadOnlyDictionary<string, string> getDictionary(dynamic container, string propertyName)
+		{
+			try
+			{
 				var c = container[propertyName];
 				var d = new Dictionary<string, string>();
-                foreach (var propertyDescriptor in System.ComponentModel.TypeDescriptor.GetProperties(c))
-                {
-                    string obj = propertyDescriptor?.GetValue(c);
+				foreach (var propertyDescriptor in System.ComponentModel.TypeDescriptor.GetProperties(c))
+				{
+					string obj = propertyDescriptor?.GetValue(c);
 					if (!string.IsNullOrEmpty(obj))
-	                    d.Add(propertyDescriptor.Name, obj);
-                }
+						d.Add(propertyDescriptor.Name, obj);
+				}
 
 				return d;
-            }
-            catch (Exception)
-            {
-                // ignore and return default value
-            }
-            return new Dictionary<string, string>();
-        }
+			}
+			catch (Exception)
+			{
+				// ignore and return default value
+			}
+			return new Dictionary<string, string>();
+		}
 
-    }
+	}
 }
