@@ -7,17 +7,16 @@
 import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { MobileEmulatorProvider } from "./sidebar"
 import { MobileProjectManager } from "./project-manager";
 import { MobileConfigurationProvider } from "./configuration";
 import { OutputChannel } from 'vscode';
 import { MobileBuildTaskProvider } from './build-task';
-import { outputChanelName } from './extensionInfo';
+import { extensionConfigurationKey, omnisharpExtensionId, outputChanelName } from './extensionInfo';
 
 
 const localize = nls.config({ locale: process.env.VSCODE_NLS_CONFIG })();
 
-const configuration = vscode.workspace.getConfiguration('comet-debug');
+const configuration = vscode.workspace.getConfiguration(extensionConfigurationKey);
 
 
 projectManager: MobileProjectManager;
@@ -39,7 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	this.buildTaskProvider = vscode.tasks.registerTaskProvider(MobileBuildTaskProvider.MobileBuildScriptType, new MobileBuildTaskProvider(vscode.workspace.rootPath));
 	
-	omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
+	omnisharp = vscode.extensions.getExtension(omnisharpExtensionId).exports;
 
 	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
 

@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 const path = require('path');
 
+export const omnisharpExtensionId = "ms-dotnettools.csharp";
+export const extensionConfigurationKey = "comet-debug";
 export const extensionId = "Clancey.comet-debug";
 export const outputChanelName = "Comet for .NET Mobile";
 export const extensionPath = vscode.extensions.getExtension(extensionId).extensionPath;
