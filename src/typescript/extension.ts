@@ -100,7 +100,8 @@ export function setUpHotReload(context: vscode.ExtensionContext)
 			// TODO: Generalize this once we have knowledge of the project path, but for now assume that xaml files are at
 			// the root of the project
 			var relativePath = td.fileName.split('\\').pop().split('/').pop();
-			currentDebugSession.customRequest("DocumentChanged", { fullPath: td.fileName, relativePath: relativePath });
+			if (currentDebugSession)
+				currentDebugSession.customRequest("DocumentChanged", { fullPath: td.fileName, relativePath: relativePath });
 		}, 200);
 	}));
 
