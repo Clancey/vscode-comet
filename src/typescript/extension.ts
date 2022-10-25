@@ -11,7 +11,7 @@ import { MobileProjectManager } from "./project-manager";
 import { MobileConfigurationProvider } from "./configuration";
 import { OutputChannel } from 'vscode';
 import { MobileBuildTaskProvider } from './build-task';
-import { extensionConfigurationKey, omnisharpExtensionId, outputChanelName } from './extensionInfo';
+import { configureExtensionCommand, extensionConfigurationKey, omnisharpExtensionId, outputChanelName, startSessionCommand } from './extensionInfo';
 
 
 const localize = nls.config({ locale: process.env.VSCODE_NLS_CONFIG })();
@@ -42,8 +42,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
 
-	context.subscriptions.push(vscode.commands.registerCommand('extension.comet.configureExceptions', () => configureExceptions()));
-	context.subscriptions.push(vscode.commands.registerCommand('extension.comet.startSession', config => startSession(config)));
+	context.subscriptions.push(vscode.commands.registerCommand(configureExtensionCommand, () => configureExceptions()));
+	context.subscriptions.push(vscode.commands.registerCommand(startSessionCommand, config => startSession(config)));
 
 	const provider = new MobileConfigurationProvider();
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(MobileBuildTaskProvider.MobileBuildScriptType, provider));
