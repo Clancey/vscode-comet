@@ -11,6 +11,8 @@ using System.Net;
 using VsCodeMobileUtil;
 using Mono.Debugging.Client;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
+using System.Reflection.Metadata;
+using System.Text;
 #if !EXCLUDE_HOT_RELOAD
 using VSCodeDebug.HotReload;
 #endif
@@ -276,12 +278,12 @@ namespace VSCodeDebug
 		async Task<(bool success, string message)> LaunchCatalyst(LaunchData launchOptions, int port)
 		{
 			var projectDir = launchOptions.GetProjectPropertyPathValue("MSBuildProjectDirectory");
-            var outputPath = launchOptions.GetProjectPropertyPathValue("OutputPath");
+			var outputPath = launchOptions.GetProjectPropertyPathValue("OutputPath");
 
 			if (!Path.IsPathRooted(outputPath))
 				outputPath = Path.GetFullPath(outputPath, projectDir);
 
-            var targetDir = launchOptions.GetProjectPropertyPathValue("TargetDir")
+			var targetDir = launchOptions.GetProjectPropertyPathValue("TargetDir")
 				?? projectDir
 				?? launchOptions.WorkspaceDirectory;
 
@@ -291,8 +293,8 @@ namespace VSCodeDebug
 
 			var targetPath = Path.Combine(targetDir, targetName + ".app");
 
-            // _XamarinSdkRootDirectory - /usr/local/share/dotnet/packs/Microsoft.MacCatalyst.Sdk/15.4.1180-rc.2/
-            
+			// _XamarinSdkRootDirectory - /usr/local/share/dotnet/packs/Microsoft.MacCatalyst.Sdk/15.4.1180-rc.2/
+			
 			
 			//Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_HOSTS__", "127.0.0.1");
 			//Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_PORT__", port.ToString());
@@ -304,8 +306,8 @@ namespace VSCodeDebug
 				d => SendConsoleEvent(d), new Dictionary<string, string>
 				{
 					["__XAMARIN_DEBUG_HOSTS__"] = "127.0.0.1",
-                    ["__XAMARIN_DEBUG_PORT__"] = port.ToString(),
-                });
+					["__XAMARIN_DEBUG_PORT__"] = port.ToString(),
+				});
 
 			var r = spr.WaitForExit();
 			return (r.ExitCode == 0, string.Join("\r\n", r.StandardError));
@@ -313,106 +315,31 @@ namespace VSCodeDebug
 
 		async Task<(bool success, string message)> LaunchiOS(Response response, LaunchData launchOptions, int port)
 		{
-			//var ipstr = string.Join(";", GetLocalIps());
+			if (System.Diagnostics.Debugger.IsAttached)
+			{
+				var sbProps = new StringBuilder();
+				foreach (var p in launchOptions.ProjectProperties)
+					sbProps.AppendLine(p.Key + " = " + p.Value);
+				var dmp = sbProps.ToString();
+				Console.WriteLine(dmp);
+			}
 
-			//Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_HOSTS__", ipstr);
-			//Environment.SetEnvironmentVariable("__XAMARIN_DEBUG_PORT__", port.ToString());
-
-			//var args = new string[]
-			//{
-			//	"build",
-			//	"--no-restore",
-			//	"-f",
-			//	launchOptions.ProjectTargetFramework,
-			//	$"\"{launchOptions.Project}\"",
-			//	"-t:Run",
-			//	$"-p:_DeviceName=\":v2:udid={launchOptions.iOSSimulatorDeviceUdid}\"",
-			//	$"-p:MtouchExtraArgs=\"-v -v -v -v --setenv:__XAMARIN_DEBUG_PORT__={port} --setenv:__XAMARIN_DEBUG_HOSTS__={ipstr}\"",
-			//	"-verbosity:diag",
-			//	"-bl:/Users/redth/Desktop/iosdbg.binlog"
-			//};
-
-			//SendConsoleEvent("Executing: dotnet " + string.Join(" ", args));
-
-			//return await Task.Run(() => DotNet.Run(
-			//		d => SendConsoleEvent(d),
-			//		args));
-
-			var workingDir = Path.GetDirectoryName(launchOptions.Project);
 			var xcodePath = Path.Combine(XCode.GetBestXcode(), "Contents", "Developer");
-			string sdkRoot = $"-sdkroot {xcodePath}";
-
-			
-
-			SendConsoleEvent($"Using `{sdkRoot}`");
-
-			string appPath = default;
-			DateTime appPathLastWrite = DateTime.MinValue;
-			var output = Path.Combine(
-				workingDir,
-				"bin",
-				launchOptions.Configuration,
-				launchOptions.ProjectTargetFramework);
-
-			if (Directory.Exists(output))
+			if (!Directory.Exists(xcodePath))
 			{
-				var ridDirs = Directory.GetDirectories(output) ?? new string[0];
-
-				foreach (var ridDir in ridDirs)
-				{
-					// Find the newest .app generated and assume that's the one we want
-					var appDirs = Directory.EnumerateDirectories(ridDir, "*.app", SearchOption.AllDirectories);
-
-					foreach (var appDir in appDirs)
-					{
-						var appDirTime = Directory.GetLastWriteTime(appDir);
-						if (appDirTime > appPathLastWrite)
-						{
-							appPath = appDir;
-							appPathLastWrite = appDirTime;
-						}
-					}
-				}
-			}
-			
-			if (string.IsNullOrEmpty(appPath))
-			{
-				var msg = $"No .app found in folder: {output}";
+				var msg = "Failed to find Xcode";
 				SendConsoleEvent(msg);
 				SendErrorResponse(response, 3002, msg);
-				return (false, "");
+				return (false, msg);
 			}
 
-			SendConsoleEvent($"Found .app: {appPath}");
+			SendConsoleEvent($"Found Xcode: {xcodePath}");
 
-			var dotnetSdkDir = Microsoft.DotNet.NativeWrapper.EnvironmentProvider.GetDotnetExeDirectory();
-			var mlaunchPath = string.Empty;
-			var dotnetSkdPath = Path.Combine(dotnetSdkDir, "packs", "Microsoft.iOS.Sdk"); // 14.4.100-ci.main.1192/tools/bin/mlaunch
+			var xcodeSdkRoot = $"-sdkroot {xcodePath}";
+			var workingDir = launchOptions.GetProjectPropertyPathValue("TargetDir");
+			var appPath = Path.Combine(workingDir, launchOptions.GetProjectPropertyValue("_AppBundleName") + ".app");
 
-			if (!Directory.Exists(dotnetSkdPath))
-			{
-				var msg = dotnetSkdPath + " is missing, please install the iOS SDK Workload";
-				SendConsoleEvent(msg);
-				SendErrorResponse(response, 3002, msg);
-				return (false, "");
-			}
-
-			// TODO: Use WorkloadResolver to get pack info for `Microsoft.iOS.Sdk` to choose
-			// the actual one that's being used - just not sure how to get dotnet sdk version in use
-			SendConsoleEvent($"Looking for Microsoft.iOS.Sdk tools in: {dotnetSkdPath}");
-
-			foreach (var dir in Directory.GetDirectories(dotnetSkdPath).Reverse())
-			{
-				var mlt = Path.Combine(dir, "tools", "bin", "mlaunch");
-
-				if (File.Exists(mlt))
-				{
-					mlaunchPath = mlt;
-					break;
-				}
-			}
-
-			//mlaunchPath = "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mlaunch";
+			var mlaunchPath = launchOptions.GetProjectPropertyPathValue("_MlaunchPath");
 
 			if (string.IsNullOrEmpty(mlaunchPath) || !File.Exists(mlaunchPath))
 			{
@@ -424,16 +351,16 @@ namespace VSCodeDebug
 
 			SendConsoleEvent($"Found mlaunch: {mlaunchPath}");
 
-			var success = await RunMlaumchComand(mlaunchPath, workingDir,
-				sdkRoot,
+			var success = await RunMlaumchComand(mlaunchPath,
+				workingDir,
+				xcodeSdkRoot,
 				$"--launchsim \"{appPath}\"",
 				$"--argument=-monodevelop-port --argument={port} --setenv=__XAMARIN_DEBUG_PORT__={port}",
 				$"--device=:v2:udid={launchOptions.DeviceId}"
 				//$"--sdk {launchOptions.iOSSimulatorVersion} --device=:v2:udid={launchOptions.DeviceId}"
 				//$"--sdk {launchOptions.iOSSimulatorVersion} --device=:v2:runtime={launchOptions.iOSSimulatorDevice},devicetype={launchOptions.iOSSimulatorDeviceType}"
 				);
-			return success;
-
+			return (true, "");// success;
 		}
 
 		System.Diagnostics.Process iOSDebuggerProcess;
@@ -897,15 +824,19 @@ namespace VSCodeDebug
 						var flags = val.Flags;
 						if (flags.HasFlag(ObjectValueFlags.Error) || flags.HasFlag(ObjectValueFlags.NotSupported)) {
 							error = val.DisplayValue;
-							if (error.IndexOf("reference not available in the current evaluation context") > 0) {
-								error = "not available";
-							}
+							
+							SendResponse(response, new EvaluateResponseBody(expression));
+							return;
 						}
 						else if (flags.HasFlag(ObjectValueFlags.Unknown)) {
 							error = "invalid expression";
+							SendResponse(response, new EvaluateResponseBody(expression));
+							return;
 						}
 						else if (flags.HasFlag(ObjectValueFlags.Object) && flags.HasFlag(ObjectValueFlags.Namespace)) {
 							error = "not available";
+							SendResponse(response, new EvaluateResponseBody(expression));
+							return;
 						}
 						else {
 							int handle = 0;
@@ -913,12 +844,14 @@ namespace VSCodeDebug
 								handle = _variableHandles.Create(val.GetAllChildren());
 							}
 							SendResponse(response, new EvaluateResponseBody(val.DisplayValue, handle, val.TypeName,
-								new VariablePresentationHint(val.IsObject ? "class" : "property", null)));
+								new VariablePresentationHint("property", null)));
 							return;
 						}
 					}
 					else {
 						error = "invalid expression";
+						SendResponse(response, new EvaluateResponseBody(expression));
+						return;
 					}
 				}
 				else {
