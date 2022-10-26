@@ -26,6 +26,7 @@ export enum ProjectType
 	Unknown,
 	WPF,
 	Blazor,
+	Windows
 }
 
 export class MobileProjectManager {
@@ -305,6 +306,16 @@ export class MobileProjectManager {
 			MobileProjectManager.Shared.StartupInfo.Device = deviceData;
 		}
 
+		if (selectedTargetFramework && MobileProjectManager.getProjectType(selectedTargetFramework) == ProjectType.Windows)
+		{
+			var deviceData = new DeviceData();
+			deviceData.name = "Local Machine";
+			deviceData.platforms = [ 'windows' ];
+			deviceData.serial = "local";
+
+			MobileProjectManager.Shared.StartupInfo.Device = deviceData;
+		}
+
 		this.updateProjectStatus();
 		this.updateDeviceStatus();
 	}
@@ -383,6 +394,15 @@ export class MobileProjectManager {
 					}
 				}
 			}
+		}
+		else if (projectType === ProjectType.Windows)
+		{
+			var deviceData = new DeviceData();
+			deviceData.name = "Local Machine";
+			deviceData.platforms = [ 'windows' ];
+			deviceData.serial = "local";
+
+			selectedDevice = deviceData;
 		}
 		else if (projectType === ProjectType.MacCatalyst)
 		{
@@ -479,7 +499,7 @@ export class MobileProjectManager {
 	{
 		var projType = this.getProjectType(targetFramework);
 
-		return projType == ProjectType.Android || projType == ProjectType.iOS || projType == ProjectType.MacCatalyst;
+		return projType == ProjectType.Android || projType == ProjectType.iOS || projType == ProjectType.MacCatalyst || projType == ProjectType.Windows;
 	}
 
 	public static getIsSupportedProject(project: ProjectInfo): boolean
@@ -517,6 +537,8 @@ export class MobileProjectManager {
 			return ProjectType.Mac;
 		else if (tfm.indexOf('xamarinmaccatalyst') >= 0 || tfm.indexOf('-maccatalyst') >= 0)
 			return ProjectType.MacCatalyst;
+		else if (tfm.indexOf('-windows') >= 0)
+			return ProjectType.Windows;
 	}
 
 	public static getProjectIsCore(targetFramework: TargetFrameworkInfo): boolean
