@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 const path = require('path');
 
+export const mobileBuildScriptType = "comet";
 export const omnisharpExtensionId = "ms-dotnettools.csharp";
 export const extensionConfigurationKey = "comet-debug";
 export const extensionId = "Clancey.comet-debug";

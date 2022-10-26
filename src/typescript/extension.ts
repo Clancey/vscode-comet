@@ -11,7 +11,7 @@ import { MobileProjectManager } from "./project-manager";
 import { MobileConfigurationProvider } from "./configuration";
 import { OutputChannel } from 'vscode';
 import { MobileBuildTaskProvider } from './build-task';
-import { configureExtensionCommand, extensionConfigurationKey, omnisharpExtensionId, outputChanelName, startSessionCommand } from './extensionInfo';
+import { configureExtensionCommand, extensionConfigurationKey, mobileBuildScriptType, omnisharpExtensionId, outputChanelName, startSessionCommand } from './extensionInfo';
 
 
 const localize = nls.config({ locale: process.env.VSCODE_NLS_CONFIG })();
@@ -36,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	this.projectManager = new MobileProjectManager(context);
 
-	this.buildTaskProvider = vscode.tasks.registerTaskProvider(MobileBuildTaskProvider.MobileBuildScriptType, new MobileBuildTaskProvider(vscode.workspace.rootPath));
+	this.buildTaskProvider = vscode.tasks.registerTaskProvider(mobileBuildScriptType, new MobileBuildTaskProvider(vscode.workspace.rootPath));
 	
 	omnisharp = vscode.extensions.getExtension(omnisharpExtensionId).exports;
 
@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand(startSessionCommand, config => startSession(config)));
 
 	const provider = new MobileConfigurationProvider();
-	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(MobileBuildTaskProvider.MobileBuildScriptType, provider));
+	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(mobileBuildScriptType, provider));
 
 	context.subscriptions.push(vscode.debug.onDidStartDebugSession(async (s) => {
 		let type = s.type;
@@ -56,7 +56,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			type = debugSessionInfo.configurationProperties.type;
 		}
 
-		if (type === MobileBuildTaskProvider.MobileBuildScriptType) {
+		if (type === mobileBuildScriptType) {
 			currentDebugSession = s;
 		}
 	}));
