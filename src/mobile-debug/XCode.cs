@@ -44,7 +44,9 @@ namespace VsCodeMobileUtil
 					Platforms = d.DotNetPlatforms,
 					Serial = d.Identifier,
 					Version = d.OperatingSystemVersion
-				});
+				})
+				.OrderBy(d => d.IsEmulator)
+				.ThenBy(d => d.Name);;
 
 			return filteredDevices.ToList();
 		}
