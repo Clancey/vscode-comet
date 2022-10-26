@@ -73,7 +73,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	setUpHotReload(context);
 
 	//output.appendLine("Initialization succeeded");
-	//output.show();
 }
 
 export function deactivate() {
