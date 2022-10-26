@@ -1,217 +1,213 @@
 {
-	"name": "comet-debug",
-	"displayName": "Comet for .NET Mobile",
-	"version": "0.3.16",
-	"publisher": "Clancey",
-	"description": "Visual Studio Code extension for Comet and .NET Mobile",
-	"icon": "images/comet-logo.png",
-	"categories": [
-		"Debuggers"
-	],
-	"author": {
-		"name": "James Clancey"
-	},
-	"license": "MIT",
-	"private": true,
-	"extensionDependencies": [
-		"ms-dotnettools.csharp"
-	],
-	"scripts": {
-		"prepublish": "",
-		"vscode:prepublish": "",
-		"webpack": "webpack --mode development",
-		"webpack-dev": "webpack --mode development --watch",
-		"test": "make tests; mocha --timeout 10000 -u tdd ./out/tests"
-	},
-	"engines": {
-		"vscode": "^1.47.0",
-		"node": "^6.3.0"
-	},
-	"dependencies": {
-		"@types/execa": "^2.0.0",
-		"@types/lodash": "^4.14.168",
-		"@types/vscode": "^1.53.0",
-		"@types/xml2js": "^0.4.8",
-		"execa": "^5.0.0",
-		"lodash": "^4.17.21",
-		"rxjs": "^6.6.6",
-		"vscode-debugprotocol": "^1.45.0",
-		"vscode-jsonrpc": "^8.0.2",
-		"vscode-nls": "^5.0.0",
-		"vscode-test": "^1.5.1",
-		"xml2js": "^0.4.23"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Clancey/vscode-comet.git"
-	},
-	"bugs": {
-		"url": "https://github.com/Clancey/vscode-comet/issues"
-	},
-	"devDependencies": {
-		"@types/mocha": "^8.2.1",
-		"@types/node": "^14.14.31",
-		"mocha": "^10.0.0",
-		"ts-loader": "^6.0.4",
-		"typescript": "^4.2.2",
-		"vsce": "^2.11.0",
-		"vscode-debugadapter-testsupport": "^1.45.0",
-		"vscode-nls-dev": "^4.0.0",
-		"webpack": "^5.24.2",
-		"webpack-cli": "^4.5.0"
-	},
-	"main": "./dist/extension",
-	"activationEvents": [
-		"onStartupFinished",
-		"onCommand:extension.comet.configureExceptions",
-		"onCommand:extension.comet.startSession"
-	],
-	"contributes": {
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "comet",
-					"title": ".NET Comet (Mobile)",
-					"icon": "images/comet-logo.png"
-				}
-			]
-		},
-		"configuration": {
-			"type": "object",
-			"title": "%configuration.title%",
-			"properties": {
-				"comet.exceptionOptions": {
-					"type": "object",
-					"additionalProperties": {
-						"type": "string",
-						"enum": [
-							"never",
-							"always",
-							"unhandled"
-						],
-						"enumDescriptions": [
-							"%breakMode.never%",
-							"%breakMode.always%",
-							"%breakMode.unhandled%"
-						],
-						"description": "%configuration.exceptionOptions.description2%",
-						"default": "never"
-					},
-					"description": "%configuration.exceptionOptions.description%",
-					"default": {
-						"System.Exception": "never",
-						"System.SystemException": "never",
-						"System.ArithmeticException": "never",
-						"System.ArrayTypeMismatchException": "never",
-						"System.DivideByZeroException": "never",
-						"System.IndexOutOfRangeException": "never",
-						"System.InvalidCastException": "never",
-						"System.NullReferenceException": "never",
-						"System.OutOfMemoryException": "never",
-						"System.OverflowException": "never",
-						"System.StackOverflowException": "never",
-						"System.TypeInitializationException": "never"
-					}
-				}
-			}
-		},
-		"languages": [
-			{
-				"id": "XAML",
-				"aliases": [
-					"XAML",
-					"xaml"
-				],
-				"extensions": [
-					".xaml"
-				]
-			},
-			{
-				"id": "csharp",
-				"aliases": [
-					"C#"
-				],
-				"extensions": [
-					".cs"
-				]
-			}
-		],
-		"grammars": [
-			{
-				"language": "XAML",
-				"scopeName": "source.XAML",
-				"path": "./syntaxes/XAML.tmLanguage.json"
-			}
-		],
-		"taskDefinitions": [
-			{
-				"type": "comet",
-				"required": [],
-				"properties": {}
-			}
-		],
-		"commands": [
-			{
-				"command": "extension.comet.configureExceptions",
-				"title": "%configure.exceptions.command%",
-				"category": "Debug"
-			}
-		],
-		"breakpoints": [
-			{
-				"language": "csharp"
-			},
-			{
-				"language": "fsharp"
-			}
-		],
-		"debuggers": [
-			{
-				"type": "comet",
-				"label": ".NET Comet (Mobile)",
-				"program": "./src/mobile-debug/bin/Debug/net6.0/mobile-debug.dll",
-				"runtime": "dotnet",
-				"languages": [
-					"csharp"
-				],
-				"initialConfigurations": [
-					{
-						"name": "%comet.launch.config.name%",
-						"type": "comet",
-						"request": "launch",
-						"preLaunchTask": "comet: Build"
-					}
-				],
-				"configurationAttributes": {
-					"launch": {
-						"required": [],
-						"properties": {
-							"projectPath": {
-								"type": "string",
-								"description": "%comet.launch.projectPath.description%",
-								"default": "undefined"
-							},
-							"projectConfiguration": {
-								"type": "string",
-								"description": "%comet.launch.projectConfiguration.description%",
-								"default": "undefined"
-							}
-						}
-					}
-				},
-				"configurationSnippets": [
-					{
-						"label": ".NET Mobile (Comet): Debug Configuration",
-						"description": "A new configuration for building and debugging a .NET Mobile (Comet) app.",
-						"body": {
-							"name": "%comet.launch.config.name%",
-							"type": "comet",
-							"request": "launch",
-							"preLaunchTask": "comet: Build"
-						}
-					}
-				]
-			}
-		]
-	}
+  "name": "comet-debug",
+  "displayName": "Comet for .NET Mobile",
+  "version": "0.3.16",
+  "publisher": "Clancey",
+  "description": "Visual Studio Code extension for Comet and .NET Mobile",
+  "icon": "images/comet-logo.png",
+  "categories": [
+    "Debuggers"
+  ],
+  "author": {
+    "name": "James Clancey"
+  },
+  "license": "MIT",
+  "private": true,
+  "extensionDependencies": [
+    "ms-dotnettools.csharp"
+  ],
+  "scripts": {
+    "prepublish": "",
+    "vscode:prepublish": "",
+    "webpack": "webpack --mode development",
+    "webpack-dev": "webpack --mode development --watch",
+    "test": "make tests; mocha --timeout 10000 -u tdd ./out/tests"
+  },
+  "engines": {
+    "vscode": "^1.47.0",
+    "node": "^6.3.0"
+  },
+  "dependencies": {
+    "@types/execa": "^2.0.0",
+    "@types/vscode": "^1.72.0",
+    "execa": "^6.1.0",
+    "rxjs": "^7.5.7",
+    "vscode-debugprotocol": "^1.51.0",
+    "vscode-jsonrpc": "^8.0.2",
+    "vscode-nls": "^5.2.0",
+    "vscode-test": "^1.6.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Clancey/vscode-comet.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Clancey/vscode-comet/issues"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^16.18.1",
+    "mocha": "^10.1.0",
+    "ts-loader": "^9.4.1",
+    "typescript": "^4.8.4",
+    "vsce": "^2.13.0",
+    "vscode-debugadapter-testsupport": "^1.51.0",
+    "vscode-nls-dev": "^4.0.3",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
+  },
+  "main": "./dist/extension",
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:extension.comet.configureExceptions",
+    "onCommand:extension.comet.startSession"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "comet",
+          "title": ".NET Comet (Mobile)",
+          "icon": "images/comet-logo.png"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "%configuration.title%",
+      "properties": {
+        "comet.exceptionOptions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "never",
+              "always",
+              "unhandled"
+            ],
+            "enumDescriptions": [
+              "%breakMode.never%",
+              "%breakMode.always%",
+              "%breakMode.unhandled%"
+            ],
+            "description": "%configuration.exceptionOptions.description2%",
+            "default": "never"
+          },
+          "description": "%configuration.exceptionOptions.description%",
+          "default": {
+            "System.Exception": "never",
+            "System.SystemException": "never",
+            "System.ArithmeticException": "never",
+            "System.ArrayTypeMismatchException": "never",
+            "System.DivideByZeroException": "never",
+            "System.IndexOutOfRangeException": "never",
+            "System.InvalidCastException": "never",
+            "System.NullReferenceException": "never",
+            "System.OutOfMemoryException": "never",
+            "System.OverflowException": "never",
+            "System.StackOverflowException": "never",
+            "System.TypeInitializationException": "never"
+          }
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "XAML",
+        "aliases": [
+          "XAML",
+          "xaml"
+        ],
+        "extensions": [
+          ".xaml"
+        ]
+      },
+      {
+        "id": "csharp",
+        "aliases": [
+          "C#"
+        ],
+        "extensions": [
+          ".cs"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "XAML",
+        "scopeName": "source.XAML",
+        "path": "./syntaxes/XAML.tmLanguage.json"
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "comet",
+        "required": [],
+        "properties": {}
+      }
+    ],
+    "commands": [
+      {
+        "command": "extension.comet.configureExceptions",
+        "title": "%configure.exceptions.command%",
+        "category": "Debug"
+      }
+    ],
+    "breakpoints": [
+      {
+        "language": "csharp"
+      },
+      {
+        "language": "fsharp"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "comet",
+        "label": ".NET Comet (Mobile)",
+        "program": "./src/mobile-debug/bin/Debug/net6.0/mobile-debug.dll",
+        "runtime": "dotnet",
+        "languages": [
+          "csharp"
+        ],
+        "initialConfigurations": [
+          {
+            "name": "%comet.launch.config.name%",
+            "type": "comet",
+            "request": "launch",
+            "preLaunchTask": "comet: Build"
+          }
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "required": [],
+            "properties": {
+              "projectPath": {
+                "type": "string",
+                "description": "%comet.launch.projectPath.description%",
+                "default": "undefined"
+              },
+              "projectConfiguration": {
+                "type": "string",
+                "description": "%comet.launch.projectConfiguration.description%",
+                "default": "undefined"
+              }
+            }
+          }
+        },
+        "configurationSnippets": [
+          {
+            "label": ".NET Mobile (Comet): Debug Configuration",
+            "description": "A new configuration for building and debugging a .NET Mobile (Comet) app.",
+            "body": {
+              "name": "%comet.launch.config.name%",
+              "type": "comet",
+              "request": "launch",
+              "preLaunchTask": "comet: Build"
+            }
+          }
+        ]
+      }
+    ]
+  }
 }
