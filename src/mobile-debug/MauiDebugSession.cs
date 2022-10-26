@@ -49,7 +49,7 @@ internal class MauiDebugSession : MonoDebugSession
 		}
 
 		if (launchOptions.ProjectType == ProjectType.iOS || launchOptions.ProjectType == ProjectType.MacCatalyst)
-			port = Utilities.FindFreePort(55555);
+			port = Utilities.FindFreePort(55559);
 
 		Connect(launchOptions, address, port);
 

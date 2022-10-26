@@ -105,7 +105,7 @@ namespace VsCodeMobileUtil
 			ProjectType = (ProjectType)projectTypeString;
 			ProjectTargetFramework = getString(args, VSCodeKeys.LaunchConfig.ProjectTargetFramework);
 			ProjectIsCore = getBool(args, VSCodeKeys.LaunchConfig.ProjectIsCore, false);
-			DebugPort = getInt(args, VSCodeKeys.LaunchConfig.DebugPort, 55555);
+			DebugPort = getInt(args, VSCodeKeys.LaunchConfig.DebugPort, 55559);
 			WorkspaceDirectory = getString(args, VSCodeKeys.LaunchConfig.WorkspaceDirectory);
 			ProjectProperties = getDictionary(args, VSCodeKeys.LaunchConfig.ProjectProperties);
 			//if(string.IsNullOrWhiteSpace(projectTypeString))
