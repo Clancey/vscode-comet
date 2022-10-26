@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 //import {ProjectType } from './msbuild-project-analyzer';
 import { MobileProjectManager, ProjectType } from './project-manager';
 import * as child from 'child_process';
+import { mobileBuildScriptType } from './extensionInfo';
 
 interface ExecResult {
     stdout: string,
@@ -51,7 +52,7 @@ interface MobileBuildTaskDefinition extends vscode.TaskDefinition {
 }
 
 export class MobileBuildTaskProvider implements vscode.TaskProvider {
-	static MobileBuildScriptType: string = 'comet';
+	
 	private platform:string;
 	
 	// We use a CustomExecution task when state needs to be shared across runs of the task or when 
@@ -162,7 +163,7 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 			definition = {
 				task: "MSBuild",
 				command,
-				type: MobileBuildTaskProvider.MobileBuildScriptType,
+				type: mobileBuildScriptType,
 				csproj,
 				configuration,
 				projectType,
@@ -194,7 +195,7 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 			args.unshift("build");
 			
 			if (tfm)
-				args.push(`-p:TargetFramework=${tfm}`);
+				args.push(`-p:TargetFramework=${tfm.FullName}`);
 		}
 
 		if (configuration.toLowerCase() === "debug")
@@ -221,7 +222,7 @@ export class MobileBuildTaskProvider implements vscode.TaskProvider {
 		}
 
 		args.concat(flags);
-		var task = new vscode.Task(definition, definition.target, MobileBuildTaskProvider.MobileBuildScriptType, new vscode.ProcessExecution(command, args),
+		var task = new vscode.Task(definition, definition.target, mobileBuildScriptType, new vscode.ProcessExecution(command, args),
 			"$msCompile");
 		return task;
 	}

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import { MobileBuildTaskProvider } from './build-task';
+import { mobileBuildScriptType } from './extensionInfo';
 import { MobileProjectManager, ProjectType } from './project-manager';
 
 export class MobileConfiguration implements DebugConfiguration {
@@ -21,13 +22,13 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 		// No launch.json exists, let's help fill out a nice default
 		if (!config.type && !config.request && !config.name)
 		{
-			config.type = MobileBuildTaskProvider.MobileBuildScriptType;
+			config.type = mobileBuildScriptType;
 			config.request = 'launch';
 			return config;
 		}
 
 		// if launch.json is missing or empty
-		if (config.type == MobileBuildTaskProvider.MobileBuildScriptType) {
+		if (config.type == mobileBuildScriptType) {
 			
 			if (!config.request)
 				config.request = 'launch';
@@ -51,11 +52,11 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 
 			if (project) {
 
+				if (!config['projectProperties'])
+					config['projectProperties']	= project.Properties;
+
 				if (!config['projectPath'])
 					config['projectPath'] = project.Path;
-
-				if (!config['projectOutputPath'])
-					config['projectOutputPath'] = project.OutputPath;
 
 				if (!config['projectConfiguration'])
 					config['projectConfiguration'] = startupInfo.Configuration;
@@ -66,7 +67,7 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 
 				config['projectType'] = projectType;
 				config['projectIsCore'] = projectIsCore;
-				config['projectTargetFramework'] = startupInfo.TargetFramework;
+				config['projectTargetFramework'] = startupInfo.TargetFramework.FullName;
 				config['projectPlatform'] = MobileProjectManager.getSelectedProjectPlatform();
 
 				config['debugPort'] = startupInfo.DebugPort;
@@ -108,7 +109,7 @@ export class MobileConfigurationProvider implements vscode.DebugConfigurationPro
 							config['device'] = device.name;
 					}
 
-					config['devicePlatform'] = projectTfm;
+					config['devicePlatform'] = projectTfm.Platform;
 				}
 			}
 		}

@@ -7,47 +7,46 @@
 import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { EmulatorItem, MobileEmulatorProvider } from "./sidebar"
-import { execArgv } from 'process';
-import { SimpleResult } from "./util";
-import { MobileUtil } from "./util";
 import { MobileProjectManager } from "./project-manager";
 import { MobileConfigurationProvider } from "./configuration";
 import { OutputChannel } from 'vscode';
-import { MSBuildProject } from './omnisharp/protocol';
 import { MobileBuildTaskProvider } from './build-task';
+import { configureExtensionCommand, extensionConfigurationKey, mobileBuildScriptType, omnisharpExtensionId, outputChanelName, startSessionCommand } from './extensionInfo';
+
 
 const localize = nls.config({ locale: process.env.VSCODE_NLS_CONFIG })();
 
-const configuration = vscode.workspace.getConfiguration('comet-debug');
+const configuration = vscode.workspace.getConfiguration(extensionConfigurationKey);
 
 
 projectManager: MobileProjectManager;
 let omnisharp: any = null;
 let output: OutputChannel = null;
 
-var treeViewProvider: MobileEmulatorProvider; 
+//var treeViewProvider: MobileEmulatorProvider; 
 var currentDebugSession: vscode.DebugSession;
 
 var buildTaskProvider: MobileBuildTaskProvider;
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 
-	output = vscode.window.createOutputChannel("Comet for .NET Mobile");
+	output = vscode.window.createOutputChannel(outputChanelName);
+
+
 
 	this.projectManager = new MobileProjectManager(context);
 
-	this.buildTaskProvider = vscode.tasks.registerTaskProvider(MobileBuildTaskProvider.MobileBuildScriptType, new MobileBuildTaskProvider(vscode.workspace.rootPath));
+	this.buildTaskProvider = vscode.tasks.registerTaskProvider(mobileBuildScriptType, new MobileBuildTaskProvider(vscode.workspace.rootPath));
 	
-	omnisharp = vscode.extensions.getExtension("ms-dotnettools.csharp").exports;
+	omnisharp = vscode.extensions.getExtension(omnisharpExtensionId).exports;
 
 	omnisharp.eventStream.subscribe((e: any) => console.log(JSON.stringify(e)));
 
-	context.subscriptions.push(vscode.commands.registerCommand('extension.comet.configureExceptions', () => configureExceptions()));
-	context.subscriptions.push(vscode.commands.registerCommand('extension.comet.startSession', config => startSession(config)));
+	context.subscriptions.push(vscode.commands.registerCommand(configureExtensionCommand, () => configureExceptions()));
+	context.subscriptions.push(vscode.commands.registerCommand(startSessionCommand, config => startSession(config)));
 
 	const provider = new MobileConfigurationProvider();
-	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(MobileBuildTaskProvider.MobileBuildScriptType, provider));
+	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(mobileBuildScriptType, provider));
 
 	context.subscriptions.push(vscode.debug.onDidStartDebugSession(async (s) => {
 		let type = s.type;
@@ -57,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
 			type = debugSessionInfo.configurationProperties.type;
 		}
 
-		if (type === MobileBuildTaskProvider.MobileBuildScriptType) {
+		if (type === mobileBuildScriptType) {
 			currentDebugSession = s;
 		}
 	}));
@@ -99,12 +98,13 @@ export function setUpHotReload(context: vscode.ExtensionContext)
 			// TODO: Generalize this once we have knowledge of the project path, but for now assume that xaml files are at
 			// the root of the project
 			var relativePath = td.fileName.split('\\').pop().split('/').pop();
-			currentDebugSession.customRequest("DocumentChanged", { fullPath: td.fileName, relativePath: relativePath });
+			if (currentDebugSession)
+				currentDebugSession.customRequest("DocumentChanged", { fullPath: td.fileName, relativePath: relativePath });
 		}, 200);
-    }));
+	}));
 
 	/*
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((td) => {
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((td) => {
 		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
 		// Hopefully we can improve in future: https://github.com/Microsoft/vscode/issues/42913
 		if (hotReloadDelayTimer) {
@@ -112,8 +112,8 @@ export function setUpHotReload(context: vscode.ExtensionContext)
 		}
 
 		hotReloadDelayTimer = setTimeout(() => {
-            hotReloadDelayTimer = null;
-            CometDebugger.Shared.SendDocumentChanged(td.document.fileName, td.document.getText());
+			hotReloadDelayTimer = null;
+			CometDebugger.Shared.SendDocumentChanged(td.document.fileName, td.document.getText());
 		}, 800);
 	}));
 	*/

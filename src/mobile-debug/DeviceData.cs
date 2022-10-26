@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
+using VSCodeDebug;
 
 namespace VsCodeMobileUtil
 {
@@ -60,15 +61,31 @@ namespace VsCodeMobileUtil
 		public ProjectType ProjectType { get; set; }
 		public string ProjectTargetFramework { get; set; }
 		public bool ProjectIsCore { get; set; }
-		public string OutputDirectory { get; set; }
+		//public string OutputDirectory { get; set; }
 		public bool EnableHotReload { get; set; }
 		public string AdbDeviceName { get; set; }
 		public string WorkspaceDirectory { get; set; }
+		public IReadOnlyDictionary<string, string> ProjectProperties { get; set; }
 
 		public int DebugPort { get; set; }
 
 		public string TargetPlatformIdentifier
 			=> NuGet.Frameworks.NuGetFramework.Parse(ProjectTargetFramework)?.Platform;
+
+
+		public string GetProjectPropertyValue(string name, string defaultValue = null)
+		{
+			if (ProjectProperties.TryGetValue(name, out var v))
+				return v;
+			return defaultValue;
+		}
+
+		public string GetProjectPropertyPathValue(string name, string defaultValue = null)
+		{
+			if (ProjectProperties.TryGetValue(name, out var v))
+				return Utilities.FixPathSeparators(v);
+			return defaultValue;
+		}
 
 		public LaunchData ()
 		{
@@ -81,17 +98,19 @@ namespace VsCodeMobileUtil
 			Platform = getString (args, VSCodeKeys.LaunchConfig.Platform, "AnyCPU");
 			DeviceId = getString(args, VSCodeKeys.LaunchConfig.DeviceId);
 			RuntimeIdentifier = getString(args, VSCodeKeys.LaunchConfig.RuntimeIdentifier);
-			OutputDirectory = cleanseStringPaths(getString (args, VSCodeKeys.LaunchConfig.Output));
+			//OutputDirectory = cleanseStringPaths(getString (args, VSCodeKeys.LaunchConfig.Output));
 			EnableHotReload = getBool (args, nameof (EnableHotReload));
 			AdbDeviceName = getString (args, VSCodeKeys.LaunchConfig.AdbEmulatorName);
 			var projectTypeString = getInt (args, VSCodeKeys.LaunchConfig.ProjectType,0);
 			ProjectType = (ProjectType)projectTypeString;
 			ProjectTargetFramework = getString(args, VSCodeKeys.LaunchConfig.ProjectTargetFramework);
 			ProjectIsCore = getBool(args, VSCodeKeys.LaunchConfig.ProjectIsCore, false);
-			DebugPort = getInt(args, VSCodeKeys.LaunchConfig.DebugPort, 55555);
+			DebugPort = getInt(args, VSCodeKeys.LaunchConfig.DebugPort, 55559);
 			WorkspaceDirectory = getString(args, VSCodeKeys.LaunchConfig.WorkspaceDirectory);
+			ProjectProperties = getDictionary(args, VSCodeKeys.LaunchConfig.ProjectProperties);
 			//if(string.IsNullOrWhiteSpace(projectTypeString))
 			//	ProjectType = Enum.Parse (typeof(ProjectType), projectTypeString,true);
+
 		}
 
 		public (bool success, string message) Validate ()
@@ -101,7 +120,7 @@ namespace VsCodeMobileUtil
 			var checks = new[] {
 				validateString(Project,nameof(Project)),
 				validateString(Configuration,nameof(Configuration)),
-				validateString(OutputDirectory,nameof(OutputDirectory)),
+				//validateString(OutputDirectory,nameof(OutputDirectory)),
 			};
 			foreach(var check in checks) {
 				if (!check.success)
@@ -122,7 +141,7 @@ namespace VsCodeMobileUtil
 
 		static string cleanseStringPaths(string path)
 		{
-			if (Util.IsWindows)
+			if (Utilities.IsWindows)
 				return path;
 			return path.Replace ("\\", "/");
 		}
@@ -158,6 +177,28 @@ namespace VsCodeMobileUtil
 				return dflt;
 			}
 			return s;
+		}
+
+		private static IReadOnlyDictionary<string, string> getDictionary(dynamic container, string propertyName)
+		{
+			try
+			{
+				var c = container[propertyName];
+				var d = new Dictionary<string, string>();
+				foreach (var propertyDescriptor in System.ComponentModel.TypeDescriptor.GetProperties(c))
+				{
+					string obj = propertyDescriptor?.GetValue(c);
+					if (!string.IsNullOrEmpty(obj))
+						d.Add(propertyDescriptor.Name, obj);
+				}
+
+				return d;
+			}
+			catch (Exception)
+			{
+				// ignore and return default value
+			}
+			return new Dictionary<string, string>();
 		}
 
 	}

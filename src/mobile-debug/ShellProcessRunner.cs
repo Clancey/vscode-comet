@@ -24,7 +24,7 @@ namespace VSCodeDebug
 
 		public Action<string> OutputHandler { get; private set; }
 
-		public ShellProcessRunner(string executable, string args, System.Threading.CancellationToken cancellationToken, string workingDir = null, Action<string> outputHandler = null)
+		public ShellProcessRunner(string executable, string args, System.Threading.CancellationToken cancellationToken, string workingDir = null, Action<string> outputHandler = null, IDictionary<string, string> environmentVariables = null)
 		{
 			OutputHandler = outputHandler;
 
@@ -34,13 +34,20 @@ namespace VSCodeDebug
 			process = new Process();
 			// process.StartInfo.FileName = Util.IsWindows ? "cmd.exe" : (File.Exists("/bin/zsh") ? "/bin/zsh" : "/bin/bash");
 			// process.StartInfo.Arguments = Util.IsWindows ? $"/c \"{executable} {args}\"" : $"-c \"{executable} {args}\"";
-			process.StartInfo.FileName = Util.IsWindows ? executable : (File.Exists("/bin/zsh") ? "/bin/zsh" : "/bin/bash");
-			process.StartInfo.Arguments = Util.IsWindows ? args : $"-c \"{executable} {args}\"";
+			process.StartInfo.FileName = Utilities.IsWindows ? executable : (File.Exists("/bin/zsh") ? "/bin/zsh" : "/bin/bash");
+			process.StartInfo.Arguments = Utilities.IsWindows ? args : $"-c \"{executable} {args}\"";
+
+			if (environmentVariables != null && environmentVariables.Any())
+			{
+				foreach (var env in environmentVariables)
+					process.StartInfo.Environment[env.Key] = env.Value;
+			}
+
 			process.StartInfo.UseShellExecute = false;
 			process.StartInfo.RedirectStandardOutput = true;
 			process.StartInfo.RedirectStandardInput = true;
 			process.StartInfo.RedirectStandardError = true;
-
+			
 			if (!string.IsNullOrEmpty(workingDir))
 				process.StartInfo.WorkingDirectory = workingDir;
 

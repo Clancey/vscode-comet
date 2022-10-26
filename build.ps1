@@ -1,3 +1,4 @@
+$netVersion = "net6.0";
 
 $cmd = $args[0];
 
@@ -24,10 +25,14 @@ function BuildNet
 
 	& dotnet build /p:Configuration=Debug ./external/Reloadify3000/Reloadify.CommandLine/Reloadify.CommandLine.csproj
 
+	$reloadifyDest = "./src/mobile-debug/bin/Debug/$netVersion/Reloadify/"
+
 	Write-Host "Copying Reloadify 3000 output"
-	Remove-Item ./src/mobile-debug/bin/Debug/net6.0/Reloadify -Force -Recurse
-	New-Item -ItemType Directory -Force -Path "./src/mobile-debug/bin/Debug/net6.0/Reloadify"
-	Copy-Item  -Path "./external/Reloadify3000/Reloadify.CommandLine/bin/Debug/net6.0/*"  -Destination "./src/mobile-debug/bin/Debug/net6.0/Reloadify/" -Recurse
+	if (Test-Path $reloadifyDest) {
+		Remove-Item $reloadifyDest -Force -Recurse
+	}
+	New-Item -ItemType Directory -Force -Path $reloadifyDest
+	Copy-Item  -Path "./external/Reloadify3000/Reloadify.CommandLine/bin/Debug/$netVersion/*"  -Destination $reloadifyDest -Recurse
 }
 
 function BuildTypeScript

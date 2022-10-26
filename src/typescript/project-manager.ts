@@ -1,10 +1,18 @@
-import { MSBuildProject, TargetFramework } from "./omnisharp/protocol";
+import { MSBuildProject } from "./omnisharp/protocol";
 import * as vscode from 'vscode';
+import * as cp from 'child_process';
+import * as rpc from 'vscode-jsonrpc/node';
+
 import { BaseEvent, WorkspaceInformationUpdated } from './omnisharp/loggingEvents';
 import { EventType } from './omnisharp/EventType';
-import { MsBuildProjectAnalyzer } from './msbuild-project-analyzer';
 import { DeviceData, MobileUtil } from "./util";
+import { analyzerExePath, extensionId } from "./extensionInfo";
+import { ProjectInfo } from "./ProjectInfo";
+import { WorkspaceInfo } from "./WorkspaceInfo";
+import { TargetFrameworkInfo } from "./TargetFrameworkInfo";
+import { MobileSessionStartupInfo } from "./MobileSessionStartupInfo";
 
+const path = require('path');
 let fs = require('fs');
 
 export enum ProjectType
@@ -18,63 +26,7 @@ export enum ProjectType
 	Unknown,
 	WPF,
 	Blazor,
-}
-
-export class MSBuildProjectInfo implements MSBuildProject {
-	public static async fromProject(project: MSBuildProject): Promise<MSBuildProjectInfo> {
-		var r = new MSBuildProjectInfo();
-
-		r.ProjectGuid = project.ProjectGuid;
-		r.Path = project.Path;
-		r.AssemblyName = project.AssemblyName;
-		r.TargetPath = project.TargetPath;
-		r.TargetFramework = project.TargetFramework;
-		r.SourceFiles = project.SourceFiles;
-		r.TargetFrameworks = project.TargetFrameworks;
-		r.OutputPath = project.OutputPath;
-		r.IsExe = project.IsExe;
-		r.IsUnityProject = project.IsUnityProject;
-
-		var projXml = fs.readFileSync(r.Path);
-		var msbpa = new MsBuildProjectAnalyzer(projXml);
-		await msbpa.analyze();
-
-		r.Configurations = msbpa.getConfigurationNames();
-		r.Platforms = msbpa.getPlatformNames();
-		r.Name = msbpa.getProjectName();
-		return r;
-	}
-
-	Name: string;
-	ProjectGuid: string;
-	Path: string;
-	AssemblyName: string;
-	TargetPath: string;
-	TargetFramework: string;
-	SourceFiles: string[];
-	TargetFrameworks: TargetFramework[];
-	OutputPath: string;
-	IsExe: boolean;
-	IsUnityProject: boolean;
-
-	Configurations: string[];
-	Platforms: string[];
-}
-
-export class MobileSessionStartupInfo {
-	constructor() {
-		this.Project = undefined;
-		this.Configuration = undefined;
-		this.TargetFramework = undefined;
-		this.DebugPort = 55559;
-		this.Device = undefined;
-	}
-
-	Project: MSBuildProjectInfo;
-	Configuration: string;
-	TargetFramework: string;
-	Device: DeviceData;
-	DebugPort: number;
+	Windows
 }
 
 export class MobileProjectManager {
@@ -87,6 +39,8 @@ export class MobileProjectManager {
 
 	omnisharp: any;
 	context: vscode.ExtensionContext;
+	dotnetProjectAnalyzerRpc: rpc.MessageConnection;
+	rpcEvaluateProjectRequest : rpc.RequestType2<string, any, ProjectInfo, void>;
 
 	constructor(context: vscode.ExtensionContext) {
 		MobileProjectManager.Shared = this;
@@ -103,51 +57,66 @@ export class MobileProjectManager {
 
 		var loadingStatusBarItemHidden = false;
 
+		let childProcess = cp.spawn(analyzerExePath);
+
+		// Use stdin and stdout for communication:
+		this.dotnetProjectAnalyzerRpc = rpc.createMessageConnection(
+			new rpc.StreamMessageReader(childProcess.stdout),
+			new rpc.StreamMessageWriter(childProcess.stdin));
+		
+		let rpcWorkspaceChangedNotification = new rpc.NotificationType<WorkspaceInfo>('WorkspaceChanged');
+		let rpcOpenWorkspaceRequest = new rpc.RequestType3<string, string, string, void, void>('OpenWorkspace');
+		this.rpcEvaluateProjectRequest = new rpc.RequestType2<string, any, ProjectInfo, void>('EvaluateProject');
+		this.updateMenus();
+
+		this.dotnetProjectAnalyzerRpc.onNotification(rpcWorkspaceChangedNotification, (workspace: WorkspaceInfo) => {
+
+			this.StartupProjects = workspace.Solution.Projects.filter(p => p.IsExe || !p.IsExe);
+
+			// After projects are reloaded we need to see if any of our existing startup settings
+			// are now invalid
+			if (!this.StartupInfo)
+				this.StartupInfo = new MobileSessionStartupInfo();
+
+			if (!this.StartupInfo.Project || !this.StartupProjects.find(p => p.Path === this.StartupInfo.Project.Path))
+			{
+				this.StartupInfo.Project = undefined;
+				this.StartupInfo.Configuration = undefined;
+				this.StartupInfo.TargetFramework = undefined;
+				this.StartupInfo.Device = undefined;
+
+				this.selectStartupProject(false);
+			}
+
+			if (!loadingStatusBarItemHidden && this.loadingStatusBarItem)
+			{
+				this.loadingStatusBarItem.hide();
+				this.loadingStatusBarItem.dispose();
+				this.loadingStatusBarItem = null;
+			}
+
+			this.updateMenus();
+
+			this.updateProjectStatus();
+			this.updateDeviceStatus();
+		});
+
+
+		this.dotnetProjectAnalyzerRpc.listen();
+
 		this.omnisharp.eventStream.subscribe(async (e: BaseEvent) => {
-
-			// var evtTp = EventType[e.type];
-
-			// if (evtTp)
-			// 	console.log("OMNIEVENT: " + evtTp);
-
 
 			if (e.type === EventType.WorkspaceInformationUpdated) {
 
-				this.StartupProjects = new Array<MSBuildProjectInfo>();
+				this.StartupProjects = new Array<ProjectInfo>();
 
-				for (var p of (<WorkspaceInformationUpdated>e).info.MsBuild.Projects) {
+				var slnPath = (<WorkspaceInformationUpdated>e).info.MsBuild.SolutionPath;
 
-					if (MobileProjectManager.getIsSupportedProject(p)) {
-						this.StartupProjects.push(await MSBuildProjectInfo.fromProject(p));
-					}
-				}
-
-				// After projects are reloaded we need to see if any of our existing startup settings
-				// are now invalid
-				if (!this.StartupInfo)
-					this.StartupInfo = new MobileSessionStartupInfo();
-
-				if (!this.StartupInfo.Project || !this.StartupProjects.find(p => p.Path === this.StartupInfo.Project.Path))
-				{
-					this.StartupInfo.Project = undefined;
-					this.StartupInfo.Configuration = undefined;
-					this.StartupInfo.TargetFramework = undefined;
-					this.StartupInfo.Device = undefined;
-
-					this.selectStartupProject(false);
-				}
-				
-				if (!loadingStatusBarItemHidden && this.loadingStatusBarItem)
-				{
-					this.loadingStatusBarItem.hide();
-					this.loadingStatusBarItem.dispose();
-					this.loadingStatusBarItem = null;
-				}
-
-				this.updateMenus();
-
-				this.updateProjectStatus();
-				this.updateDeviceStatus();
+				this.dotnetProjectAnalyzerRpc.sendRequest(
+					rpcOpenWorkspaceRequest,
+					slnPath,
+					this.StartupInfo?.Configuration,
+					this.StartupInfo?.Platform);
 			}
 		});
 	}
@@ -178,16 +147,7 @@ export class MobileProjectManager {
 	projectStatusBarItem: vscode.StatusBarItem;
 	deviceStatusBarItem: vscode.StatusBarItem;
 
-	public StartupProjects = new Array<MSBuildProjectInfo>();
-
-	fixTfm(targetFramework: string) : string {
-
-		// /^net[0-9]{2}(\-[a-z0-9\.]+)?$/gis
-		var r = /^net[0-9]{2}(\-[a-z0-9\.]+)?$/gis.test(targetFramework);
-		if (r)
-			return 'net' + targetFramework[3] + '.' + targetFramework[4] + targetFramework.substr(5);
-		return targetFramework;
-	}
+	public StartupProjects = new Array<ProjectInfo>();
 
 	private startupProjectCommand()
 	{
@@ -201,7 +161,7 @@ export class MobileProjectManager {
 		if (!availableProjects || availableProjects.length <= 0)
 			return;
 
-		var selectedProject = undefined;
+		var selectedProject: ProjectInfo;
 
 		// Try and auto select some defaults
 		if (availableProjects.length == 1)
@@ -228,14 +188,14 @@ export class MobileProjectManager {
 		if (!selectedProject)
 			return;
 
-		var selectedTargetFramework = undefined;
+		var selectedTargetFramework: TargetFrameworkInfo;
 
 		if (selectedProject.TargetFrameworks && selectedProject.TargetFrameworks.length > 0)
 		{
 			// If just 1, use it without asking
 			if (selectedProject.TargetFrameworks.length == 1)
 			{
-				selectedTargetFramework = this.fixTfm(selectedProject.TargetFrameworks[0].ShortName);
+				selectedTargetFramework = selectedProject.TargetFrameworks[0];
 			}
 			else
 			{
@@ -244,25 +204,21 @@ export class MobileProjectManager {
 				{
 					var tfms = selectedProject.TargetFrameworks
 						// Only return supported tfms
-						.filter(x => MobileProjectManager.getIsSupportedTargetFramework(x.ShortName))
-						.map(x => this.fixTfm(x.ShortName));
+						.filter(x => MobileProjectManager.getIsSupportedTargetFramework(x))
+						.map(x => x.FullName);
 
 					var t = await vscode.window.showQuickPick(tfms, { placeHolder: "Startup Project's Target Framework" });
 
 					if (t)
-						selectedTargetFramework = t;
+						selectedTargetFramework = selectedProject.TargetFrameworks.filter(st => st.FullName == t)[0];
 				}
 				else {
 					// Pick the first one if not interactive
-					selectedTargetFramework = this.fixTfm(selectedProject.TargetFrameworks[0].ShortName);
+					selectedTargetFramework = selectedProject.TargetFrameworks[0];
 				}
 			}
 		}
-		else if (selectedProject.TargetFramework)
-		{
-			selectedTargetFramework = this.fixTfm(selectedProject.TargetFramework);
-		}
-		
+
 		if (!selectedTargetFramework)
 			return;
 
@@ -328,6 +284,15 @@ export class MobileProjectManager {
 
 		if (projectSelectionWasChanged)
 		{
+			// Get evaluated project
+			var evaluatedProject = await this.dotnetProjectAnalyzerRpc.sendRequest(this.rpcEvaluateProjectRequest,
+				selectedProject.Path,
+				{
+					TargetFramework: selectedTargetFramework.FullName,
+					Configuration: selectedConfiguration
+				});
+
+			MobileProjectManager.Shared.StartupInfo.Project = evaluatedProject;
 			MobileProjectManager.Shared.StartupInfo.Device = undefined;
 		}
 
@@ -336,6 +301,16 @@ export class MobileProjectManager {
 			var deviceData = new DeviceData();
 			deviceData.name = "Local Machine";
 			deviceData.platforms = [ 'maccatalyst' ];
+			deviceData.serial = "local";
+
+			MobileProjectManager.Shared.StartupInfo.Device = deviceData;
+		}
+
+		if (selectedTargetFramework && MobileProjectManager.getProjectType(selectedTargetFramework) == ProjectType.Windows)
+		{
+			var deviceData = new DeviceData();
+			deviceData.name = "Local Machine";
+			deviceData.platforms = [ 'windows' ];
 			deviceData.serial = "local";
 
 			MobileProjectManager.Shared.StartupInfo.Device = deviceData;
@@ -355,7 +330,7 @@ export class MobileProjectManager {
 			var selTfm = startupInfo.TargetFramework;
 			var selConfig = startupInfo.Configuration;
 
-			var projectString = selProj === undefined ? "Startup Project" : `${selProj.Name ?? selProj.AssemblyName} | ${selTfm} | ${selConfig}`;
+			var projectString = selProj === undefined ? "Startup Project" : `${selProj.Name ?? selProj.AssemblyName} | ${selTfm.FullName} | ${selConfig}`;
 
 			this.projectStatusBarItem.text = "$(project) " + projectString;
 			this.projectStatusBarItem.tooltip = selProj === undefined ? "Select a Startup Project" : selProj.Path;
@@ -419,6 +394,15 @@ export class MobileProjectManager {
 					}
 				}
 			}
+		}
+		else if (projectType === ProjectType.Windows)
+		{
+			var deviceData = new DeviceData();
+			deviceData.name = "Local Machine";
+			deviceData.platforms = [ 'windows' ];
+			deviceData.serial = "local";
+
+			selectedDevice = deviceData;
 		}
 		else if (projectType === ProjectType.MacCatalyst)
 		{
@@ -511,31 +495,31 @@ export class MobileProjectManager {
 		}
 	}
 
-	public static getIsSupportedTargetFramework(targetFramework: string) : boolean
+	public static getIsSupportedTargetFramework(targetFramework: TargetFrameworkInfo) : boolean
 	{
 		var projType = this.getProjectType(targetFramework);
 
-		return projType == ProjectType.Android || projType == ProjectType.iOS || projType == ProjectType.MacCatalyst;
+		return projType == ProjectType.Android || projType == ProjectType.iOS || projType == ProjectType.MacCatalyst || projType == ProjectType.Windows;
 	}
 
-	public static getIsSupportedProject(project: MSBuildProject): boolean
+	public static getIsSupportedProject(project: ProjectInfo): boolean
 	{
+		if (!project.IsExe)
+			return false;
+
 		if (project.TargetFrameworks && project.TargetFrameworks.length > 0) {
 
 			for (var tf of project.TargetFrameworks)
 			{
-				if (this.getIsSupportedTargetFramework(tf.ShortName))
+				if (this.getIsSupportedTargetFramework(tf))
 					return true;
 			}
-		} else {
-			if (this.getIsSupportedTargetFramework(project.TargetFramework))
-				return true;
 		}
 
 		return false;
 	}
 
-	public static getProjectType(targetFramework: string): ProjectType
+	public static getProjectType(targetFramework: TargetFrameworkInfo): ProjectType
 	{
 		if (!targetFramework)
 			targetFramework = MobileProjectManager.Shared?.StartupInfo?.TargetFramework;
@@ -543,7 +527,7 @@ export class MobileProjectManager {
 		if (!targetFramework)
 			return ProjectType.Mono;
 		
-		var tfm = targetFramework.toLowerCase().replace(".", "");
+		var tfm = targetFramework.FullName.toLowerCase().replace(".", "");
 
 		if (tfm.indexOf('monoandroid') >= 0 || tfm.indexOf('-android') >= 0)
 			return ProjectType.Android;
@@ -553,13 +537,15 @@ export class MobileProjectManager {
 			return ProjectType.Mac;
 		else if (tfm.indexOf('xamarinmaccatalyst') >= 0 || tfm.indexOf('-maccatalyst') >= 0)
 			return ProjectType.MacCatalyst;
+		else if (tfm.indexOf('-windows') >= 0)
+			return ProjectType.Windows;
 	}
 
-	public static getProjectIsCore(targetFramework: string): boolean
+	public static getProjectIsCore(targetFramework: TargetFrameworkInfo): boolean
 	{
-		var tfm = targetFramework.toLowerCase();
+		var tfm = targetFramework.FullName.toLowerCase();
 
-		return tfm.startsWith('net') && this.getIsSupportedTargetFramework(tfm);
+		return tfm.startsWith('net') && this.getIsSupportedTargetFramework(targetFramework);
 	}
 
 	public static getSelectedProjectPlatform():string
