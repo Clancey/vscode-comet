@@ -67,7 +67,11 @@ export class MobileUtil
 
 		var txt = proc['stdout'];
 
-		return JSON.parse(txt) as CommandResponse<TResult>;
+		var result = JSON.parse(txt) as CommandResponse<TResult>;
+		if (result.error) {
+			throw new Error(result.error);
+		}		
+		return result;
 	}
 
 	public async Debug(jsonConfig: string): Promise<SimpleResult>
