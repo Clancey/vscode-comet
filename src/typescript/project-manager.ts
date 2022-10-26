@@ -66,7 +66,7 @@ export class MobileSessionStartupInfo {
 		this.Project = undefined;
 		this.Configuration = undefined;
 		this.TargetFramework = undefined;
-		this.DebugPort = 55555;
+		this.DebugPort = 55559;
 		this.Device = undefined;
 	}
 
@@ -74,7 +74,7 @@ export class MobileSessionStartupInfo {
 	Configuration: string;
 	TargetFramework: string;
 	Device: DeviceData;
-	DebugPort: number = 55555;
+	DebugPort: number;
 }
 
 export class MobileProjectManager {
