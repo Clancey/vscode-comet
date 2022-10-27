@@ -1,24 +1,39 @@
-﻿using System;
+﻿namespace DotNetWorkspaceAnalyzer;
 
-namespace DotNetWorkspaceAnalyzer;
-
-public class AppleDeviceService : IAppleDeviceService
+public class AppleDeviceService : IDeviceService
 {
 	public event EventHandler<IEnumerable<DeviceData>> DevicesChanged;
 
-	public Task<IEnumerable<DeviceData>> GetDevices(bool includeUsb = true, bool includeWifi = true)
+	public async Task<IEnumerable<DeviceData>> GetDevices(params string[] targetPlatformIdentifiers)
 	{
-		throw new NotImplementedException();
+		return await XCode.GetDevices(targetPlatformIdentifiers);
 	}
 
-	public Task StartWatching()
+	Task observeTask = Task.CompletedTask;
+
+	CancellationTokenSource ctsObserve = new CancellationTokenSource();
+
+	public Task StartWatching(params string[] targetPlatformIdentifiers)
 	{
-		throw new NotImplementedException();
+		if (!ctsObserve.IsCancellationRequested)
+		{
+			ctsObserve.Cancel();
+			ctsObserve = new CancellationTokenSource();
+		}
+
+		observeTask = XCode.ObserveDevices(devices => DevicesChanged?.Invoke(this, devices), true, true, ctsObserve.Token, targetPlatformIdentifiers);
+
+		return Task.CompletedTask;
 	}
 
 	public Task StopWatching()
 	{
-		throw new NotImplementedException();
+		if (!ctsObserve.IsCancellationRequested)
+		{
+			ctsObserve.Cancel();
+			ctsObserve = new CancellationTokenSource();
+		}
+		return observeTask ?? Task.CompletedTask;
 	}
 }
 
