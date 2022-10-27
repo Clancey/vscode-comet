@@ -1,7 +1,7 @@
 {
   "name": "comet-debug",
   "displayName": "Comet for .NET Mobile",
-  "version": "0.3.16",
+  "version": "0.999.0",
   "publisher": "Clancey",
   "description": "Visual Studio Code extension for Comet and .NET Mobile",
   "icon": "images/comet-logo.png",
