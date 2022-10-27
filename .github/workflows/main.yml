@@ -31,7 +31,6 @@ jobs:
       run: |
         arrTag=(${GITHUB_REF//\// })
         VERSION="${arrTag[2]}"
-        echo "::set-output name=pkgver::$VERSION"
         echo "pkgversion=$VERSION" >> $GITHUB_ENV
     - name: Version (CI)
       if: github.event_name != 'release'
@@ -59,11 +58,16 @@ jobs:
 
     - name: Create VSIX
       run: pwsh ./build.ps1 all
+
+    - name: Rename VSIX with version
+      run: |
+        mv ./vscode-comet.vsix ./vscode-comet-${{ env.pkgversion }}.vsix
+
     - name: Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
-        name: VSIX
-        path: '*.vsix'
+        name: vscode-comet-${{ env.pkgversion }}.vsix
+        path: ./vscode-comet-${{ env.pkgversion }}.vsix
 
   publish:
     name: Publish
@@ -79,12 +83,12 @@ jobs:
         run: |
           arrTag=(${GITHUB_REF//\// })
           VERSION="${arrTag[2]}"
-          echo "::set-output name=pkgverrelease::$VERSION"
+          echo "pkgversion=$VERSION" >> $GITHUB_ENV
           echo "VSIX VERSION: $VERSION"
       - name: Publish to Visual Studio Marketplace
         uses: HaaLeo/publish-vscode-extension@v0
         with:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
-          extensionFile: ./VSIX/vscode-comet.vsix
+          extensionFile: ./VSIX/vscode-comet-${{ env.pkgversion }}.vsix
           packagePath: ""
