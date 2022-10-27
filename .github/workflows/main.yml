@@ -31,7 +31,7 @@ jobs:
       run: |
         arrTag=(${GITHUB_REF//\// })
         VERSION="${arrTag[2]}"
-        echo "::set-output name=pkgverrelease::$VERSION"
+        echo "::set-output name=pkgver::$VERSION"
         echo "VSIX VERSION: $VERSION"
     - name: Version (CI)
       if: github.event_name != 'release'
@@ -45,15 +45,17 @@ jobs:
         npm install
 
     - name: Update version in package.json
-      uses: benday-inc/set-property-value-in-appsettings@main
+      uses: jossef/action-set-json-field@v2
       with:
-        pathtosettingsfile: '${{ github.workspace }}/package.json'
-        version: '$VERSION'
+        file: package.json
+        field: version
+        value: ${{ env.VERSION }}
     - name: Update version in package-lock.json
-      uses: benday-inc/set-property-value-in-appsettings@main
+      uses: jossef/action-set-json-field@v2
       with:
-        pathtosettingsfile: '${{ github.workspace }}/package-lock.json'
-        version: '$VERSION'
+        file: package-lock.json
+        field: version
+        value: ${{ env.VERSION }}
 
     - name: Create VSIX
       run: pwsh ./build.ps1 all
