@@ -32,12 +32,12 @@ jobs:
         arrTag=(${GITHUB_REF//\// })
         VERSION="${arrTag[2]}"
         echo "::set-output name=pkgver::$VERSION"
-        echo "VSIX VERSION: $VERSION"
+        echo "pkgversion=$VERSION" >> $GITHUB_ENV
     - name: Version (CI)
       if: github.event_name != 'release'
       run: |
         VERSION=$VSIX_MAJOR-ci$GITHUB_RUN_ID
-        echo "::set-output name=pkgverci::$VERSION"
+        echo "pkgversion=$VERSION" >> $GITHUB_ENV
         echo "VSIX VERSION: $VERSION"
 
     - name: NPM
@@ -49,13 +49,13 @@ jobs:
       with:
         file: package.json
         field: version
-        value: ${{ env.VERSION }}
+        value: ${{ env.pkgversion }}
     - name: Update version in package-lock.json
       uses: jossef/action-set-json-field@v2
       with:
         file: package-lock.json
         field: version
-        value: ${{ env.VERSION }}
+        value: ${{ env.pkgversion }}
 
     - name: Create VSIX
       run: pwsh ./build.ps1 all
