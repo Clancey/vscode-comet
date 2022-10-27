@@ -11,7 +11,7 @@ jobs:
   build:
     name: CI
     env:
-      VSIX_MAJOR: 0.5.0
+      VSIX_MAJOR: 0.99.0
       DOTNET_VERSION: 6.0.402
     runs-on: ubuntu-latest
     steps:
@@ -39,10 +39,22 @@ jobs:
         VERSION=$VSIX_MAJOR-ci$GITHUB_RUN_ID
         echo "::set-output name=pkgverci::$VERSION"
         echo "VSIX VERSION: $VERSION"
+
     - name: NPM
       run: |
         npm install
-        npm version $VERSION --git-tag-version false
+
+    - name: Update version in package.json
+      uses: benday-inc/set-property-value-in-appsettings@main
+      with:
+        pathtosettingsfile: '${{ github.workspace }}/package.json'
+        version: '$VERSION'
+    - name: Update version in package-lock.json
+      uses: benday-inc/set-property-value-in-appsettings@main
+      with:
+        pathtosettingsfile: '${{ github.workspace }}/package-lock.json'
+        version: '$VERSION'
+
     - name: Create VSIX
       run: pwsh ./build.ps1 all
     - name: Artifacts
