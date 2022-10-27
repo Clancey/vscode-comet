@@ -2,6 +2,5 @@
 
 public class WorkspaceInfo
 {
-    public SolutionInfo? Solution { get; set; }
-
+	public SolutionInfo? Solution { get; set; }
 }

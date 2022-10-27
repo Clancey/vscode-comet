@@ -2,5 +2,5 @@
 
 public class SolutionInfo
 {
-    public ProjectInfo[] Projects { get; set; } = new ProjectInfo[0];
+	public ProjectInfo[] Projects { get; set; } = new ProjectInfo[0];
 }
