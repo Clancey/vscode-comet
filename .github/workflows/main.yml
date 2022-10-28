@@ -90,5 +90,5 @@ jobs:
         with:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
-          extensionFile: ./vscode-comet-${{ env.pkgversion }}.vsix
+          extensionFile: ./vscode-comet-${{ env.pkgversion }}.vsix/vscode-comet-${{ env.pkgversion }}.vsix
           packagePath: ""
