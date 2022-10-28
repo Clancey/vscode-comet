@@ -3,6 +3,7 @@
 **/.DS_Store
 !syntaxes/*.json
 !src/mobile-debug/bin/Debug/**/*
+!src/DotNetWorkspaceAnalyzer/bin/Debug/**/*
 !dist/extension.js
 !node_modules/vscode-nls/**/*
 !node_modules/vscode-debugprotocol/**/*
