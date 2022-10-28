@@ -75,20 +75,20 @@ jobs:
     needs: build
     if: github.event_name == 'release'
     steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v1
-        with:
-          name: VSIX
       - name: Version (Release)
         run: |
           arrTag=(${GITHUB_REF//\// })
           VERSION="${arrTag[2]}"
           echo "pkgversion=$VERSION" >> $GITHUB_ENV
           echo "VSIX VERSION: $VERSION"
+      - name: Download Artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: vscode-comet-${{ env.pkgversion }}.vsix
       - name: Publish to Visual Studio Marketplace
         uses: HaaLeo/publish-vscode-extension@v0
         with:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
-          extensionFile: ./VSIX/vscode-comet-${{ env.pkgversion }}.vsix
+          extensionFile: ./vscode-comet-${{ env.pkgversion }}.vsix
           packagePath: ""
