@@ -57,7 +57,7 @@ export class MobileProjectManager {
 
 		var loadingStatusBarItemHidden = false;
 
-		let childProcess = cp.spawn(analyzerExePath);
+		let childProcess = cp.spawn('dotnet', [ analyzerExePath ]);
 
 		// Use stdin and stdout for communication:
 		this.dotnetProjectAnalyzerRpc = rpc.createMessageConnection(
