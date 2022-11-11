@@ -15,11 +15,12 @@ function Vsix
 }
 function BuildNet
 {
-	Write-Host "Building .NET Project..."
+	Write-Host "Building .NET Projects..."
 
 	& dotnet build /r /p:Configuration=Debug ./src/mobile-debug/mobile-debug.csproj
+	& dotnet build /r /p:Configuration=Debug ./src/DotNetWorkspaceAnalyzer/DotNetWorkspaceAnalyzer.csproj
 
-	Write-Host "Done .NET Project."
+	Write-Host "Done .NET Projects."
 
 	Write-Host "Building Reloadify 3000 "
 
