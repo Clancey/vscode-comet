@@ -19,7 +19,7 @@ class UtilRunner
 		var command = helpCommand;
 		var id = Guid.NewGuid().ToString();
 
-		options.Add("c|command=", "get the tool version", s => command = s?.ToLowerInvariant()?.Trim() ?? helpCommand);
+		options.Add("c|command=", "command to execute", s => command = s?.ToLowerInvariant()?.Trim() ?? helpCommand);
 		options.Add("h|help", "prints the help", s => command = helpCommand);
 		options.Add("i|id=", "unique identifier of the command", s => id = s);
 		options.Add("t|tpi=", "target platform identifier", s => targetPlatformIdentifier = s);
