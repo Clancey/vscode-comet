@@ -171,9 +171,67 @@ internal class MauiDebugSession : MonoDebugSession
 
 		var xcodeSdkRoot = $"-sdkroot {xcodePath}";
 		var workingDir = launchOptions.GetProjectPropertyPathValue("TargetDir");
-		var appPath = Path.Combine(workingDir, launchOptions.GetProjectPropertyValue("_AppBundleName") + ".app");
+		
+		string appPath = default;
+		DateTime appPathLastWrite = DateTime.MinValue;
+		var output = workingDir;
+		if (Directory.Exists(output))
+		{
+			var ridDirs = Directory.GetDirectories(output) ?? new string[0];
 
-		var mlaunchPath = launchOptions.GetProjectPropertyPathValue("_MlaunchPath");
+			foreach (var ridDir in ridDirs)
+			{
+				// Find the newest .app generated and assume that's the one we want
+				var appDirs = Directory.EnumerateDirectories(ridDir, "*.app", SearchOption.AllDirectories);
+
+				foreach (var appDir in appDirs)
+				{
+					var appDirTime = Directory.GetLastWriteTime(appDir);
+					if (appDirTime > appPathLastWrite)
+					{
+						appPath = appDir;
+						appPathLastWrite = appDirTime;
+					}
+				}
+			}
+		}
+		
+		if (string.IsNullOrEmpty(appPath))
+		{
+			var msg = $"No .app found in folder: {output}";
+			SendConsoleEvent(msg);
+			SendErrorResponse(response, 3002, msg);
+			return (false, "");
+		}
+
+		SendConsoleEvent($"Found .app: {appPath}");
+
+		var dotnetSdkDir = Microsoft.DotNet.NativeWrapper.EnvironmentProvider.GetDotnetExeDirectory();
+		var mlaunchPath = string.Empty;
+		var dotnetSkdPath = Path.Combine(dotnetSdkDir, "packs", "Microsoft.iOS.Sdk"); // 14.4.100-ci.main.1192/tools/bin/mlaunch
+
+		if (!Directory.Exists(dotnetSkdPath))
+		{
+			var msg = dotnetSkdPath + " is missing, please install the iOS SDK Workload";
+			SendConsoleEvent(msg);
+			SendErrorResponse(response, 3002, msg);
+			return (false, "");
+		}
+
+		// TODO: Use WorkloadResolver to get pack info for `Microsoft.iOS.Sdk` to choose
+		// the actual one that's being used - just not sure how to get dotnet sdk version in use
+		SendConsoleEvent($"Looking for Microsoft.iOS.Sdk tools in: {dotnetSkdPath}");
+
+		foreach (var dir in Directory.GetDirectories(dotnetSkdPath).Reverse())
+		{
+			var mlt = Path.Combine(dir, "tools", "bin", "mlaunch");
+
+			if (File.Exists(mlt))
+			{
+				mlaunchPath = mlt;
+				break;
+			}
+		}
 
 		if (string.IsNullOrEmpty(mlaunchPath) || !File.Exists(mlaunchPath))
 		{
