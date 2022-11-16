@@ -111,6 +111,9 @@ export class MobileProjectManager {
 				this.StartupProjects = new Array<ProjectInfo>();
 
 				var slnPath = (<WorkspaceInformationUpdated>e).info.MsBuild.SolutionPath;
+				if (!slnPath.endsWith(".sln")) {
+					vscode.window.showErrorMessage("Solution (.sln) has to be selected (vscode-comet)");
+				}
 
 				this.dotnetProjectAnalyzerRpc.sendRequest(
 					rpcOpenWorkspaceRequest,
@@ -172,7 +175,7 @@ export class MobileProjectManager {
 		{
 			var projects = availableProjects
 			.map(x => ({
-				label: x.AssemblyName,
+				label: x.Name,
 				project: x,
 			}));
 
