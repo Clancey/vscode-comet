@@ -181,6 +181,17 @@ internal class MauiDebugSession : MonoDebugSession
 
 			foreach (var ridDir in ridDirs)
 			{
+                //check the dir itself
+                if (ridDir.EndsWith(".app"))
+                {
+                    var appDirTime = Directory.GetLastWriteTime(ridDir);
+                    if (appDirTime > appPathLastWrite)
+                    {
+                        appPath = ridDir;
+                        appPathLastWrite = appDirTime;
+                    }
+                }
+
 				// Find the newest .app generated and assume that's the one we want
 				var appDirs = Directory.EnumerateDirectories(ridDir, "*.app", SearchOption.AllDirectories);
 
