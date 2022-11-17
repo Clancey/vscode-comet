@@ -18,14 +18,17 @@ function BuildNet
 	Write-Host "Building .NET Projects..."
 
 	& dotnet build /r /p:Configuration=Debug ./src/mobile-debug/mobile-debug.csproj
+	CheckLastExitCode
 	& dotnet build /r /p:Configuration=Debug ./src/DotNetWorkspaceAnalyzer/DotNetWorkspaceAnalyzer.csproj
+	CheckLastExitCode
 
 	Write-Host "Done .NET Projects."
 
 	Write-Host "Building Reloadify 3000 "
 
 	& dotnet build /p:Configuration=Debug ./external/Reloadify3000/Reloadify.CommandLine/Reloadify.CommandLine.csproj
-
+	CheckLastExitCode
+	
 	$reloadifyDest = "./src/mobile-debug/bin/Debug/$netVersion/Reloadify/"
 
 	Write-Host "Copying Reloadify 3000 output"
@@ -43,6 +46,22 @@ function BuildTypeScript
 	& npm run webpack
 
 	Write-Host "Done TypeScript."
+}
+
+function CheckLastExitCode {
+    param ([int[]]$SuccessCodes = @(0), [scriptblock]$CleanupScript=$null)
+
+    if ($SuccessCodes -notcontains $LastExitCode) {
+        if ($CleanupScript) {
+            "Executing cleanup script: $CleanupScript"
+            &$CleanupScript
+        }
+        $msg = @"
+EXE RETURNED EXIT CODE $LastExitCode
+CALLSTACK:$(Get-PSCallStack | Out-String)
+"@
+        throw $msg
+    }
 }
 
 
