@@ -46,10 +46,10 @@ public partial class WorkspaceAnalyzer : IWorkspaceAnalyzerService
 		CurrentWorkspace.WorkspaceChanged += CurrentWorkspace_WorkspaceChanged;
 		CurrentWorkspace.WorkspaceFailed += CurrentWorkspace_WorkspaceFailed;
 
-        if (path.EndsWith(".sln"))
-            await CurrentWorkspace.OpenSolutionAsync(path);
-        else if (path.EndsWith(".csproj"))
-            await CurrentWorkspace.OpenProjectAsync(path);
+		if (path.EndsWith(".sln"))
+			await CurrentWorkspace.OpenSolutionAsync(path);
+		else if (path.EndsWith(".csproj"))
+			await CurrentWorkspace.OpenProjectAsync(path);
 	}
 
 	private void CurrentWorkspace_WorkspaceFailed(object? sender, Microsoft.CodeAnalysis.WorkspaceDiagnosticEventArgs e)
