@@ -109,12 +109,19 @@ export class MobileProjectManager {
 			if (e.type === EventType.WorkspaceInformationUpdated) {
 
 				this.StartupProjects = new Array<ProjectInfo>();
+				let msBuild = (<WorkspaceInformationUpdated>e).info.MsBuild;
+				var slnOrProjPath = msBuild.SolutionPath;
 
-				var slnPath = (<WorkspaceInformationUpdated>e).info.MsBuild.SolutionPath;
+				if (!slnOrProjPath.endsWith(".sln")) {
+					// If there's no sln file, the SolutionPath point to the folder.
+					let project = msBuild.Projects.find(p => p.Path.includes(slnOrProjPath));
+					// Use the project file in this case and DotNetWorkspaceAnalyzer can handle it.
+					slnOrProjPath = project.Path;
+				}
 
 				this.dotnetProjectAnalyzerRpc.sendRequest(
 					rpcOpenWorkspaceRequest,
-					slnPath,
+					slnOrProjPath,
 					this.StartupInfo?.Configuration,
 					this.StartupInfo?.Platform);
 			}
@@ -172,7 +179,7 @@ export class MobileProjectManager {
 		{
 			var projects = availableProjects
 			.map(x => ({
-				label: x.AssemblyName,
+				label: x.AssemblyName ?? x.Name,
 				project: x,
 			}));
 
