@@ -1,8 +1,7 @@
 import { MSBuildProject } from "./omnisharp/protocol";
 import * as vscode from 'vscode';
-import * as cp from 'child_process';
 import * as rpc from 'vscode-jsonrpc/node';
-
+import * as cp from 'child_process';
 import { BaseEvent, WorkspaceInformationUpdated } from './omnisharp/loggingEvents';
 import { EventType } from './omnisharp/EventType';
 import { DeviceData, MobileUtil } from "./util";
@@ -109,12 +108,19 @@ export class MobileProjectManager {
 			if (e.type === EventType.WorkspaceInformationUpdated) {
 
 				this.StartupProjects = new Array<ProjectInfo>();
+				let msBuild = (<WorkspaceInformationUpdated>e).info.MsBuild;
+				var slnOrProjPath = msBuild.SolutionPath;
 
-				var slnPath = (<WorkspaceInformationUpdated>e).info.MsBuild.SolutionPath;
+				if (!slnOrProjPath.endsWith(".sln")) {
+					// If there's no sln file, the SolutionPath point to the folder.
+					let project = msBuild.Projects.find(p => p.Path.includes(slnOrProjPath));
+					// Use the project file in this case and DotNetWorkspaceAnalyzer can handle it.
+					slnOrProjPath = project.Path;
+				}
 
 				this.dotnetProjectAnalyzerRpc.sendRequest(
 					rpcOpenWorkspaceRequest,
-					slnPath,
+					slnOrProjPath,
 					this.StartupInfo?.Configuration,
 					this.StartupInfo?.Platform);
 			}
@@ -172,7 +178,7 @@ export class MobileProjectManager {
 		{
 			var projects = availableProjects
 			.map(x => ({
-				label: x.AssemblyName,
+				label: x.Name ?? x.AssemblyName,
 				project: x,
 			}));
 

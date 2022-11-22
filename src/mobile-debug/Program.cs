@@ -9,16 +9,16 @@ using System.Net;
 using System.Net.Sockets;
 using VSCodeDebug.Debugger;
 using VsCodeMobileUtil;
-
+using Esp.Resources;
 namespace VSCodeDebug;
 
 internal class Program
 {
-	const int DEFAULT_PORT = 4711;
-
 	private static bool trace_requests;
 	private static bool trace_responses;
 	static string LOG_FILE_PATH = null;
+
+	const int DEFAULT_PORT = 4711;
 
 	private static void Main(string[] argv)
 	{

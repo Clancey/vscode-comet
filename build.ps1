@@ -1,4 +1,4 @@
-$netVersion = "net6.0";
+$netVersion = "net7.0";
 
 $cmd = $args[0];
 
@@ -11,6 +11,7 @@ function Vsix
 {
 	Write-Host "Creating VSIX..."
 	& ./node_modules/.bin/vsce package -o ./vscode-comet.vsix
+	if ($LASTEXITCODE) { Throw "Creating VSIX failed." }
 	Write-Host "Done."
 }
 function BuildNet
@@ -18,13 +19,17 @@ function BuildNet
 	Write-Host "Building .NET Projects..."
 
 	& dotnet build /r /p:Configuration=Debug ./src/mobile-debug/mobile-debug.csproj
+	if ($LASTEXITCODE) { Throw "Building mobile-debug failed." }
+
 	& dotnet build /r /p:Configuration=Debug ./src/DotNetWorkspaceAnalyzer/DotNetWorkspaceAnalyzer.csproj
+	if ($LASTEXITCODE) { Throw "Building DotNetWorkspaceAnalyzer failed." }
 
 	Write-Host "Done .NET Projects."
 
 	Write-Host "Building Reloadify 3000 "
 
 	& dotnet build /p:Configuration=Debug ./external/Reloadify3000/Reloadify.CommandLine/Reloadify.CommandLine.csproj
+	if ($LASTEXITCODE) { Throw "Building Reloadify3000 failed." }
 
 	$reloadifyDest = "./src/mobile-debug/bin/Debug/$netVersion/Reloadify/"
 
@@ -41,6 +46,7 @@ function BuildTypeScript
 	Write-Host "Building TypeScript..."
 
 	& npm run webpack
+	if ($LASTEXITCODE) { Throw "Building TypeScript failed." }
 
 	Write-Host "Done TypeScript."
 }

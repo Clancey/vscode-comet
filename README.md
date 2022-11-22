@@ -17,7 +17,7 @@ Build .NET 6 Mobile Apps with MVU style UI with Comet
 - VSCE (to package VSIX): `npm install -g vsce`
 - .NET 6 Preview with Android/iOS/Catalyst workloads (Install `dotnet tool install -g redth.net.maui.check` and run `maui-check` to ensure your environment is setup correctly)
 - Mono (mac only)
-- VSCode on Mac must have the `"omnisharp.useGlobalMono": "never"` setting to properly load net6.0 projects!
+- VSCode on Mac must have the `"omnisharp.useGlobalMono": "never"` setting to properly load net7.0 projects!
 
 1. Clone repo recursively `git clone --recursive git@github.com:clancey/vscode-comet.git`
 2. `pwsh build.ps1 build`

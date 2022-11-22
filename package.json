@@ -28,14 +28,13 @@
     "node": "^6.3.0"
   },
   "dependencies": {
-    "@types/execa": "^2.0.0",
-    "@types/vscode": "^1.72.0",
+    "@types/vscode": "^1.73.1",
+    "@vscode/debugprotocol": "^1.58.0",
+    "@vscode/test-electron": "^2.2.0",
     "execa": "^6.1.0",
     "rxjs": "^7.5.7",
-    "vscode-debugprotocol": "^1.51.0",
     "vscode-jsonrpc": "^8.0.2",
-    "vscode-nls": "^5.2.0",
-    "vscode-test": "^1.6.1"
+    "vscode-nls": "^5.2.0"
   },
   "repository": {
     "type": "git",
@@ -46,14 +45,15 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.0",
-    "@types/node": "^16.18.1",
+    "@types/node": "^16.18.3",
+    "@vscode/debugadapter": "^1.58.0",
+    "@vscode/debugadapter-testsupport": "^1.58.0",
     "mocha": "^10.1.0",
     "ts-loader": "^9.4.1",
-    "typescript": "^4.8.4",
-    "vsce": "^2.13.0",
-    "vscode-debugadapter-testsupport": "^1.51.0",
+    "typescript": "^4.9.3",
+    "vsce": "^2.14.0",
     "vscode-nls-dev": "^4.0.3",
-    "webpack": "^5.74.0",
+    "webpack": "^5.75.0",
     "webpack-cli": "^4.10.0"
   },
   "main": "./dist/extension",
@@ -165,7 +165,7 @@
       {
         "type": "comet",
         "label": ".NET Comet (Mobile)",
-        "program": "./src/mobile-debug/bin/Debug/net6.0/mobile-debug.dll",
+        "program": "./src/mobile-debug/bin/Debug/net7.0/mobile-debug.dll",
         "runtime": "dotnet",
         "languages": [
           "csharp"
