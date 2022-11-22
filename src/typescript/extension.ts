@@ -6,7 +6,7 @@
 
 import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
-import { DebugProtocol } from 'vscode-debugprotocol';
+import { DebugProtocol } from '@vscode/debugprotocol';
 import { MobileProjectManager } from "./project-manager";
 import { MobileConfigurationProvider } from "./configuration";
 import { OutputChannel } from 'vscode';
