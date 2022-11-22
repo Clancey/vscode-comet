@@ -178,7 +178,7 @@ export class MobileProjectManager {
 		{
 			var projects = availableProjects
 			.map(x => ({
-				label: x.AssemblyName ?? x.Name,
+				label: x.Name ?? x.AssemblyName,
 				project: x,
 			}));
 
