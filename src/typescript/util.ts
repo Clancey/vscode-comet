@@ -58,10 +58,7 @@ export class MobileUtil
 
 		var proc: any;
 
-		//if (this.isUnix)
-		proc = await execa('dotnet', [ this.UtilPath ].concat(stdargs));
-		// else
-		// 	proc = await execa(this.UtilPath, stdargs);
+		proc = await execa.execa('dotnet', [ this.UtilPath ].concat(stdargs));
 
 		var txt = proc['stdout'];
 

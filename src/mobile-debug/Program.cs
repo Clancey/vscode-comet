@@ -9,13 +9,11 @@ using System.Net;
 using System.Net.Sockets;
 using VSCodeDebug.Debugger;
 using VsCodeMobileUtil;
-
+using Esp.Resources;
 namespace VSCodeDebug;
 
 internal class Program
 {
-	const int DEFAULT_PORT = 4711;
-
 	private static bool trace_requests;
 	private static bool trace_responses;
 	static string LOG_FILE_PATH = null;
@@ -41,12 +39,12 @@ internal class Program
 				trace_responses = true;
 				break;
 			case "--server":
-				port = DEFAULT_PORT;
+				port = Constants.DEFAULT_PORT;
 				break;
 			default:
 				if (a.StartsWith("--server=")) {
 					if (!int.TryParse(a.Substring("--server=".Length), out port)) {
-						port = DEFAULT_PORT;
+						port = Constants.DEFAULT_PORT;
 					}
 				}
 				else if( a.StartsWith("--log-file=")) {
