@@ -1,8 +1,7 @@
 import { MSBuildProject } from "./omnisharp/protocol";
 import * as vscode from 'vscode';
-import * as cp from 'child_process';
 import * as rpc from 'vscode-jsonrpc/node';
-
+import * as cp from 'child_process';
 import { BaseEvent, WorkspaceInformationUpdated } from './omnisharp/loggingEvents';
 import { EventType } from './omnisharp/EventType';
 import { DeviceData, MobileUtil } from "./util";
