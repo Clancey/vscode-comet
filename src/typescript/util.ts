@@ -1,3 +1,5 @@
+import { execa } from 'execa';
+
 interface CommandResponse<T> {
 	id: string;
 	command: string;
@@ -21,7 +23,6 @@ export class DeviceData {
 }
 
 const path = require('path');
-const execa = require('execa');
 
 import * as vscode from 'vscode';
 import { extensionId, extensionPath, mobileDebugPath } from './extensionInfo';
@@ -72,10 +73,10 @@ export class MobileUtil
 	{
 		var proc: any;
 
-		if (this.isUnix)
-			proc = await execa('dotnet', [ this.UtilPath, `util`, `-c=debug` ], { input: jsonConfig + '\r\n' });
-		else
-			proc = await execa(this.UtilPath, [ `util`, `-c=debug` ], { input: jsonConfig + '\r\n' });
+		//if (this.isUnix)
+		proc = await execa('dotnet', [ this.UtilPath, `util`, `-c=debug` ], { input: jsonConfig + '\r\n' });
+		// else
+		// 	proc = await execa(this.UtilPath, [ `util`, `-c=debug` ], { input: jsonConfig + '\r\n' });
 
 		var txt = proc['stdout'];
 

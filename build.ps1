@@ -1,4 +1,4 @@
-$netVersion = "net6.0";
+$netVersion = "net7.0";
 
 $cmd = $args[0];
 

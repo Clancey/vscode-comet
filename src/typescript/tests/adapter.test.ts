@@ -8,13 +8,14 @@
 import * as Path from 'path';
 import {DebugClient} from 'vscode-debugadapter-testsupport';
 import {DebugProtocol} from 'vscode-debugprotocol';
+import { dotnetVersion } from '../extensionInfo';
 
 suite('Node Debug Adapter', () => {
 
 	const PROJECT_ROOT = Path.join(__dirname, '../../');
 	const DATA_ROOT = Path.join(PROJECT_ROOT, 'testdata/');
 
-	const DEBUG_ADAPTER = Path.join(PROJECT_ROOT, 'src/mobile-debug/bin/Debug/net6.0/mobile-debug.exe');
+	const DEBUG_ADAPTER = Path.join(PROJECT_ROOT, 'src/mobile-debug/bin/Debug/' + dotnetVersion + '/mobile-debug.exe');
 
 
 	let dc: DebugClient;
