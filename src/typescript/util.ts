@@ -58,7 +58,7 @@ export class MobileUtil
 
 		var proc: any;
 
-		proc = await execa.execa('dotnet', [ this.UtilPath ].concat(stdargs));
+		proc = await execa('dotnet', [ this.UtilPath ].concat(stdargs));
 
 		var txt = proc['stdout'];
 
