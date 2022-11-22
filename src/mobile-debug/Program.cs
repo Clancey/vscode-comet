@@ -18,6 +18,8 @@ internal class Program
 	private static bool trace_responses;
 	static string LOG_FILE_PATH = null;
 
+	const int DEFAULT_PORT = 4711;
+
 	private static void Main(string[] argv)
 	{
 		if (argv.Length > 0 && argv[0] == "util")
@@ -39,12 +41,12 @@ internal class Program
 				trace_responses = true;
 				break;
 			case "--server":
-				port = Constants.DEFAULT_PORT;
+				port = DEFAULT_PORT;
 				break;
 			default:
 				if (a.StartsWith("--server=")) {
 					if (!int.TryParse(a.Substring("--server=".Length), out port)) {
-						port = Constants.DEFAULT_PORT;
+						port = DEFAULT_PORT;
 					}
 				}
 				else if( a.StartsWith("--log-file=")) {
