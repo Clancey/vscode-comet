@@ -56,16 +56,14 @@ export class MobileUtil
 				stdargs.push(args[a]);
 		}
 
-		var proc: any;
+		const { stdout, stderr } = await execa('dotnet', [ this.UtilPath ].concat(stdargs));
 
-		proc = await execa('dotnet', [ this.UtilPath ].concat(stdargs));
-
-		var txt = proc['stdout'];
-
-		var result = JSON.parse(txt) as CommandResponse<TResult>;
+		var result = JSON.parse(stdout) as CommandResponse<TResult>;
 		if (result.error) {
 			throw new Error(result.error);
-		}		
+		} else if (stderr) {
+			vscode.window.showErrorMessage(stderr);
+		}
 		return result;
 	}
 
