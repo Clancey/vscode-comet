@@ -62,6 +62,7 @@ public class MonoDebugSession : DebugSession
 		_frameHandles = new Handles<Mono.Debugging.Client.StackFrame>();
 		_seenThreads = new Dictionary<int, Thread>();
 		HotReloadManager ??= new HotReloadManager();
+		HotReloadManager.OutputHandler = SendConsoleEvent;
 		_debuggerSessionOptions = new DebuggerSessionOptions
 		{
 			EvaluationOptions = EvaluationOptions.DefaultOptions
