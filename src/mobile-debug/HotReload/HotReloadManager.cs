@@ -37,11 +37,10 @@ namespace VSCodeDebug.HotReload
 
 			args.AppendQuoted(launchData.Project);
 			args.Append($"-t={launchData.ProjectTargetFramework}");
-			args.Append($"-p={launchData.Platform}");
 			args.Append($"-c={launchData.Configuration}");
 			args.Append($"-f=\"{launchData.WorkspaceDirectory}\"");
 			var runCommand = args.ToString();
- 			runner = new DotnetRunner(runCommand, projectDir, CancellationToken.None, s => Console.WriteLine(s));
+ 			runner = new DotnetRunner(runCommand, projectDir, CancellationToken.None, OutputHandler);
 		}
 
 		public void Start(SoftDebuggerSession debugger)
@@ -69,5 +68,7 @@ namespace VSCodeDebug.HotReload
 			}
 			runner = null;
 		}
+
+		public Action<string> OutputHandler {get;set;}
 	}
 }
