@@ -46,8 +46,6 @@ class UtilRunner
 			{
 				"version" => Version(),
 				"devices" => AllDevices(targetPlatformIdentifier),
-				"android-devices" => AndroidDevices(),
-				"ios-devices" => XCode.GetDevices(),
 				"android-start-emulator" => AndroidStartEmulator(extras),
 				"debug" => Debug(),
 				_ => Version()
