@@ -21,9 +21,14 @@
 			"problemMatcher": "$tsc-watch"
 		},
 		{
-			"label": "build",
+			"label": "Debug Build",
 			"type": "shell",
-			"command": "msbuild /r /t:Build /p:Configuration=Debug ./src/mobile-debug/mobile-debug.csproj"
+			"command": "dotnet build /r /t:Build /p:Configuration=Debug ./src/mobile-debug/mobile-debug.csproj"
+		},
+		{
+			"label": "Release Build",
+			"type": "shell",
+			"command": "dotnet build /r /t:Build /p:Configuration=Release ./src/mobile-debug/mobile-debug.csproj"
 		},
 	]
 }
