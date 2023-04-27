@@ -1,4 +1,4 @@
-﻿using Mono.Options;
+using Mono.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -113,7 +113,22 @@ class UtilRunner
 
 		// Get all Avds
 		var avdManager = new AndroidSdk.AvdManager();
-		var avds = avdManager.ListAvds() ?? Enumerable.Empty<AndroidSdk.AvdManager.Avd>();
+		var avds = Enumerable.Empty<AndroidSdk.AvdManager.Avd>();
+		try
+		{
+			avds = avdManager.ListAvds() ?? Enumerable.Empty<AndroidSdk.AvdManager.Avd>();
+		}
+		catch (NullReferenceException ex)
+		{
+			if (results.Any())
+			{
+				Console.Error.WriteLine($"AVD Manager crashed trying to list emulators.\nListing only {results.Count} physical devices.");
+			}
+			else
+			{
+				throw new NullReferenceException("AVD Manager crashed trying to list emulators.\nAborting as no physical devices were found.", ex);
+			}
+		}
 
 		// Look through all avd's to list, but let's be smart and see if any of them
 		// are already running (so were listed in the adb devices output)
